@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="DevBridge 隧道快速入门：通过 Relay Controller 创建隧道、配置端口并签发连接令牌。">
+  <title>创建并使用开发隧道 | DevBridge 文档</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到正文</a>
+
+  <header class="topbar">
+    <button class="nav-toggle" type="button" aria-label="打开文档导航" aria-expanded="false" aria-controls="sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="./" aria-label="DevBridge 文档首页">
+      <span class="brand-mark" aria-hidden="true">D</span>
+      <span>DevBridge 文档</span>
+    </a>
+    <div class="topbar-links">
+      <a href="openapi.yaml">OpenAPI YAML</a>
+      <a href="https://github.com/lizhicheng00/demo" rel="noreferrer">源代码</a>
+    </div>
+  </header>
+
+  <div class="page-shell">
+    <aside class="sidebar" id="sidebar" aria-label="文档导航">
+      <div class="sidebar-inner">
+        <p class="sidebar-title">DevBridge 隧道</p>
+        <nav>
+          <a class="active" href="#overview">快速入门</a>
+          <a href="#prerequisites">准备工作</a>
+          <a href="#create">创建隧道</a>
+          <a href="#port">配置端口</a>
+          <a href="#token">签发令牌</a>
+          <a href="#manage">管理隧道</a>
+          <a href="#api">API 概览</a>
+          <a href="#errors">错误处理</a>
+          <a href="#boundaries">边界与约束</a>
+        </nav>
+      </div>
+    </aside>
+
+    <main id="main" class="content">
+      <article>
+        <div class="breadcrumb" aria-label="面包屑">
+          <a href="./">文档</a><span>/</span><span>DevBridge 隧道</span><span>/</span><span>快速入门</span>
+        </div>
+
+        <section id="overview" class="article-header">
+          <p class="eyebrow">快速入门</p>
+          <h1>创建并使用开发隧道</h1>
+          <p class="lead">使用 Relay Controller 创建一条临时隧道、声明可访问端口，并为宿主端和连接端签发独立 JWT。</p>
+          <div class="article-meta">适用于 Relay Controller API v1</div>
+        </section>
+
+        <div class="notice important">
+          <strong>内部接口</strong>
+          <p>Relay Controller 是控制面服务，API 通过 mTLS 保护。调用方应是受信任的 RelayService、Relay Gateway 或内部编排服务，而不是浏览器终端用户。</p>
+        </div>
+
+        <section class="in-this-article" aria-labelledby="article-index-title">
+          <h2 id="article-index-title">本文内容</h2>
+          <ul>
+            <li><a href="#prerequisites">准备调用环境</a></li>
+            <li><a href="#create">创建隧道并取得访问主机名</a></li>
+            <li><a href="#port">配置端口协议和匿名访问策略</a></li>
+            <li><a href="#token">签发 host 与 connect 令牌</a></li>
+          </ul>
+        </section>
+
+        <section class="architecture" aria-labelledby="architecture-title">
+          <h2 id="architecture-title">请求如何流转</h2>
+          <div class="flow" role="img" aria-label="内部服务通过双向 TLS 调用 Relay Controller，RelayService 和 Relay Gateway 使用令牌建立数据面连接">
+            <div class="flow-node"><span>01</span><strong>内部调用方</strong><small>namespace + mTLS</small></div>
+            <div class="flow-line"><b>控制面</b></div>
+            <div class="flow-node primary"><span>02</span><strong>Relay Controller</strong><small>元数据、端口、JWT</small></div>
+            <div class="flow-line"><b>令牌</b></div>
+            <div class="flow-node"><span>03</span><strong>Relay 数据面</strong><small>Service + Gateway</small></div>
+          </div>
+          <p class="caption">Controller 不转发 HTTP、TCP、WebSocket 或 WebTransport 流量。</p>
+        </section>
+
+        <section id="prerequisites">
+          <h2>准备工作</h2>
+          <p>开始前，请准备以下信息：</p>
+          <ul>
+            <li>Relay Controller 的 HTTPS 地址。</li>
+            <li>受服务端信任的客户端证书和私钥，以及签发服务端证书的 CA。</li>
+            <li>调用方所属的 <code>namespace</code>。</li>
+            <li>当前 region 下已登记的 <code>clusterId</code>，例如 <code>cn-north-4-bridge</code>。</li>
+          </ul>
+
+          <p>以下示例使用环境变量，避免在命令历史中重复填写路径：</p>
+          <div class="code-block">
+            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>export RELAY_CONTROLLER="https://relay-controller.example.com"
+export RELAY_API="$RELAY_CONTROLLER/open-api-inner/v1/relay-controller"
+export RELAY_NAMESPACE="ns-demo"
+export RELAY_CLUSTER="cn-north-4-bridge"
+export RELAY_CLIENT_CERT="./client.crt"
+export RELAY_CLIENT_KEY="./client.key"
+export RELAY_CA_CERT="./ca.crt"</code></pre>
+          </div>
+
+          <p>先验证证书和网络是否可用：</p>
+          <div class="code-block">
+            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>curl --fail --silent --show-error \
+  --cert "$RELAY_CLIENT_CERT" \
+  --key "$RELAY_CLIENT_KEY" \
+  --cacert "$RELAY_CA_CERT" \
+  "$RELAY_CONTROLLER/openapi.yaml"</code></pre>
+          </div>
+          <div class="notice note">
+            <strong>证书校验</strong>
+            <p>不要使用 <code>-k</code> 跳过服务端证书校验。生产环境还应由可信网关提供经过认证的 namespace，避免调用方自行声明其他租户身份。</p>
+          </div>
+        </section>
+
+        <section id="create">
+          <h2>1. 创建隧道</h2>
+          <p>创建隧道时必须指定名称和 cluster。<code>expiration</code> 是固定规格，单位为小时；默认 72 小时，允许范围为 1 到 720 小时。</p>
+          <div class="code-block">
+            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>curl --fail --silent --show-error \
+  --cert "$RELAY_CLIENT_CERT" \
+  --key "$RELAY_CLIENT_KEY" \
+  --cacert "$RELAY_CA_CERT" \
+  -X POST "$RELAY_API/tunnels" \
+  -H "X-Namespace: $RELAY_NAMESPACE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "local-web",
+    "description": "Local web development tunnel",
+    "clusterId": "cn-north-4-bridge",
+    "expiration": 72,
+    "type": "bridge"
+  }'</code></pre>
+          </div>
+          <p>响应直接返回隧道资源，不额外包装 <code>result</code>：</p>
+          <div class="code-block response">
+            <div class="code-header"><span>JSON</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>{
+  "name": "local-web",
+  "tunnelId": "km5q7d2a",
+  "tunnelCode": 277278047059,
+  "clusterId": "cn-north-4-bridge",
+  "description": "Local web development tunnel",
+  "bandwidthUsed": 0,
+  "tunnelExpiration": 72,
+  "created": 1784606400,
+  "url": "km5q7d2a.cn-north-4-bridge.myhuaweicloud.com",
+  "type": "bridge"
+}</code></pre>
+          </div>
+
+          <dl class="field-notes">
+            <div><dt><code>tunnelId</code></dt><dd>40 位 tunnelCode 的 8 位小写 Base32 表示，用于 API 路径和访问主机名。</dd></div>
+            <div><dt><code>tunnelExpiration</code></dt><dd>创建或更新时选择的有效期规格，单位为小时，不是持续递减的剩余秒数。</dd></div>
+            <div><dt><code>url</code></dt><dd>隧道主机名。最终协议、端口和路由方式由端口策略及 Relay Gateway 决定。</dd></div>
+          </dl>
+        </section>
+
+        <section id="port">
+          <h2>2. 配置端口</h2>
+          <p>端口策略决定 Gateway 如何识别转发协议，以及连接端是否必须携带 <code>connect</code> 令牌。创建端口时三个字段都必填。</p>
+          <div class="code-block">
+            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>export TUNNEL_ID="km5q7d2a"
+
+curl --fail --silent --show-error \
+  --cert "$RELAY_CLIENT_CERT" \
+  --key "$RELAY_CLIENT_KEY" \
+  --cacert "$RELAY_CA_CERT" \
+  -X POST "$RELAY_API/tunnels/$TUNNEL_ID/ports" \
+  -H "X-Namespace: $RELAY_NAMESPACE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "port": 8080,
+    "protocol": "http",
+    "allowAnonymous": false
+  }'</code></pre>
+          </div>
+
+          <table>
+            <thead><tr><th>字段</th><th>可选值</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td><code>protocol</code></td><td><code>http</code>、<code>https</code>、<code>auto</code></td><td><code>auto</code> 由数据面识别实际协议。</td></tr>
+              <tr><td><code>allowAnonymous</code></td><td><code>true</code>、<code>false</code></td><td>为 <code>false</code> 时，连接端需要有效的 connect 令牌。</td></tr>
+            </tbody>
+          </table>
+          <p>更新端口时，<code>protocol</code> 和 <code>allowAnonymous</code> 均为可选字段，只提交需要修改的值。</p>
+        </section>
+
+        <section id="token">
+          <h2>3. 签发连接令牌</h2>
+          <p>每条隧道有两类独立令牌。每次调用都签发一个新 JWT，不复用、不缓存，也不存入 Redis。</p>
+
+          <div class="token-grid">
+            <div>
+              <h3><code>host</code></h3>
+              <p>交给 RelayService，用于声明并托管本地服务。</p>
+            </div>
+            <div>
+              <h3><code>connect</code></h3>
+              <p>交给访问端，用于连接禁止匿名访问的端口。</p>
+            </div>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>curl --fail --silent --show-error \
+  --cert "$RELAY_CLIENT_CERT" \
+  --key "$RELAY_CLIENT_KEY" \
+  --cacert "$RELAY_CA_CERT" \
+  -X POST "$RELAY_API/tunnels/$TUNNEL_ID/token?scope=host" \
+  -H "X-Namespace: $RELAY_NAMESPACE"
+
+curl --fail --silent --show-error \
+  --cert "$RELAY_CLIENT_CERT" \
+  --key "$RELAY_CLIENT_KEY" \
+  --cacert "$RELAY_CA_CERT" \
+  -X POST "$RELAY_API/tunnels/$TUNNEL_ID/token?scope=connect" \
+  -H "X-Namespace: $RELAY_NAMESPACE"</code></pre>
+          </div>
+          <div class="code-block response">
+            <div class="code-header"><span>JSON</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>{
+  "tunnelId": "km5q7d2a",
+  "scope": "host",
+  "lifetime": 3600,
+  "expiration": 1784610000,
+  "token": "eyJ..."
+}</code></pre>
+          </div>
+          <p><code>lifetime</code> 的单位是秒，取服务端固定配置 <code>relay.jwt.token.ttl-seconds</code>，不随隧道有效期变化。响应带有 <code>Cache-Control: no-store</code>。</p>
+          <div class="notice warning">
+            <strong>令牌安全</strong>
+            <p>令牌是短期凭据。不要写入日志、仓库、URL 参数或前端持久化存储；只把对应 scope 的令牌交给实际使用方。</p>
+          </div>
+        </section>
+
+        <section id="manage">
+          <h2>4. 查询和清理</h2>
+          <p>列表接口只返回当前 namespace 下未过期的隧道，可按 cluster 过滤。响应中的 <code>portCount</code> 便于调用方判断端口策略数量。</p>
+          <div class="code-block">
+            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code># 查询当前 cluster 的隧道
+curl --fail --silent --show-error \
+  --cert "$RELAY_CLIENT_CERT" --key "$RELAY_CLIENT_KEY" --cacert "$RELAY_CA_CERT" \
+  -H "X-Namespace: $RELAY_NAMESPACE" \
+  "$RELAY_API/tunnels?clusterId=$RELAY_CLUSTER"
+
+# 查询单条隧道
+curl --fail --silent --show-error \
+  --cert "$RELAY_CLIENT_CERT" --key "$RELAY_CLIENT_KEY" --cacert "$RELAY_CA_CERT" \
+  -H "X-Namespace: $RELAY_NAMESPACE" \
+  "$RELAY_API/tunnels/$TUNNEL_ID"
+
+# 物理删除隧道及其端口策略
+curl --fail --silent --show-error \
+  --cert "$RELAY_CLIENT_CERT" --key "$RELAY_CLIENT_KEY" --cacert "$RELAY_CA_CERT" \
+  -X DELETE -H "X-Namespace: $RELAY_NAMESPACE" \
+  "$RELAY_API/tunnels/$TUNNEL_ID"</code></pre>
+          </div>
+          <p>删除是物理删除。过期隧道不会出现在列表中，并在保留期后由老化任务清理。</p>
+        </section>
+
+        <section id="api">
+          <h2>API 概览</h2>
+          <p>所有 namespace 范围内的接口都必须携带 <code>X-Namespace</code>。完整字段和约束以 <a href="openapi.yaml">OpenAPI YAML</a> 为准。</p>
+          <div class="api-table-wrap">
+            <table class="api-table">
+              <thead><tr><th>方法</th><th>路径</th><th>用途</th></tr></thead>
+              <tbody>
+                <tr><td><span class="method post">POST</span></td><td><code>/tunnels</code></td><td>创建隧道</td></tr>
+                <tr><td><span class="method get">GET</span></td><td><code>/tunnels</code></td><td>列出当前 namespace 的隧道</td></tr>
+                <tr><td><span class="method get">GET</span></td><td><code>/tunnels/{tunnelId}</code></td><td>查询隧道详情</td></tr>
+                <tr><td><span class="method put">PUT</span></td><td><code>/tunnels/{tunnelId}</code></td><td>更新隧道</td></tr>
+                <tr><td><span class="method delete">DELETE</span></td><td><code>/tunnels/{tunnelId}</code></td><td>删除隧道</td></tr>
+                <tr><td><span class="method post">POST</span></td><td><code>/tunnels/{tunnelId}/token?scope=</code></td><td>签发 host 或 connect 令牌</td></tr>
+                <tr><td><span class="method post">POST</span></td><td><code>/tunnels/{tunnelId}/ports</code></td><td>创建端口策略</td></tr>
+                <tr><td><span class="method get">GET</span></td><td><code>/tunnels/{tunnelId}/ports</code></td><td>列出端口策略</td></tr>
+                <tr><td><span class="method put">PUT</span></td><td><code>/tunnels/{tunnelId}/ports/{port}</code></td><td>更新端口策略</td></tr>
+                <tr><td><span class="method delete">DELETE</span></td><td><code>/tunnels/{tunnelId}/ports/{port}</code></td><td>删除端口策略</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="muted">上述路径均相对于 <code>/open-api-inner/v1/relay-controller</code>。Gateway 端口策略查询和 metering 是服务间接口，不属于本快速入门的调用链。</p>
+        </section>
+
+        <section id="errors">
+          <h2>错误处理</h2>
+          <p>参数错误返回 4xx，服务内部错误返回 5xx。错误响应统一使用 <code>error</code> 对象：</p>
+          <div class="code-block response">
+            <div class="code-header"><span>JSON</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>{
+  "error": {
+    "code": "40000",
+    "message": "request validation failed",
+    "target": "request",
+    "details": [
+      {
+        "code": "40000",
+        "target": "expiration",
+        "message": "must be less than or equal to 720"
+      }
+    ]
+  }
+}</code></pre>
+          </div>
+          <p>调用方应先根据 HTTP 状态码区分请求问题和服务问题，再使用 <code>error.code</code> 做稳定分支。<code>message</code> 用于诊断，不建议作为程序判断条件。</p>
+        </section>
+
+        <section id="boundaries">
+          <h2>业务边界与约束</h2>
+          <ul>
+            <li>一个 Relay Controller 实例只管理配置 region 下的 cluster，不信任跨 region 的 cluster 数据。</li>
+            <li>每个 namespace 默认最多拥有 10 条有效隧道；过期和已删除记录不占配额。</li>
+            <li><code>namespace</code>、<code>clusterId</code> 和 <code>tunnelId</code> 会参与隔离校验，调用方不能只凭 tunnelId 访问资源。</li>
+            <li>Relay Controller 只管理控制面；连接数、实时上传和下载速率需要数据面上报，本版不在隧道列表中展示。</li>
+            <li>metering 接口已预留，但本期未对接，不应作为计费依据。</li>
+            <li>多副本部署时，流控和 namespace 配额需要由 Redis 或网关提供一致性；单机内存计数只能作为实例级保护。</li>
+          </ul>
+        </section>
+
+        <section class="next-steps">
+          <h2>后续步骤</h2>
+          <div class="next-links">
+            <a href="openapi.yaml"><strong>查看 OpenAPI 定义</strong><span>获取所有请求、响应和校验规则</span></a>
+            <a href="https://github.com/lizhicheng00/demo" rel="noreferrer"><strong>查看 Relay Controller</strong><span>了解部署配置和服务端实现</span></a>
+          </div>
+        </section>
+
+        <footer class="article-footer">
+          <p>文档版本：Relay Controller API v1</p>
+        </footer>
+      </article>
+
+      <aside class="toc" aria-label="本文目录">
+        <p>本文内容</p>
+        <nav>
+          <a href="#prerequisites">准备工作</a>
+          <a href="#create">创建隧道</a>
+          <a href="#port">配置端口</a>
+          <a href="#token">签发令牌</a>
+          <a href="#manage">查询和清理</a>
+          <a href="#api">API 概览</a>
+          <a href="#errors">错误处理</a>
+          <a href="#boundaries">业务边界</a>
+        </nav>
+      </aside>
+    </main>
+  </div>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

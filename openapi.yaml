@@ -1,0 +1,583 @@
+openapi: 3.0.3
+info:
+  title: Relay Controller API
+  version: v1
+  description: Control plane APIs for DevBridge relay tunnels. Relay Controller does not forward traffic.
+servers:
+  - url: https://localhost:8443
+tags:
+  - name: Tunnel
+  - name: Metering
+  - name: Tunnel Port
+  - name: Gateway Tunnel Port
+paths:
+  /open-api-inner/v1/relay-controller/tunnels:
+    post:
+      tags: [Tunnel]
+      summary: Create tunnel
+      operationId: createTunnel
+      parameters:
+        - $ref: '#/components/parameters/NamespaceHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTunnelRequest'
+      responses:
+        '200':
+          description: Created tunnel metadata.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateTunnelResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    get:
+      tags: [Tunnel]
+      summary: List namespace tunnels
+      operationId: listTunnels
+      parameters:
+        - $ref: '#/components/parameters/NamespaceHeader'
+        - name: clusterId
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: '^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$'
+      responses:
+        '200':
+          description: Namespace tunnel list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TunnelListItemResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      tags: [Tunnel]
+      summary: Delete all namespace tunnels
+      operationId: deleteTunnels
+      parameters:
+        - $ref: '#/components/parameters/NamespaceHeader'
+      responses:
+        '200':
+          description: Delete result.
+          content:
+            application/json:
+              schema:
+                type: boolean
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /open-api-inner/v1/relay-controller/tunnels/{tunnelId}:
+    get:
+      tags: [Tunnel]
+      summary: Get tunnel detail
+      operationId: getTunnelDetail
+      parameters:
+        - $ref: '#/components/parameters/NamespaceHeader'
+        - $ref: '#/components/parameters/TunnelIdPath'
+      responses:
+        '200':
+          description: Tunnel metadata.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TunnelDetailResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    put:
+      tags: [Tunnel]
+      summary: Update tunnel
+      operationId: updateTunnel
+      parameters:
+        - $ref: '#/components/parameters/NamespaceHeader'
+        - $ref: '#/components/parameters/TunnelIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTunnelRequest'
+      responses:
+        '200':
+          description: Update result.
+          content:
+            application/json:
+              schema:
+                type: boolean
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      tags: [Tunnel]
+      summary: Delete tunnel
+      operationId: deleteTunnel
+      parameters:
+        - $ref: '#/components/parameters/NamespaceHeader'
+        - $ref: '#/components/parameters/TunnelIdPath'
+      responses:
+        '200':
+          description: Delete result.
+          content:
+            application/json:
+              schema:
+                type: boolean
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /open-api-inner/v1/relay-controller/tunnels/{tunnelId}/token:
+    post:
+      tags: [Tunnel]
+      summary: Issue a new tunnel token
+      description: Issues a new token on every call. Its lifetime is configured by relay.jwt.token.ttl-seconds.
+      operationId: issueTunnelToken
+      parameters:
+        - $ref: '#/components/parameters/NamespaceHeader'
+        - $ref: '#/components/parameters/TunnelIdPath'
+        - name: scope
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [host, connect]
+      responses:
+        '200':
+          description: Newly issued tunnel token.
+          headers:
+            Cache-Control:
+              description: Prevents storage of the issued token response.
+              schema:
+                type: string
+                example: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TunnelTokenResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /open-api-inner/v1/relay-controller/clusters/{clusterId}/metering:
+    post:
+      tags: [Metering]
+      summary: Report tunnel traffic usage
+      operationId: reportMetering
+      parameters:
+        - $ref: '#/components/parameters/ClusterIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeteringReportRequest'
+      responses:
+        '200':
+          description: Metering acceptance result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeteringReportResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /open-api-inner/v1/relay-controller/tunnels/{tunnelId}/ports:
+    post:
+      tags: [Tunnel Port]
+      summary: Create tunnel port policy
+      operationId: createTunnelPort
+      parameters:
+        - $ref: '#/components/parameters/NamespaceHeader'
+        - $ref: '#/components/parameters/TunnelIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTunnelPortRequest'
+      responses:
+        '200':
+          description: Created tunnel port policy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TunnelPortResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    get:
+      tags: [Tunnel Port]
+      summary: List tunnel port policies
+      operationId: listTunnelPorts
+      parameters:
+        - $ref: '#/components/parameters/NamespaceHeader'
+        - $ref: '#/components/parameters/TunnelIdPath'
+      responses:
+        '200':
+          description: Tunnel port policy list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TunnelPortResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /open-api-inner/v1/relay-controller/tunnels/{tunnelId}/ports/{port}:
+    get:
+      tags: [Tunnel Port]
+      summary: Get tunnel port policy
+      operationId: getTunnelPort
+      parameters:
+        - $ref: '#/components/parameters/NamespaceHeader'
+        - $ref: '#/components/parameters/TunnelIdPath'
+        - $ref: '#/components/parameters/PortPath'
+      responses:
+        '200':
+          description: Tunnel port policy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TunnelPortResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    put:
+      tags: [Tunnel Port]
+      summary: Update tunnel port policy
+      operationId: updateTunnelPort
+      parameters:
+        - $ref: '#/components/parameters/NamespaceHeader'
+        - $ref: '#/components/parameters/TunnelIdPath'
+        - $ref: '#/components/parameters/PortPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTunnelPortRequest'
+      responses:
+        '200':
+          description: Updated tunnel port policy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TunnelPortResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      tags: [Tunnel Port]
+      summary: Delete tunnel port policy
+      operationId: deleteTunnelPort
+      parameters:
+        - $ref: '#/components/parameters/NamespaceHeader'
+        - $ref: '#/components/parameters/TunnelIdPath'
+        - $ref: '#/components/parameters/PortPath'
+      responses:
+        '200':
+          description: Delete result.
+          content:
+            application/json:
+              schema:
+                type: boolean
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /open-api-inner/v1/relay-controller/clusters/{clusterId}/tunnels/{tunnelId}/ports/{port}:
+    get:
+      tags: [Gateway Tunnel Port]
+      summary: Get gateway tunnel port policy
+      operationId: getGatewayTunnelPortPolicy
+      parameters:
+        - $ref: '#/components/parameters/ClusterIdPath'
+        - $ref: '#/components/parameters/TunnelIdPath'
+        - $ref: '#/components/parameters/PortPath'
+      responses:
+        '200':
+          description: Gateway tunnel port policy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GatewayTunnelPortPolicyResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+components:
+  responses:
+    ErrorResponse:
+      description: Request failed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  parameters:
+    NamespaceHeader:
+      name: X-Namespace
+      in: header
+      required: true
+      schema:
+        type: string
+        pattern: '^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$'
+    TunnelIdPath:
+      name: tunnelId
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-z2-7]{8}$'
+        description: Lowercase base32 encoded 40-bit tunnel code.
+    ClusterIdPath:
+      name: clusterId
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$'
+    PortPath:
+      name: port
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+        maximum: 65535
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          $ref: '#/components/schemas/Error'
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: "10002"
+        message:
+          type: string
+          example: tunnel not found
+        target:
+          type: string
+          example: tunnelId
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+    ErrorDetail:
+      type: object
+      required: [code, target, message]
+      properties:
+        code:
+          type: string
+          example: "40000"
+        target:
+          type: string
+          example: expiration
+        message:
+          type: string
+          example: must be less than or equal to 720
+    CreateTunnelRequest:
+      type: object
+      required: [name, clusterId]
+      properties:
+        name:
+          type: string
+          maxLength: 128
+        description:
+          type: string
+          maxLength: 512
+        clusterId:
+          type: string
+          pattern: '^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$'
+          description: Cluster identifier.
+        expiration:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 720
+          description: Expiration duration in hours. Defaults to 72 hours. Maximum is 720 hours.
+        type:
+          type: string
+          enum: [bridge, env]
+          default: bridge
+    UpdateTunnelRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 128
+        description:
+          type: string
+          maxLength: 512
+        expiration:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 720
+          description: Expiration duration in hours from update time. Maximum is 720 hours.
+        type:
+          type: string
+          enum: [bridge, env]
+    MeteringReportRequest:
+      type: object
+      required: [tunnelCode, tunnelId, usage]
+      properties:
+        tunnelCode:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 1099511627775
+        tunnelId:
+          type: string
+          pattern: '^[a-z2-7]{8}$'
+        usage:
+          type: integer
+          format: int64
+          minimum: 0
+    CreateTunnelPortRequest:
+      type: object
+      required: [port, protocol, allowAnonymous]
+      properties:
+        port:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 65535
+        protocol:
+          type: string
+          enum: [http, https, auto]
+        allowAnonymous:
+          type: boolean
+    UpdateTunnelPortRequest:
+      type: object
+      properties:
+        protocol:
+          type: string
+          enum: [http, https, auto]
+        allowAnonymous:
+          type: boolean
+    CreateTunnelResponse:
+      allOf:
+        - $ref: '#/components/schemas/Tunnel'
+    TunnelDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/Tunnel'
+    Tunnel:
+      type: object
+      properties:
+        name:
+          type: string
+        tunnelId:
+          type: string
+          pattern: '^[a-z2-7]{8}$'
+        tunnelCode:
+          type: integer
+          format: int64
+        clusterId:
+          type: string
+        description:
+          type: string
+        bandwidthUsed:
+          type: integer
+          format: int64
+        tunnelExpiration:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 720
+          description: Configured tunnel expiration duration in hours.
+        created:
+          type: integer
+          format: int64
+        url:
+          type: string
+        type:
+          type: string
+          enum: [bridge, env]
+    TunnelListItemResponse:
+      type: object
+      properties:
+        tunnelId:
+          type: string
+          pattern: '^[a-z2-7]{8}$'
+        tunnelCode:
+          type: integer
+          format: int64
+        clusterId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        tunnelExpiration:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 720
+          description: Configured tunnel expiration duration in hours.
+        created:
+          type: integer
+          format: int64
+        url:
+          type: string
+        portCount:
+          type: integer
+          format: int64
+          minimum: 0
+    MeteringReportResponse:
+      type: object
+      properties:
+        accepted:
+          type: boolean
+    TunnelTokenResponse:
+      type: object
+      required: [tunnelId, scope, lifetime, expiration, token]
+      properties:
+        tunnelId:
+          type: string
+          pattern: '^[a-z2-7]{8}$'
+        scope:
+          type: string
+          enum: [host, connect]
+        lifetime:
+          type: integer
+          format: int64
+          description: Token lifetime in seconds.
+        expiration:
+          type: integer
+          format: int64
+          description: Token expiration as Unix seconds.
+        token:
+          type: string
+    TunnelPortResponse:
+      type: object
+      properties:
+        tunnelId:
+          type: string
+          pattern: '^[a-z2-7]{8}$'
+        tunnelCode:
+          type: integer
+          format: int64
+        port:
+          type: integer
+          format: int64
+        protocol:
+          type: string
+          enum: [http, https, auto]
+        allowAnonymous:
+          type: boolean
+    GatewayTunnelPortPolicyResponse:
+      type: object
+      properties:
+        tunnelId:
+          type: string
+          pattern: '^[a-z2-7]{8}$'
+        tunnelCode:
+          type: integer
+          format: int64
+        clusterId:
+          type: string
+        port:
+          type: integer
+          format: int64
+        protocol:
+          type: string
+          enum: [http, https, auto]
+        allowAnonymous:
+          type: boolean
