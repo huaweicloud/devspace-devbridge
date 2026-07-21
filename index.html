@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="DevBridge 隧道快速入门：通过 Relay Controller 创建隧道、配置端口并签发连接令牌。">
-  <title>创建并使用开发隧道 | DevBridge 文档</title>
+  <meta name="description" content="DevBridge 开发隧道快速入门：安全地托管本地服务，并与团队共享临时访问地址。">
+  <title>创建并托管开发隧道 | DevBridge 文档</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="assets/styles.css">
 </head>
@@ -20,7 +20,7 @@
       <span>DevBridge 文档</span>
     </a>
     <div class="topbar-links">
-      <a href="openapi.yaml">OpenAPI YAML</a>
+      <a href="openapi.yaml">API 参考</a>
       <a href="https://github.com/lizhicheng00/demo" rel="noreferrer">源代码</a>
     </div>
   </header>
@@ -28,17 +28,18 @@
   <div class="page-shell">
     <aside class="sidebar" id="sidebar" aria-label="文档导航">
       <div class="sidebar-inner">
-        <p class="sidebar-title">DevBridge 隧道</p>
+        <p class="sidebar-title">开发隧道</p>
         <nav>
           <a class="active" href="#overview">快速入门</a>
+          <a href="#how-it-works">工作原理</a>
           <a href="#prerequisites">准备工作</a>
           <a href="#create">创建隧道</a>
-          <a href="#port">配置端口</a>
-          <a href="#token">签发令牌</a>
-          <a href="#manage">管理隧道</a>
-          <a href="#api">API 概览</a>
-          <a href="#errors">错误处理</a>
-          <a href="#boundaries">边界与约束</a>
+          <a href="#port">开放本地端口</a>
+          <a href="#host">托管本地服务</a>
+          <a href="#connect">访问隧道</a>
+          <a href="#manage">管理与清理</a>
+          <a href="#rules">使用规则</a>
+          <a href="#faq">常见问题</a>
         </nav>
       </div>
     </aside>
@@ -46,311 +47,288 @@
     <main id="main" class="content">
       <article>
         <div class="breadcrumb" aria-label="面包屑">
-          <a href="./">文档</a><span>/</span><span>DevBridge 隧道</span><span>/</span><span>快速入门</span>
+          <a href="./">文档</a><span>/</span><span>开发隧道</span><span>/</span><span>快速入门</span>
         </div>
 
         <section id="overview" class="article-header">
           <p class="eyebrow">快速入门</p>
-          <h1>创建并使用开发隧道</h1>
-          <p class="lead">使用 Relay Controller 创建一条临时隧道、声明可访问端口，并为宿主端和连接端签发独立 JWT。</p>
-          <div class="article-meta">适用于 Relay Controller API v1</div>
+          <h1>创建并托管开发隧道</h1>
+          <p class="lead">将本机正在运行的 Web 服务安全地接入 DevBridge，让团队成员在无需部署测试环境的情况下访问和验证你的改动。</p>
+          <div class="article-meta">预计用时：10 分钟 · 使用 REST API</div>
         </section>
 
         <div class="notice important">
-          <strong>内部接口</strong>
-          <p>Relay Controller 是控制面服务，API 通过 mTLS 保护。调用方应是受信任的 RelayService、Relay Gateway 或内部编排服务，而不是浏览器终端用户。</p>
+          <strong>完成本快速入门后</strong>
+          <p>本地 <code>127.0.0.1:8080</code> 会对应一条有有效期的开发隧道。你可以允许匿名访问，也可以只向持有 connect 令牌的成员开放。</p>
         </div>
 
         <section class="in-this-article" aria-labelledby="article-index-title">
           <h2 id="article-index-title">本文内容</h2>
           <ul>
-            <li><a href="#prerequisites">准备调用环境</a></li>
-            <li><a href="#create">创建隧道并取得访问主机名</a></li>
-            <li><a href="#port">配置端口协议和匿名访问策略</a></li>
-            <li><a href="#token">签发 host 与 connect 令牌</a></li>
+            <li><a href="#create">创建一条 72 小时的隧道</a></li>
+            <li><a href="#port">把本地 8080 端口加入隧道</a></li>
+            <li><a href="#host">授权宿主端托管本地服务</a></li>
+            <li><a href="#connect">向访问者提供受保护的连接</a></li>
           </ul>
         </section>
 
-        <section class="architecture" aria-labelledby="architecture-title">
-          <h2 id="architecture-title">请求如何流转</h2>
-          <div class="flow" role="img" aria-label="内部服务通过双向 TLS 调用 Relay Controller，RelayService 和 Relay Gateway 使用令牌建立数据面连接">
-            <div class="flow-node"><span>01</span><strong>内部调用方</strong><small>namespace + mTLS</small></div>
-            <div class="flow-line"><b>控制面</b></div>
-            <div class="flow-node primary"><span>02</span><strong>Relay Controller</strong><small>元数据、端口、JWT</small></div>
-            <div class="flow-line"><b>令牌</b></div>
-            <div class="flow-node"><span>03</span><strong>Relay 数据面</strong><small>Service + Gateway</small></div>
+        <section id="how-it-works" class="architecture">
+          <h2>工作原理</h2>
+          <p>开发隧道在本地服务和远程访问者之间建立一条临时通道。DevBridge 管理隧道、端口和权限；RelayService 与隧道网关负责建立连接和转发实际流量。</p>
+          <div class="flow" role="img" aria-label="本地开发服务通过 DevBridge 隧道连接到远程浏览器或客户端">
+            <div class="flow-node"><span>01</span><strong>本地服务</strong><small>127.0.0.1:8080</small></div>
+            <div class="flow-line"><b>托管</b></div>
+            <div class="flow-node primary"><span>02</span><strong>DevBridge 隧道</strong><small>临时地址 + 访问策略</small></div>
+            <div class="flow-line"><b>访问</b></div>
+            <div class="flow-node"><span>03</span><strong>团队成员</strong><small>浏览器或客户端</small></div>
           </div>
-          <p class="caption">Controller 不转发 HTTP、TCP、WebSocket 或 WebTransport 流量。</p>
+          <p class="caption">隧道不会把源代码或本地文件上传到 DevBridge，只转发已开放端口上的连接。</p>
         </section>
 
         <section id="prerequisites">
           <h2>准备工作</h2>
-          <p>开始前，请准备以下信息：</p>
+          <p>开始前，请确认你具备：</p>
           <ul>
-            <li>Relay Controller 的 HTTPS 地址。</li>
-            <li>受服务端信任的客户端证书和私钥，以及签发服务端证书的 CA。</li>
-            <li>调用方所属的 <code>namespace</code>。</li>
-            <li>当前 region 下已登记的 <code>clusterId</code>，例如 <code>cn-north-4-bridge</code>。</li>
+            <li>一个可用的 DevBridge 工作空间（namespace）和接入集群（cluster），例如 <code>ns-demo</code>、<code>cn-north-4-bridge</code>。</li>
+            <li>用于访问 DevBridge API 的客户端证书、私钥和 CA 证书。</li>
+            <li><code>curl</code> 和 <code>jq</code>。</li>
+            <li>已经在本机启动的服务。本文假设它监听 <code>127.0.0.1:8080</code>。</li>
+            <li>已经安装并配置好的 RelayService 客户端。</li>
           </ul>
 
-          <p>以下示例使用环境变量，避免在命令历史中重复填写路径：</p>
+          <p>设置本文会用到的环境变量：</p>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>export RELAY_CONTROLLER="https://relay-controller.example.com"
-export RELAY_API="$RELAY_CONTROLLER/open-api-inner/v1/relay-controller"
-export RELAY_NAMESPACE="ns-demo"
-export RELAY_CLUSTER="cn-north-4-bridge"
-export RELAY_CLIENT_CERT="./client.crt"
-export RELAY_CLIENT_KEY="./client.key"
-export RELAY_CA_CERT="./ca.crt"</code></pre>
-          </div>
+            <pre><code>export DEVBRIDGE_ENDPOINT="https://devbridge-api.example.com"
+export DEVBRIDGE_API="$DEVBRIDGE_ENDPOINT/open-api-inner/v1/relay-controller"
+export DEVBRIDGE_NAMESPACE="ns-demo"
+export DEVBRIDGE_CLUSTER="cn-north-4-bridge"
 
-          <p>先验证证书和网络是否可用：</p>
-          <div class="code-block">
-            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>curl --fail --silent --show-error \
-  --cert "$RELAY_CLIENT_CERT" \
-  --key "$RELAY_CLIENT_KEY" \
-  --cacert "$RELAY_CA_CERT" \
-  "$RELAY_CONTROLLER/openapi.yaml"</code></pre>
+export DEVBRIDGE_CLIENT_CERT="./client.crt"
+export DEVBRIDGE_CLIENT_KEY="./client.key"
+export DEVBRIDGE_CA_CERT="./ca.crt"
+
+devbridge_api() {
+  curl --fail --silent --show-error \
+    --cert "$DEVBRIDGE_CLIENT_CERT" \
+    --key "$DEVBRIDGE_CLIENT_KEY" \
+    --cacert "$DEVBRIDGE_CA_CERT" \
+    -H "X-Namespace: $DEVBRIDGE_NAMESPACE" \
+    "$@"
+}</code></pre>
           </div>
           <div class="notice note">
-            <strong>证书校验</strong>
-            <p>不要使用 <code>-k</code> 跳过服务端证书校验。生产环境还应由可信网关提供经过认证的 namespace，避免调用方自行声明其他租户身份。</p>
+            <strong>从平台获取这些值</strong>
+            <p>namespace 表示你的隔离空间，cluster 表示隧道接入位置。请使用平台分配的值，不要自行猜测或复用其他用户的工作空间。</p>
           </div>
         </section>
 
         <section id="create">
           <h2>1. 创建隧道</h2>
-          <p>创建隧道时必须指定名称和 cluster。<code>expiration</code> 是固定规格，单位为小时；默认 72 小时，允许范围为 1 到 720 小时。</p>
+          <p>创建一条名为 <code>local-web</code> 的隧道，并把返回结果保存到环境变量。<code>expiration</code> 的单位是小时：</p>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>curl --fail --silent --show-error \
-  --cert "$RELAY_CLIENT_CERT" \
-  --key "$RELAY_CLIENT_KEY" \
-  --cacert "$RELAY_CA_CERT" \
-  -X POST "$RELAY_API/tunnels" \
-  -H "X-Namespace: $RELAY_NAMESPACE" \
+            <pre><code>TUNNEL=$(devbridge_api \
+  -X POST "$DEVBRIDGE_API/tunnels" \
   -H "Content-Type: application/json" \
-  -d '{
-    "name": "local-web",
-    "description": "Local web development tunnel",
-    "clusterId": "cn-north-4-bridge",
-    "expiration": 72,
-    "type": "bridge"
-  }'</code></pre>
+  -d "{
+    \"name\": \"local-web\",
+    \"description\": \"Share the local web application\",
+    \"clusterId\": \"$DEVBRIDGE_CLUSTER\",
+    \"expiration\": 72,
+    \"type\": \"bridge\"
+  }")
+
+export TUNNEL_ID=$(printf '%s' "$TUNNEL" | jq -r .tunnelId)
+export TUNNEL_HOST=$(printf '%s' "$TUNNEL" | jq -r .url)
+
+printf 'Tunnel ID: %s\nTunnel host: %s\n' "$TUNNEL_ID" "$TUNNEL_HOST"</code></pre>
           </div>
-          <p>响应直接返回隧道资源，不额外包装 <code>result</code>：</p>
+          <p>输出类似：</p>
           <div class="code-block response">
-            <div class="code-header"><span>JSON</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>{
-  "name": "local-web",
-  "tunnelId": "km5q7d2a",
-  "tunnelCode": 277278047059,
-  "clusterId": "cn-north-4-bridge",
-  "description": "Local web development tunnel",
-  "bandwidthUsed": 0,
-  "tunnelExpiration": 72,
-  "created": 1784606400,
-  "url": "km5q7d2a.cn-north-4-bridge.myhuaweicloud.com",
-  "type": "bridge"
-}</code></pre>
+            <div class="code-header"><span>Text</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>Tunnel ID: km5q7d2a
+Tunnel host: km5q7d2a.cn-north-4-bridge.myhuaweicloud.com</code></pre>
           </div>
 
           <dl class="field-notes">
-            <div><dt><code>tunnelId</code></dt><dd>40 位 tunnelCode 的 8 位小写 Base32 表示，用于 API 路径和访问主机名。</dd></div>
-            <div><dt><code>tunnelExpiration</code></dt><dd>创建或更新时选择的有效期规格，单位为小时，不是持续递减的剩余秒数。</dd></div>
-            <div><dt><code>url</code></dt><dd>隧道主机名。最终协议、端口和路由方式由端口策略及 Relay Gateway 决定。</dd></div>
+            <div><dt><code>TUNNEL_ID</code></dt><dd>隧道的短标识。查询、更新、配置端口和签发令牌时都会用到。</dd></div>
+            <div><dt><code>TUNNEL_HOST</code></dt><dd>隧道主机名。RelayService 建立宿主连接后，Gateway 才能在该隧道上接收访问请求。</dd></div>
+            <div><dt><code>expiration</code></dt><dd>隧道有效期规格。默认 72 小时，最短 1 小时，最长 720 小时（30 天）。</dd></div>
           </dl>
         </section>
 
         <section id="port">
-          <h2>2. 配置端口</h2>
-          <p>端口策略决定 Gateway 如何识别转发协议，以及连接端是否必须携带 <code>connect</code> 令牌。创建端口时三个字段都必填。</p>
+          <h2>2. 开放本地端口</h2>
+          <p>隧道默认不开放任何端口。下面把本地 Web 服务使用的 <code>8080</code> 端口加入隧道，并要求访问者提供 connect 令牌：</p>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>export TUNNEL_ID="km5q7d2a"
-
-curl --fail --silent --show-error \
-  --cert "$RELAY_CLIENT_CERT" \
-  --key "$RELAY_CLIENT_KEY" \
-  --cacert "$RELAY_CA_CERT" \
-  -X POST "$RELAY_API/tunnels/$TUNNEL_ID/ports" \
-  -H "X-Namespace: $RELAY_NAMESPACE" \
+            <pre><code>devbridge_api \
+  -X POST "$DEVBRIDGE_API/tunnels/$TUNNEL_ID/ports" \
   -H "Content-Type: application/json" \
   -d '{
     "port": 8080,
     "protocol": "http",
     "allowAnonymous": false
-  }'</code></pre>
+  }' | jq</code></pre>
           </div>
 
           <table>
-            <thead><tr><th>字段</th><th>可选值</th><th>说明</th></tr></thead>
+            <thead><tr><th>设置</th><th>如何选择</th></tr></thead>
             <tbody>
-              <tr><td><code>protocol</code></td><td><code>http</code>、<code>https</code>、<code>auto</code></td><td><code>auto</code> 由数据面识别实际协议。</td></tr>
-              <tr><td><code>allowAnonymous</code></td><td><code>true</code>、<code>false</code></td><td>为 <code>false</code> 时，连接端需要有效的 connect 令牌。</td></tr>
+              <tr><td><code>protocol: http</code></td><td>本地服务直接接收 HTTP。</td></tr>
+              <tr><td><code>protocol: https</code></td><td>本地服务自身启用了 HTTPS。</td></tr>
+              <tr><td><code>protocol: auto</code></td><td>希望数据面自动识别协议。</td></tr>
+              <tr><td><code>allowAnonymous: false</code></td><td>仅允许持有 connect 令牌的成员访问。</td></tr>
+              <tr><td><code>allowAnonymous: true</code></td><td>允许任何获得隧道地址的人访问。</td></tr>
             </tbody>
           </table>
-          <p>更新端口时，<code>protocol</code> 和 <code>allowAnonymous</code> 均为可选字段，只提交需要修改的值。</p>
+          <div class="notice warning">
+            <strong>公开前先判断内容</strong>
+            <p>本地管理后台、调试接口和包含用户数据的服务不应启用匿名访问。对不确定的场景保持 <code>false</code>。</p>
+          </div>
         </section>
 
-        <section id="token">
-          <h2>3. 签发连接令牌</h2>
-          <p>每条隧道有两类独立令牌。每次调用都签发一个新 JWT，不复用、不缓存，也不存入 Redis。</p>
+        <section id="host">
+          <h2>3. 托管本地服务</h2>
+          <p>宿主端需要一个 <code>host</code> 令牌，证明它有权为这条隧道提供服务。每次请求都会生成新令牌：</p>
+          <div class="code-block">
+            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>HOST_CREDENTIAL=$(devbridge_api \
+  -X POST "$DEVBRIDGE_API/tunnels/$TUNNEL_ID/token?scope=host")
+
+export HOST_TOKEN=$(printf '%s' "$HOST_CREDENTIAL" | jq -r .token)
+printf 'Host token expires at: %s\n' \
+  "$(printf '%s' "$HOST_CREDENTIAL" | jq -r .expiration)"</code></pre>
+          </div>
+
+          <p>在 RelayService 中创建宿主连接时提供以下四项输入：</p>
+          <table>
+            <thead><tr><th>输入</th><th>本文示例</th><th>作用</th></tr></thead>
+            <tbody>
+              <tr><td>隧道 ID</td><td><code>$TUNNEL_ID</code></td><td>选择要托管的隧道。</td></tr>
+              <tr><td>接入集群</td><td><code>$DEVBRIDGE_CLUSTER</code></td><td>连接当前区域的隧道网关。</td></tr>
+              <tr><td>本地地址</td><td><code>127.0.0.1:8080</code></td><td>指定流量最终转发到哪里。</td></tr>
+              <tr><td>宿主令牌</td><td><code>$HOST_TOKEN</code></td><td>授权 RelayService 建立宿主连接。</td></tr>
+            </tbody>
+          </table>
+          <p>宿主连接建立成功后保持 RelayService 运行。关闭 RelayService 会中断流量，但不会立即删除隧道配置。</p>
+          <div class="notice note">
+            <strong>RelayService 启动方式</strong>
+            <p>不同 RelayService 版本可能使用命令行参数或配置文件。按当前客户端的启动说明传入上述四项值；连接成功后，客户端应显示宿主连接状态和 Gateway 提供的最终访问地址。</p>
+          </div>
+        </section>
+
+        <section id="connect">
+          <h2>4. 访问隧道</h2>
+          <p>访问方式取决于端口是否允许匿名访问。</p>
 
           <div class="token-grid">
             <div>
-              <h3><code>host</code></h3>
-              <p>交给 RelayService，用于声明并托管本地服务。</p>
+              <h3>匿名访问</h3>
+              <p><code>allowAnonymous: true</code> 时，访问者只需要 Gateway 提供的最终访问地址。</p>
             </div>
             <div>
-              <h3><code>connect</code></h3>
-              <p>交给访问端，用于连接禁止匿名访问的端口。</p>
+              <h3>受保护访问</h3>
+              <p><code>allowAnonymous: false</code> 时，访问者还必须携带 connect 令牌。</p>
             </div>
           </div>
 
+          <p>为受保护访问签发一个新的 connect 令牌：</p>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>curl --fail --silent --show-error \
-  --cert "$RELAY_CLIENT_CERT" \
-  --key "$RELAY_CLIENT_KEY" \
-  --cacert "$RELAY_CA_CERT" \
-  -X POST "$RELAY_API/tunnels/$TUNNEL_ID/token?scope=host" \
-  -H "X-Namespace: $RELAY_NAMESPACE"
+            <pre><code>CONNECT_CREDENTIAL=$(devbridge_api \
+  -X POST "$DEVBRIDGE_API/tunnels/$TUNNEL_ID/token?scope=connect")
 
-curl --fail --silent --show-error \
-  --cert "$RELAY_CLIENT_CERT" \
-  --key "$RELAY_CLIENT_KEY" \
-  --cacert "$RELAY_CA_CERT" \
-  -X POST "$RELAY_API/tunnels/$TUNNEL_ID/token?scope=connect" \
-  -H "X-Namespace: $RELAY_NAMESPACE"</code></pre>
+export CONNECT_TOKEN=$(printf '%s' "$CONNECT_CREDENTIAL" | jq -r .token)
+printf 'Connect token expires at: %s\n' \
+  "$(printf '%s' "$CONNECT_CREDENTIAL" | jq -r .expiration)"</code></pre>
           </div>
-          <div class="code-block response">
-            <div class="code-header"><span>JSON</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>{
-  "tunnelId": "km5q7d2a",
-  "scope": "host",
-  "lifetime": 3600,
-  "expiration": 1784610000,
-  "token": "eyJ..."
-}</code></pre>
-          </div>
-          <p><code>lifetime</code> 的单位是秒，取服务端固定配置 <code>relay.jwt.token.ttl-seconds</code>，不随隧道有效期变化。响应带有 <code>Cache-Control: no-store</code>。</p>
-          <div class="notice warning">
-            <strong>令牌安全</strong>
-            <p>令牌是短期凭据。不要写入日志、仓库、URL 参数或前端持久化存储；只把对应 scope 的令牌交给实际使用方。</p>
+
+          <p>把 Gateway 显示的最终访问地址和 <code>CONNECT_TOKEN</code> 通过安全渠道交给访问者。访问端如何携带令牌由 Relay Gateway 或 DevBridge 客户端协议决定。</p>
+          <div class="notice important">
+            <strong>主机名不是完整访问地址</strong>
+            <p>创建隧道返回的 <code>url</code> 是隧道主机名。不要自行拼接协议、端口或令牌；以宿主连接建立后 Relay Gateway 返回或展示的地址为准。</p>
           </div>
         </section>
 
         <section id="manage">
-          <h2>4. 查询和清理</h2>
-          <p>列表接口只返回当前 namespace 下未过期的隧道，可按 cluster 过滤。响应中的 <code>portCount</code> 便于调用方判断端口策略数量。</p>
+          <h2>5. 管理与清理</h2>
+          <p>查看当前空间下仍然有效的隧道：</p>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code># 查询当前 cluster 的隧道
-curl --fail --silent --show-error \
-  --cert "$RELAY_CLIENT_CERT" --key "$RELAY_CLIENT_KEY" --cacert "$RELAY_CA_CERT" \
-  -H "X-Namespace: $RELAY_NAMESPACE" \
-  "$RELAY_API/tunnels?clusterId=$RELAY_CLUSTER"
-
-# 查询单条隧道
-curl --fail --silent --show-error \
-  --cert "$RELAY_CLIENT_CERT" --key "$RELAY_CLIENT_KEY" --cacert "$RELAY_CA_CERT" \
-  -H "X-Namespace: $RELAY_NAMESPACE" \
-  "$RELAY_API/tunnels/$TUNNEL_ID"
-
-# 物理删除隧道及其端口策略
-curl --fail --silent --show-error \
-  --cert "$RELAY_CLIENT_CERT" --key "$RELAY_CLIENT_KEY" --cacert "$RELAY_CA_CERT" \
-  -X DELETE -H "X-Namespace: $RELAY_NAMESPACE" \
-  "$RELAY_API/tunnels/$TUNNEL_ID"</code></pre>
+            <pre><code>devbridge_api \
+  "$DEVBRIDGE_API/tunnels?clusterId=$DEVBRIDGE_CLUSTER" \
+  | jq '.[] | {
+      tunnelId,
+      name,
+      tunnelExpiration,
+      url,
+      portCount
+    }'</code></pre>
           </div>
-          <p>删除是物理删除。过期隧道不会出现在列表中，并在保留期后由老化任务清理。</p>
+
+          <p>不再需要隧道时主动删除，避免遗留可访问入口：</p>
+          <div class="code-block">
+            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>devbridge_api \
+  -X DELETE "$DEVBRIDGE_API/tunnels/$TUNNEL_ID"</code></pre>
+          </div>
+          <p>删除隧道会同时移除它的端口策略。已有令牌不能再用于已删除或过期的隧道。</p>
         </section>
 
-        <section id="api">
-          <h2>API 概览</h2>
-          <p>所有 namespace 范围内的接口都必须携带 <code>X-Namespace</code>。完整字段和约束以 <a href="openapi.yaml">OpenAPI YAML</a> 为准。</p>
-          <div class="api-table-wrap">
-            <table class="api-table">
-              <thead><tr><th>方法</th><th>路径</th><th>用途</th></tr></thead>
-              <tbody>
-                <tr><td><span class="method post">POST</span></td><td><code>/tunnels</code></td><td>创建隧道</td></tr>
-                <tr><td><span class="method get">GET</span></td><td><code>/tunnels</code></td><td>列出当前 namespace 的隧道</td></tr>
-                <tr><td><span class="method get">GET</span></td><td><code>/tunnels/{tunnelId}</code></td><td>查询隧道详情</td></tr>
-                <tr><td><span class="method put">PUT</span></td><td><code>/tunnels/{tunnelId}</code></td><td>更新隧道</td></tr>
-                <tr><td><span class="method delete">DELETE</span></td><td><code>/tunnels/{tunnelId}</code></td><td>删除隧道</td></tr>
-                <tr><td><span class="method post">POST</span></td><td><code>/tunnels/{tunnelId}/token?scope=</code></td><td>签发 host 或 connect 令牌</td></tr>
-                <tr><td><span class="method post">POST</span></td><td><code>/tunnels/{tunnelId}/ports</code></td><td>创建端口策略</td></tr>
-                <tr><td><span class="method get">GET</span></td><td><code>/tunnels/{tunnelId}/ports</code></td><td>列出端口策略</td></tr>
-                <tr><td><span class="method put">PUT</span></td><td><code>/tunnels/{tunnelId}/ports/{port}</code></td><td>更新端口策略</td></tr>
-                <tr><td><span class="method delete">DELETE</span></td><td><code>/tunnels/{tunnelId}/ports/{port}</code></td><td>删除端口策略</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <p class="muted">上述路径均相对于 <code>/open-api-inner/v1/relay-controller</code>。Gateway 端口策略查询和 metering 是服务间接口，不属于本快速入门的调用链。</p>
-        </section>
-
-        <section id="errors">
-          <h2>错误处理</h2>
-          <p>参数错误返回 4xx，服务内部错误返回 5xx。错误响应统一使用 <code>error</code> 对象：</p>
-          <div class="code-block response">
-            <div class="code-header"><span>JSON</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>{
-  "error": {
-    "code": "40000",
-    "message": "request validation failed",
-    "target": "request",
-    "details": [
-      {
-        "code": "40000",
-        "target": "expiration",
-        "message": "must be less than or equal to 720"
-      }
-    ]
-  }
-}</code></pre>
-          </div>
-          <p>调用方应先根据 HTTP 状态码区分请求问题和服务问题，再使用 <code>error.code</code> 做稳定分支。<code>message</code> 用于诊断，不建议作为程序判断条件。</p>
-        </section>
-
-        <section id="boundaries">
-          <h2>业务边界与约束</h2>
+        <section id="rules">
+          <h2>使用规则</h2>
           <ul>
-            <li>一个 Relay Controller 实例只管理配置 region 下的 cluster，不信任跨 region 的 cluster 数据。</li>
-            <li>每个 namespace 默认最多拥有 10 条有效隧道；过期和已删除记录不占配额。</li>
-            <li><code>namespace</code>、<code>clusterId</code> 和 <code>tunnelId</code> 会参与隔离校验，调用方不能只凭 tunnelId 访问资源。</li>
-            <li>Relay Controller 只管理控制面；连接数、实时上传和下载速率需要数据面上报，本版不在隧道列表中展示。</li>
-            <li>metering 接口已预留，但本期未对接，不应作为计费依据。</li>
-            <li>多副本部署时，流控和 namespace 配额需要由 Redis 或网关提供一致性；单机内存计数只能作为实例级保护。</li>
+            <li>一条隧道属于一个工作空间和一个接入集群，不能跨隔离空间访问。</li>
+            <li>每个工作空间默认最多保留 10 条有效隧道。</li>
+            <li>隧道默认有效 72 小时，最长 30 天；列表只显示尚未过期的隧道。</li>
+            <li>隧道有效期和令牌有效期相互独立。令牌过期后可以重新签发，不需要重建隧道。</li>
+            <li>host 与 connect 令牌用途不同，不能互换。</li>
+            <li>端口未显式加入隧道时默认拒绝访问。</li>
           </ul>
+
+          <div class="notice warning">
+            <strong>保护凭据</strong>
+            <p>不要把客户端私钥、host 令牌或 connect 令牌写入仓库、日志和工单。令牌响应禁止缓存，使用方也应只在需要的进程内保存。</p>
+          </div>
+        </section>
+
+        <section id="faq">
+          <h2>常见问题</h2>
+          <dl class="faq-list">
+            <div><dt>页面应该显示“72 小时”还是持续倒计时？</dt><dd><code>tunnelExpiration</code> 表示创建时选择的固定规格，应显示“72 小时”或“3 天”。服务端会单独判断实际是否过期。</dd></div>
+            <div><dt>为什么隧道存在但仍然无法访问？</dt><dd>依次检查端口是否已开放、RelayService 宿主连接是否在线、host 令牌是否有效，以及访问者是否需要 connect 令牌。</dd></div>
+            <div><dt>关闭本地服务会删除隧道吗？</dt><dd>不会。流量会中断，但隧道和端口策略会保留到主动删除或过期清理。</dd></div>
+            <div><dt>可以公开调试接口吗？</dt><dd>技术上可以，但不建议。优先保持 <code>allowAnonymous: false</code>，并只向明确的协作者发放短期 connect 令牌。</dd></div>
+          </dl>
         </section>
 
         <section class="next-steps">
-          <h2>后续步骤</h2>
+          <h2>参考资料</h2>
           <div class="next-links">
-            <a href="openapi.yaml"><strong>查看 OpenAPI 定义</strong><span>获取所有请求、响应和校验规则</span></a>
-            <a href="https://github.com/lizhicheng00/demo" rel="noreferrer"><strong>查看 Relay Controller</strong><span>了解部署配置和服务端实现</span></a>
+            <a href="openapi.yaml"><strong>REST API 定义</strong><span>查看完整请求字段、响应和校验规则</span></a>
+            <a href="https://github.com/lizhicheng00/demo" rel="noreferrer"><strong>Relay Controller 源代码</strong><span>供平台开发和部署人员查看服务端实现</span></a>
           </div>
         </section>
 
         <footer class="article-footer">
-          <p>文档版本：Relay Controller API v1</p>
+          <p>适用于 DevBridge 开发隧道 API v1</p>
         </footer>
       </article>
 
       <aside class="toc" aria-label="本文目录">
         <p>本文内容</p>
         <nav>
+          <a href="#how-it-works">工作原理</a>
           <a href="#prerequisites">准备工作</a>
           <a href="#create">创建隧道</a>
-          <a href="#port">配置端口</a>
-          <a href="#token">签发令牌</a>
-          <a href="#manage">查询和清理</a>
-          <a href="#api">API 概览</a>
-          <a href="#errors">错误处理</a>
-          <a href="#boundaries">业务边界</a>
+          <a href="#port">开放端口</a>
+          <a href="#host">托管服务</a>
+          <a href="#connect">访问隧道</a>
+          <a href="#manage">管理与清理</a>
+          <a href="#rules">使用规则</a>
+          <a href="#faq">常见问题</a>
         </nav>
       </aside>
     </main>

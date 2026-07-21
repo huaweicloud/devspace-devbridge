@@ -1,6 +1,6 @@
 # DevBridge Tunnel Documentation
 
-DevBridge Relay Controller 的 GitHub Pages 文档。
+面向 DevBridge 开发隧道使用者的 GitHub Pages 文档。主文档按用户任务组织，Relay Controller API 作为创建、授权和管理隧道的实现入口。
 
 ## Local preview
 
@@ -18,4 +18,4 @@ python3 -m http.server 4173
 
 ## Source of truth
 
-接口字段和路径以 Relay Controller 仓库的 `src/main/resources/static/openapi.yaml` 为准。修改 API 后，应同步本仓库的 `openapi.yaml` 和快速入门示例。
+控制面字段和路径以 Relay Controller 仓库的 `src/main/resources/static/openapi.yaml` 为准。修改隧道业务、RelayService 接入方式或 Gateway 访问协议后，应同步本仓库的快速入门；修改 API 后还应同步 `openapi.yaml`。

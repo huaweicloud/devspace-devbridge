@@ -361,6 +361,11 @@ pre code { padding: 0; color: inherit; background: transparent; font: inherit; o
 .field-notes dt { font-weight: 650; }
 .field-notes dd { margin: 0; color: #4e5560; }
 
+.faq-list { margin: 18px 0 0; border-top: 1px solid var(--border); }
+.faq-list > div { padding: 17px 0; border-bottom: 1px solid var(--border); }
+.faq-list dt { font-weight: 700; }
+.faq-list dd { margin: 5px 0 0; color: #4e5560; }
+
 table {
   width: 100%;
   margin: 20px 0;
@@ -381,21 +386,6 @@ th { background: var(--surface); font-weight: 700; }
 .token-grid > div { border-left: 4px solid var(--teal); padding: 14px 16px; background: var(--surface); }
 .token-grid p { margin: 0; color: var(--muted); }
 
-.method {
-  display: inline-block;
-  min-width: 58px;
-  border-radius: 3px;
-  padding: 2px 6px;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 750;
-  text-align: center;
-}
-
-.method.get { background: #1769aa; }
-.method.post { background: #087f76; }
-.method.put { background: #8b5b00; }
-.method.delete { background: #b4232c; }
 .muted { color: var(--muted); font-size: 14px; }
 
 .next-links { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -447,8 +437,6 @@ th { background: var(--surface); font-weight: 700; }
   .flow-line::after { right: auto; bottom: 7px; border: 0; border-right: 1px solid #8f96a1; border-bottom: 1px solid #8f96a1; transform: rotate(45deg); }
   .token-grid, .next-links { grid-template-columns: 1fr; }
   .field-notes > div { grid-template-columns: 1fr; gap: 4px; }
-  .api-table-wrap { overflow-x: auto; }
-  .api-table { min-width: 680px; }
   pre { font-size: 12px; }
 }
 
