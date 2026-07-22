@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="DevBridge 开发隧道快速入门：安全地托管本地服务，并与团队共享临时访问地址。">
+  <meta name="description" content="DevBridge CLI 快速入门：安装、登录、创建、托管并连接开发隧道。">
   <title>创建并托管开发隧道 | DevBridge 文档</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="assets/styles.css">
@@ -12,16 +12,25 @@
   <a class="skip-link" href="#main">跳到正文</a>
 
   <header class="topbar">
-    <button class="nav-toggle" type="button" aria-label="打开文档导航" aria-expanded="false" aria-controls="sidebar">
-      <span></span><span></span><span></span>
-    </button>
-    <a class="brand" href="./" aria-label="DevBridge 文档首页">
-      <span class="brand-mark" aria-hidden="true">D</span>
-      <span>DevBridge 文档</span>
-    </a>
-    <div class="topbar-links">
-      <a href="openapi.yaml">API 参考</a>
-      <a href="https://github.com/lizhicheng00/demo" rel="noreferrer">源代码</a>
+    <div class="topbar-inner">
+      <button class="nav-toggle" type="button" aria-label="打开文档导航" aria-expanded="false" aria-controls="sidebar">
+        <span></span><span></span><span></span>
+      </button>
+      <a class="brand" href="./" aria-label="DevBridge 文档首页">
+        <span class="brand-mark" aria-hidden="true">D</span>
+        <span>DevBridge 文档</span>
+      </a>
+
+      <div class="search-shell">
+        <label class="sr-only" for="doc-search">搜索文档</label>
+        <input id="doc-search" type="search" placeholder="搜索文档" autocomplete="off" aria-autocomplete="list" aria-controls="search-results" aria-expanded="false">
+        <div id="search-results" class="search-results" role="listbox" hidden></div>
+      </div>
+
+      <div class="topbar-links">
+        <a href="#command-reference">CLI 参考</a>
+        <a href="https://github.com/lizhicheng00/demo" rel="noreferrer">源代码</a>
+      </div>
     </div>
   </header>
 
@@ -29,17 +38,44 @@
     <aside class="sidebar" id="sidebar" aria-label="文档导航">
       <div class="sidebar-inner">
         <p class="sidebar-title">开发隧道</p>
-        <nav>
-          <a class="active" href="#overview">快速入门</a>
-          <a href="#how-it-works">工作原理</a>
-          <a href="#prerequisites">准备工作</a>
-          <a href="#create">创建隧道</a>
-          <a href="#port">开放本地端口</a>
-          <a href="#host">托管本地服务</a>
-          <a href="#connect">访问隧道</a>
-          <a href="#manage">管理与清理</a>
-          <a href="#rules">使用规则</a>
-          <a href="#faq">常见问题</a>
+        <nav class="doc-nav">
+          <div class="nav-group">
+            <button class="nav-group-toggle" type="button" aria-expanded="true">
+              <span>开始使用</span><span class="chevron" aria-hidden="true"></span>
+            </button>
+            <div class="nav-group-items">
+              <a class="active" href="#overview">快速入门</a>
+              <a href="#features">功能特性</a>
+              <a href="#install">安装 CLI</a>
+              <a href="#login">登录</a>
+              <a href="#host-quickstart">托管隧道</a>
+              <a href="#connect-quickstart">连接隧道</a>
+            </div>
+          </div>
+
+          <div class="nav-group">
+            <button class="nav-group-toggle" type="button" aria-expanded="true">
+              <span>管理隧道</span><span class="chevron" aria-hidden="true"></span>
+            </button>
+            <div class="nav-group-items">
+              <a href="#tunnel-management">隧道管理</a>
+              <a href="#port-management">端口管理</a>
+              <a href="#default-tunnel">默认隧道</a>
+              <a href="#forwarding">远程端口转发</a>
+            </div>
+          </div>
+
+          <div class="nav-group">
+            <button class="nav-group-toggle" type="button" aria-expanded="true">
+              <span>安全与配置</span><span class="chevron" aria-hidden="true"></span>
+            </button>
+            <div class="nav-group-items">
+              <a href="#authentication">认证方式</a>
+              <a href="#credentials">凭证与重连</a>
+              <a href="#directories">目录说明</a>
+              <a href="#command-reference">命令速查</a>
+            </div>
+          </div>
         </nav>
       </div>
     </aside>
@@ -50,290 +86,397 @@
           <a href="./">文档</a><span>/</span><span>开发隧道</span><span>/</span><span>快速入门</span>
         </div>
 
-        <section id="overview" class="article-header">
+        <section id="overview" class="article-header" data-search-title="创建并托管开发隧道">
           <p class="eyebrow">快速入门</p>
           <h1>创建并托管开发隧道</h1>
-          <p class="lead">将本机正在运行的 Web 服务安全地接入 DevBridge，让团队成员在无需部署测试环境的情况下访问和验证你的改动。</p>
-          <div class="article-meta">预计用时：10 分钟 · 使用 REST API</div>
+          <p class="lead">使用 <code>guacamole</code> CLI 将本机服务安全地开放给远程客户端，并控制谁可以访问。</p>
+          <div class="article-meta">预计用时：10 分钟 · 适用于 CLI 1.0.0</div>
         </section>
 
         <div class="notice important">
-          <strong>完成本快速入门后</strong>
-          <p>本地 <code>127.0.0.1:8080</code> 会对应一条有有效期的开发隧道。你可以允许匿名访问，也可以只向持有 connect 令牌的成员开放。</p>
+          <strong>你将完成什么</strong>
+          <p>安装并登录 CLI，启动一条转发本地 <code>8080</code> 端口的隧道，然后从另一台设备连接该隧道。</p>
         </div>
 
         <section class="in-this-article" aria-labelledby="article-index-title">
           <h2 id="article-index-title">本文内容</h2>
           <ul>
-            <li><a href="#create">创建一条 72 小时的隧道</a></li>
-            <li><a href="#port">把本地 8080 端口加入隧道</a></li>
-            <li><a href="#host">授权宿主端托管本地服务</a></li>
-            <li><a href="#connect">向访问者提供受保护的连接</a></li>
+            <li><a href="#install">安装并验证 CLI</a></li>
+            <li><a href="#login">使用交互登录或 AK/SK 登录</a></li>
+            <li><a href="#host-quickstart">托管一个本地 Web 服务</a></li>
+            <li><a href="#connect-quickstart">从远程客户端连接隧道</a></li>
           </ul>
         </section>
 
-        <section id="how-it-works" class="architecture">
-          <h2>工作原理</h2>
-          <p>开发隧道在本地服务和远程访问者之间建立一条临时通道。DevBridge 管理隧道、端口和权限；RelayService 与隧道网关负责建立连接和转发实际流量。</p>
-          <div class="flow" role="img" aria-label="本地开发服务通过 DevBridge 隧道连接到远程浏览器或客户端">
-            <div class="flow-node"><span>01</span><strong>本地服务</strong><small>127.0.0.1:8080</small></div>
-            <div class="flow-line"><b>托管</b></div>
-            <div class="flow-node primary"><span>02</span><strong>DevBridge 隧道</strong><small>临时地址 + 访问策略</small></div>
-            <div class="flow-line"><b>访问</b></div>
-            <div class="flow-node"><span>03</span><strong>团队成员</strong><small>浏览器或客户端</small></div>
+        <section id="features" data-search-title="功能特性">
+          <h2>功能特性</h2>
+          <p>DevBridge CLI 覆盖开发隧道从创建到连接的完整工作流：</p>
+          <div class="feature-list">
+            <div><strong>隧道管理</strong><span>创建、查看、更新、删除和选择默认隧道。</span></div>
+            <div><strong>端口管理</strong><span>为一条隧道配置多个 HTTP、HTTPS 或自动识别端口。</span></div>
+            <div><strong>Host 模式</strong><span>把本机一个或多个端口转发到 DevBridge。</span></div>
+            <div><strong>Connect 模式</strong><span>从远程客户端连接隧道并建立本地端口映射。</span></div>
+            <div><strong>多种认证</strong><span>支持交互登录、AK/SK 和临时 Security Token。</span></div>
+            <div><strong>稳定连接</strong><span>安全保存凭证，网络中断后自动重新连接。</span></div>
           </div>
-          <p class="caption">隧道不会把源代码或本地文件上传到 DevBridge，只转发已开放端口上的连接。</p>
         </section>
 
-        <section id="prerequisites">
-          <h2>准备工作</h2>
-          <p>开始前，请确认你具备：</p>
-          <ul>
-            <li>一个可用的 DevBridge 工作空间（namespace）和接入集群（cluster），例如 <code>ns-demo</code>、<code>cn-north-4-bridge</code>。</li>
-            <li>用于访问 DevBridge API 的客户端证书、私钥和 CA 证书。</li>
-            <li><code>curl</code> 和 <code>jq</code>。</li>
-            <li>已经在本机启动的服务。本文假设它监听 <code>127.0.0.1:8080</code>。</li>
-            <li>已经安装并配置好的 RelayService 客户端。</li>
-          </ul>
+        <section id="install" data-search-title="安装 DevBridge CLI">
+          <h2>安装</h2>
+          <p>使用 <code>install.sh</code> 安装 CLI。默认可执行文件目录是 <code>~/.huawei/bin</code>，默认配置目录是 <code>~/.huawei/devbridge</code>。</p>
 
-          <p>设置本文会用到的环境变量：</p>
+          <div class="tabs" data-tabs="install">
+            <div class="tab-list" role="tablist" aria-label="安装方式">
+              <button type="button" role="tab" id="tab-default" aria-controls="panel-default" aria-selected="true">默认安装</button>
+              <button type="button" role="tab" id="tab-directory" aria-controls="panel-directory" aria-selected="false">指定目录</button>
+              <button type="button" role="tab" id="tab-source" aria-controls="panel-source" aria-selected="false">指定下载源</button>
+              <button type="button" role="tab" id="tab-silent" aria-controls="panel-silent" aria-selected="false">静默安装</button>
+            </div>
+
+            <div id="panel-default" class="tab-panel" role="tabpanel" aria-labelledby="tab-default">
+              <div class="code-block">
+                <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+                <pre><code>bash install.sh -v 1.0.0</code></pre>
+              </div>
+              <p>将指定版本安装到 <code>~/.huawei/bin</code>。</p>
+            </div>
+
+            <div id="panel-directory" class="tab-panel" role="tabpanel" aria-labelledby="tab-directory" hidden>
+              <div class="code-block">
+                <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+                <pre><code>bash install.sh -d /path/to/bin -v 1.0.0</code></pre>
+              </div>
+              <p><code>-d</code> 指定 CLI 可执行文件的安装目录。</p>
+            </div>
+
+            <div id="panel-source" class="tab-panel" role="tabpanel" aria-labelledby="tab-source" hidden>
+              <div class="code-block">
+                <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+                <pre><code>bash install.sh -u https://downloads.example.com/devbridge -v 1.0.0</code></pre>
+              </div>
+              <p><code>-u</code> 指定安装包下载源，适用于内网镜像或测试仓库。</p>
+            </div>
+
+            <div id="panel-silent" class="tab-panel" role="tabpanel" aria-labelledby="tab-silent" hidden>
+              <div class="code-block">
+                <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+                <pre><code>bash install.sh -d ./bin -s</code></pre>
+              </div>
+              <p><code>-s</code> 以静默模式安装，只保留必要的结果和错误输出。</p>
+            </div>
+          </div>
+
+          <p>安装完成后，将默认目录加入 <code>PATH</code> 并检查版本：</p>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>export DEVBRIDGE_ENDPOINT="https://devbridge-api.example.com"
-export DEVBRIDGE_API="$DEVBRIDGE_ENDPOINT/open-api-inner/v1/relay-controller"
-export DEVBRIDGE_NAMESPACE="ns-demo"
-export DEVBRIDGE_CLUSTER="cn-north-4-bridge"
-
-export DEVBRIDGE_CLIENT_CERT="./client.crt"
-export DEVBRIDGE_CLIENT_KEY="./client.key"
-export DEVBRIDGE_CA_CERT="./ca.crt"
-
-devbridge_api() {
-  curl --fail --silent --show-error \
-    --cert "$DEVBRIDGE_CLIENT_CERT" \
-    --key "$DEVBRIDGE_CLIENT_KEY" \
-    --cacert "$DEVBRIDGE_CA_CERT" \
-    -H "X-Namespace: $DEVBRIDGE_NAMESPACE" \
-    "$@"
-}</code></pre>
+            <pre><code>export PATH="$HOME/.huawei/bin:$PATH"
+guacamole --version</code></pre>
           </div>
           <div class="notice note">
-            <strong>从平台获取这些值</strong>
-            <p>namespace 表示你的隔离空间，cluster 表示隧道接入位置。请使用平台分配的值，不要自行猜测或复用其他用户的工作空间。</p>
+            <strong>持久化 PATH</strong>
+            <p>把上述 <code>export</code> 写入 <code>~/.bashrc</code> 或 <code>~/.zshrc</code>，重新打开终端后即可直接运行 <code>guacamole</code>。</p>
           </div>
         </section>
 
-        <section id="create">
-          <h2>1. 创建隧道</h2>
-          <p>创建一条名为 <code>local-web</code> 的隧道，并把返回结果保存到环境变量。<code>expiration</code> 的单位是小时：</p>
+        <section id="login" data-search-title="登录 DevBridge">
+          <h2>登录</h2>
+          <p>托管或连接隧道前必须先登录。个人开发环境优先使用交互登录：</p>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>TUNNEL=$(devbridge_api \
-  -X POST "$DEVBRIDGE_API/tunnels" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"name\": \"local-web\",
-    \"description\": \"Share the local web application\",
-    \"clusterId\": \"$DEVBRIDGE_CLUSTER\",
-    \"expiration\": 72,
-    \"type\": \"bridge\"
-  }")
-
-export TUNNEL_ID=$(printf '%s' "$TUNNEL" | jq -r .tunnelId)
-export TUNNEL_HOST=$(printf '%s' "$TUNNEL" | jq -r .url)
-
-printf 'Tunnel ID: %s\nTunnel host: %s\n' "$TUNNEL_ID" "$TUNNEL_HOST"</code></pre>
+            <pre><code>guacamole auth login</code></pre>
           </div>
-          <p>输出类似：</p>
+          <p>CLI 会引导你完成身份认证，并把登录凭据保存到受保护的凭证存储中。</p>
+
+          <p>自动化环境可以使用 AK/SK；临时凭证还应提供 Security Token：</p>
+          <div class="code-block">
+            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code># 长期 AK/SK
+guacamole auth login \
+  --access-key "$DEVBRIDGE_ACCESS_KEY" \
+  --secret-key "$DEVBRIDGE_SECRET_KEY"
+
+# 临时 AK/SK
+guacamole auth login \
+  --access-key "$DEVBRIDGE_ACCESS_KEY" \
+  --secret-key "$DEVBRIDGE_SECRET_KEY" \
+  --security-token "$DEVBRIDGE_SECURITY_TOKEN"</code></pre>
+          </div>
+
+          <p>检查当前身份或清除本地登录状态：</p>
+          <div class="code-block">
+            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>guacamole auth status
+guacamole auth logout</code></pre>
+          </div>
+          <div class="notice warning">
+            <strong>不要把密钥写进命令历史</strong>
+            <p>在自动化环境中通过受保护的环境变量或密钥服务注入 AK、SK 和 Security Token，不要把真实值直接写入脚本或仓库。</p>
+          </div>
+        </section>
+
+        <section id="host-quickstart" data-search-title="Host 模式托管本地服务">
+          <h2>Host：托管本地服务</h2>
+          <p>下面的示例先在本机启动一个测试服务，再创建一条有效期为 8 小时的临时隧道并托管端口 <code>8080</code>。</p>
+
+          <h3>1. 启动本地服务</h3>
+          <div class="code-block">
+            <div class="code-header"><span>终端 1</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>python3 -m http.server 8080</code></pre>
+          </div>
+
+          <h3>2. 托管端口</h3>
+          <p>为方便阅读，后续示例使用 <code>g</code> 作为 <code>guacamole</code> 的别名：</p>
+          <div class="code-block">
+            <div class="code-header"><span>终端 2</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>alias g=guacamole
+g host -p 8080 -d "Local web server" -e 8</code></pre>
+          </div>
+
+          <p>未指定隧道 ID 时，<code>host</code> 会创建临时隧道、配置端口并立即建立宿主连接。成功后输出类似：</p>
           <div class="code-block response">
-            <div class="code-header"><span>Text</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>Tunnel ID: km5q7d2a
-Tunnel host: km5q7d2a.cn-north-4-bridge.myhuaweicloud.com</code></pre>
+            <div class="code-header"><span>输出</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>Created tunnel: km5q7d2a
+Hosting port 8080
+Tunnel URL: https://km5q7d2a.cn-north-4-bridge.myhuaweicloud.com
+Ready to accept connections
+Auto reconnect: enabled</code></pre>
           </div>
-
-          <dl class="field-notes">
-            <div><dt><code>TUNNEL_ID</code></dt><dd>隧道的短标识。查询、更新、配置端口和签发令牌时都会用到。</dd></div>
-            <div><dt><code>TUNNEL_HOST</code></dt><dd>隧道主机名。RelayService 建立宿主连接后，Gateway 才能在该隧道上接收访问请求。</dd></div>
-            <div><dt><code>expiration</code></dt><dd>隧道有效期规格。默认 72 小时，最短 1 小时，最长 720 小时（30 天）。</dd></div>
-          </dl>
+          <p>保持该进程运行。网络短暂中断时 CLI 会自动重连；结束进程会停止转发，但已创建的隧道仍按有效期保留。</p>
         </section>
 
-        <section id="port">
-          <h2>2. 开放本地端口</h2>
-          <p>隧道默认不开放任何端口。下面把本地 Web 服务使用的 <code>8080</code> 端口加入隧道，并要求访问者提供 connect 令牌：</p>
+        <section id="connect-quickstart" data-search-title="Connect 模式连接隧道">
+          <h2>Connect：连接隧道</h2>
+          <p>在另一台已经安装并登录 CLI 的设备上，使用 Host 输出的隧道 ID 建立连接：</p>
           <div class="code-block">
-            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>devbridge_api \
-  -X POST "$DEVBRIDGE_API/tunnels/$TUNNEL_ID/ports" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "port": 8080,
-    "protocol": "http",
-    "allowAnonymous": false
-  }' | jq</code></pre>
+            <div class="code-header"><span>远程终端</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>alias g=guacamole
+g connect km5q7d2a</code></pre>
           </div>
 
-          <table>
-            <thead><tr><th>设置</th><th>如何选择</th></tr></thead>
-            <tbody>
-              <tr><td><code>protocol: http</code></td><td>本地服务直接接收 HTTP。</td></tr>
-              <tr><td><code>protocol: https</code></td><td>本地服务自身启用了 HTTPS。</td></tr>
-              <tr><td><code>protocol: auto</code></td><td>希望数据面自动识别协议。</td></tr>
-              <tr><td><code>allowAnonymous: false</code></td><td>仅允许持有 connect 令牌的成员访问。</td></tr>
-              <tr><td><code>allowAnonymous: true</code></td><td>允许任何获得隧道地址的人访问。</td></tr>
-            </tbody>
-          </table>
-          <div class="notice warning">
-            <strong>公开前先判断内容</strong>
-            <p>本地管理后台、调试接口和包含用户数据的服务不应启用匿名访问。对不确定的场景保持 <code>false</code>。</p>
+          <p>Connect 模式读取隧道的端口配置，并在本机建立对应映射。输出类似：</p>
+          <div class="code-block response">
+            <div class="code-header"><span>输出</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>Connected to tunnel: km5q7d2a
+Forwarding localhost:8080 -> tunnel port 8080
+Auto reconnect: enabled</code></pre>
           </div>
-        </section>
-
-        <section id="host">
-          <h2>3. 托管本地服务</h2>
-          <p>宿主端需要一个 <code>host</code> 令牌，证明它有权为这条隧道提供服务。每次请求都会生成新令牌：</p>
-          <div class="code-block">
-            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>HOST_CREDENTIAL=$(devbridge_api \
-  -X POST "$DEVBRIDGE_API/tunnels/$TUNNEL_ID/token?scope=host")
-
-export HOST_TOKEN=$(printf '%s' "$HOST_CREDENTIAL" | jq -r .token)
-printf 'Host token expires at: %s\n' \
-  "$(printf '%s' "$HOST_CREDENTIAL" | jq -r .expiration)"</code></pre>
-          </div>
-
-          <p>在 RelayService 中创建宿主连接时提供以下四项输入：</p>
-          <table>
-            <thead><tr><th>输入</th><th>本文示例</th><th>作用</th></tr></thead>
-            <tbody>
-              <tr><td>隧道 ID</td><td><code>$TUNNEL_ID</code></td><td>选择要托管的隧道。</td></tr>
-              <tr><td>接入集群</td><td><code>$DEVBRIDGE_CLUSTER</code></td><td>连接当前区域的隧道网关。</td></tr>
-              <tr><td>本地地址</td><td><code>127.0.0.1:8080</code></td><td>指定流量最终转发到哪里。</td></tr>
-              <tr><td>宿主令牌</td><td><code>$HOST_TOKEN</code></td><td>授权 RelayService 建立宿主连接。</td></tr>
-            </tbody>
-          </table>
-          <p>宿主连接建立成功后保持 RelayService 运行。关闭 RelayService 会中断流量，但不会立即删除隧道配置。</p>
-          <div class="notice note">
-            <strong>RelayService 启动方式</strong>
-            <p>不同 RelayService 版本可能使用命令行参数或配置文件。按当前客户端的启动说明传入上述四项值；连接成功后，客户端应显示宿主连接状态和 Gateway 提供的最终访问地址。</p>
-          </div>
-        </section>
-
-        <section id="connect">
-          <h2>4. 访问隧道</h2>
-          <p>访问方式取决于端口是否允许匿名访问。</p>
-
-          <div class="token-grid">
-            <div>
-              <h3>匿名访问</h3>
-              <p><code>allowAnonymous: true</code> 时，访问者只需要 Gateway 提供的最终访问地址。</p>
-            </div>
-            <div>
-              <h3>受保护访问</h3>
-              <p><code>allowAnonymous: false</code> 时，访问者还必须携带 connect 令牌。</p>
-            </div>
-          </div>
-
-          <p>为受保护访问签发一个新的 connect 令牌：</p>
-          <div class="code-block">
-            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>CONNECT_CREDENTIAL=$(devbridge_api \
-  -X POST "$DEVBRIDGE_API/tunnels/$TUNNEL_ID/token?scope=connect")
-
-export CONNECT_TOKEN=$(printf '%s' "$CONNECT_CREDENTIAL" | jq -r .token)
-printf 'Connect token expires at: %s\n' \
-  "$(printf '%s' "$CONNECT_CREDENTIAL" | jq -r .expiration)"</code></pre>
-          </div>
-
-          <p>把 Gateway 显示的最终访问地址和 <code>CONNECT_TOKEN</code> 通过安全渠道交给访问者。访问端如何携带令牌由 Relay Gateway 或 DevBridge 客户端协议决定。</p>
+          <p>现在访问 <code>http://localhost:8080</code>，即可连接 Host 设备上的本地服务。按 <code>Ctrl+C</code> 停止当前连接。</p>
           <div class="notice important">
-            <strong>主机名不是完整访问地址</strong>
-            <p>创建隧道返回的 <code>url</code> 是隧道主机名。不要自行拼接协议、端口或令牌；以宿主连接建立后 Relay Gateway 返回或展示的地址为准。</p>
+            <strong>两种访问方式</strong>
+            <p>Web 端口可以使用 Host 输出的 URL；需要本地端口映射或非浏览器客户端时使用 <code>connect</code>。受保护端口会由 CLI 自动申请并使用 connect 凭证。</p>
           </div>
         </section>
 
-        <section id="manage">
-          <h2>5. 管理与清理</h2>
-          <p>查看当前空间下仍然有效的隧道：</p>
+        <section id="tunnel-management" data-search-title="隧道管理命令">
+          <h2>隧道管理</h2>
+          <p>持久隧道适合需要重复 Host、保留相同隧道 ID 或预先配置多个端口的场景。</p>
+          <p>本节使用 <code>g</code> 简写；新终端中先执行 <code>alias g=guacamole</code>，也可以把所有 <code>g</code> 替换为 <code>guacamole</code>。</p>
+
+          <h3>创建隧道</h3>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>devbridge_api \
-  "$DEVBRIDGE_API/tunnels?clusterId=$DEVBRIDGE_CLUSTER" \
-  | jq '.[] | {
-      tunnelId,
-      name,
-      tunnelExpiration,
-      url,
-      portCount
-    }'</code></pre>
+            <pre><code>g create frontend -d "Frontend preview" -e 24</code></pre>
+          </div>
+          <p><code>frontend</code> 是隧道名称，<code>-d</code> 设置描述，<code>-e</code> 设置有效期小时数。默认 72 小时，允许范围为 1 到 720 小时。</p>
+
+          <h3>查询隧道</h3>
+          <div class="code-block">
+            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code># 列出当前工作空间的有效隧道
+g list
+
+# 输出适合脚本处理的 JSON
+g list -j
+
+# 查看单条隧道
+g show &lt;tunnelId&gt;</code></pre>
           </div>
 
-          <p>不再需要隧道时主动删除，避免遗留可访问入口：</p>
+          <h3>更新和删除</h3>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>devbridge_api \
-  -X DELETE "$DEVBRIDGE_API/tunnels/$TUNNEL_ID"</code></pre>
+            <pre><code>g update &lt;tunnelId&gt; -n "frontend" -d "Frontend preview" -e 48
+g delete &lt;tunnelId&gt;
+g delete-all</code></pre>
           </div>
-          <p>删除隧道会同时移除它的端口策略。已有令牌不能再用于已删除或过期的隧道。</p>
+          <p><code>delete-all</code> 删除当前工作空间中的全部隧道，应在 CLI 二次确认后执行。删除隧道也会删除它的端口配置。</p>
+
+          <h3>签发专用令牌</h3>
+          <div class="code-block">
+            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>g token &lt;tunnelId&gt; -s host
+g token &lt;tunnelId&gt; -s connect</code></pre>
+          </div>
+          <p>通常由 <code>host</code> 和 <code>connect</code> 自动获取令牌。只有集成其他客户端时才需要手动签发；每次执行都会返回新令牌。</p>
         </section>
 
-        <section id="rules">
-          <h2>使用规则</h2>
-          <ul>
-            <li>一条隧道属于一个工作空间和一个接入集群，不能跨隔离空间访问。</li>
-            <li>每个工作空间默认最多保留 10 条有效隧道。</li>
-            <li>隧道默认有效 72 小时，最长 30 天；列表只显示尚未过期的隧道。</li>
-            <li>隧道有效期和令牌有效期相互独立。令牌过期后可以重新签发，不需要重建隧道。</li>
-            <li>host 与 connect 令牌用途不同，不能互换。</li>
-            <li>端口未显式加入隧道时默认拒绝访问。</li>
-          </ul>
+        <section id="port-management" data-search-title="端口管理命令">
+          <h2>端口管理</h2>
+          <p>一条隧道可以开放多个端口。未配置的端口默认不能访问。</p>
+          <div class="code-block">
+            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code># 创建受保护的 HTTP 端口
+g port create &lt;tunnelId&gt; -p 8080 --protocol http -d "Web API"
 
+# 创建允许匿名访问的自动识别端口
+g port create &lt;tunnelId&gt; -p 3000 --protocol auto -a
+
+# 查询端口
+g port list &lt;tunnelId&gt;
+g port show &lt;tunnelId&gt; -p 8080
+
+# 更新或删除端口
+g port update &lt;tunnelId&gt; -p 8080 -d "Updated Web API" -a
+g port delete &lt;tunnelId&gt; -p 8080</code></pre>
+          </div>
+
+          <table>
+            <thead><tr><th>参数</th><th>含义</th></tr></thead>
+            <tbody>
+              <tr><td><code>-p, --port</code></td><td>本地或隧道端口，范围为 1 到 65535。</td></tr>
+              <tr><td><code>--protocol</code></td><td><code>http</code>、<code>https</code> 或 <code>auto</code>。</td></tr>
+              <tr><td><code>-d, --description</code></td><td>便于识别端口用途的描述。</td></tr>
+              <tr><td><code>-a, --allow-anonymous</code></td><td>允许不登录的访问者连接该端口。</td></tr>
+            </tbody>
+          </table>
           <div class="notice warning">
-            <strong>保护凭据</strong>
-            <p>不要把客户端私钥、host 令牌或 connect 令牌写入仓库、日志和工单。令牌响应禁止缓存，使用方也应只在需要的进程内保存。</p>
+            <strong>匿名访问默认关闭</strong>
+            <p>只有明确需要公开的测试页面才使用 <code>-a</code>。管理后台、调试端点和包含用户数据的服务应保持受保护状态。</p>
           </div>
         </section>
 
-        <section id="faq">
-          <h2>常见问题</h2>
-          <dl class="faq-list">
-            <div><dt>页面应该显示“72 小时”还是持续倒计时？</dt><dd><code>tunnelExpiration</code> 表示创建时选择的固定规格，应显示“72 小时”或“3 天”。服务端会单独判断实际是否过期。</dd></div>
-            <div><dt>为什么隧道存在但仍然无法访问？</dt><dd>依次检查端口是否已开放、RelayService 宿主连接是否在线、host 令牌是否有效，以及访问者是否需要 connect 令牌。</dd></div>
-            <div><dt>关闭本地服务会删除隧道吗？</dt><dd>不会。流量会中断，但隧道和端口策略会保留到主动删除或过期清理。</dd></div>
-            <div><dt>可以公开调试接口吗？</dt><dd>技术上可以，但不建议。优先保持 <code>allowAnonymous: false</code>，并只向明确的协作者发放短期 connect 令牌。</dd></div>
-          </dl>
+        <section id="default-tunnel" data-search-title="设置默认隧道">
+          <h2>设置默认隧道</h2>
+          <p>频繁操作同一条隧道时，可以把它设置为当前默认隧道：</p>
+          <div class="code-block">
+            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>g set &lt;tunnelId&gt;
+
+# 后续命令可以省略 tunnelId
+g port list
+g host -p 8080
+
+# 清除默认隧道
+g unset</code></pre>
+          </div>
+          <p>默认隧道只影响本机 CLI 上下文，不会修改隧道归属或其他用户的设置。</p>
+        </section>
+
+        <section id="forwarding" data-search-title="远程端口转发 Host Connect">
+          <h2>远程端口转发</h2>
+          <h3>Host 模式</h3>
+          <p>Host 模式运行在服务所在设备，把本地端口注册到现有隧道：</p>
+          <div class="code-block">
+            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code># 托管一个端口
+g host &lt;tunnelId&gt; -p 8080
+
+# 同时托管多个端口
+g host &lt;tunnelId&gt; -p 8080 -p 3000
+
+# 创建临时隧道并立即托管
+g host -p 8080 -d "Temporary preview" -e 8</code></pre>
+          </div>
+
+          <h3>Connect 模式</h3>
+          <p>Connect 模式运行在访问设备，连接隧道并为可用端口建立本地映射：</p>
+          <div class="code-block">
+            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>g connect &lt;tunnelId&gt;</code></pre>
+          </div>
+          <p>Host 和 Connect 都是长运行命令。保持进程运行即可持续转发；网络恢复后 CLI 会自动重连。</p>
+        </section>
+
+        <section id="authentication" data-search-title="多种认证方式">
+          <h2>认证方式</h2>
+          <table>
+            <thead><tr><th>方式</th><th>适用场景</th><th>命令</th></tr></thead>
+            <tbody>
+              <tr><td>交互登录</td><td>开发人员日常使用</td><td><code>guacamole auth login</code></td></tr>
+              <tr><td>AK/SK</td><td>固定服务账号或自动化任务</td><td><code>--access-key</code> + <code>--secret-key</code></td></tr>
+              <tr><td>临时 AK/SK</td><td>短期任务和动态授权</td><td>AK/SK + <code>--security-token</code></td></tr>
+            </tbody>
+          </table>
+          <p>交互登录最适合个人使用；自动化环境优先使用短期凭证，降低凭证泄露后的影响范围。</p>
+        </section>
+
+        <section id="credentials" data-search-title="凭证安全存储和断线自动重连">
+          <h2>凭证与自动重连</h2>
+          <ul>
+            <li>登录成功后，CLI 将凭证写入受保护的本地凭证存储；命令输出不会回显 SK 或完整令牌。</li>
+            <li><code>auth status</code> 只显示当前身份、认证方式和有效状态。</li>
+            <li><code>auth logout</code> 清除 CLI 保存的登录凭证，不会删除隧道。</li>
+            <li>Host 和 Connect 在网络短暂中断后自动重连，不需要重新创建隧道。</li>
+            <li>凭证过期或权限被撤销时，CLI 停止重试并提示重新登录。</li>
+          </ul>
+        </section>
+
+        <section id="directories" data-search-title="安装目录和配置目录">
+          <h2>目录说明</h2>
+          <table>
+            <thead><tr><th>目录</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr><td><code>~/.huawei/bin</code></td><td>默认 CLI 安装目录。可以通过安装参数 <code>-d</code> 修改。</td></tr>
+              <tr><td><code>~/.huawei/devbridge</code></td><td>CLI 配置、当前默认隧道和运行状态目录。</td></tr>
+            </tbody>
+          </table>
+          <p>不要把配置目录复制到其他用户或提交到代码仓库。迁移设备时应在新设备重新登录。</p>
+        </section>
+
+        <section id="command-reference" data-search-title="CLI 命令速查">
+          <h2>命令速查</h2>
+          <div class="command-table-wrap">
+            <table class="command-table">
+              <thead><tr><th>命令</th><th>用途</th></tr></thead>
+              <tbody>
+                <tr><td><code>guacamole auth login</code></td><td>登录 DevBridge。</td></tr>
+                <tr><td><code>g create &lt;name&gt;</code></td><td>创建持久隧道。</td></tr>
+                <tr><td><code>g list [-j]</code></td><td>列出有效隧道，可输出 JSON。</td></tr>
+                <tr><td><code>g show &lt;tunnelId&gt;</code></td><td>查看隧道详情。</td></tr>
+                <tr><td><code>g update &lt;tunnelId&gt;</code></td><td>更新名称、描述或有效期。</td></tr>
+                <tr><td><code>g delete &lt;tunnelId&gt;</code></td><td>删除一条隧道。</td></tr>
+                <tr><td><code>g port create</code></td><td>给隧道添加端口。</td></tr>
+                <tr><td><code>g set &lt;tunnelId&gt;</code></td><td>设置默认隧道。</td></tr>
+                <tr><td><code>g host</code></td><td>从服务设备托管本地端口。</td></tr>
+                <tr><td><code>g connect &lt;tunnelId&gt;</code></td><td>从访问设备连接隧道。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>使用 <code>guacamole --help</code> 或任意命令后的 <code>--help</code> 查看当前版本支持的全部参数。</p>
         </section>
 
         <section class="next-steps">
-          <h2>参考资料</h2>
+          <h2>后续步骤</h2>
           <div class="next-links">
-            <a href="openapi.yaml"><strong>REST API 定义</strong><span>查看完整请求字段、响应和校验规则</span></a>
-            <a href="https://github.com/lizhicheng00/demo" rel="noreferrer"><strong>Relay Controller 源代码</strong><span>供平台开发和部署人员查看服务端实现</span></a>
+            <a href="#tunnel-management"><strong>管理持久隧道</strong><span>更新有效期、端口和默认上下文</span></a>
+            <a href="#authentication"><strong>选择认证方式</strong><span>为个人终端或自动化环境配置凭证</span></a>
           </div>
         </section>
 
         <footer class="article-footer">
-          <p>适用于 DevBridge 开发隧道 API v1</p>
+          <p>适用于 DevBridge CLI 1.0.0</p>
         </footer>
       </article>
 
       <aside class="toc" aria-label="本文目录">
         <p>本文内容</p>
         <nav>
-          <a href="#how-it-works">工作原理</a>
-          <a href="#prerequisites">准备工作</a>
-          <a href="#create">创建隧道</a>
-          <a href="#port">开放端口</a>
-          <a href="#host">托管服务</a>
-          <a href="#connect">访问隧道</a>
-          <a href="#manage">管理与清理</a>
-          <a href="#rules">使用规则</a>
-          <a href="#faq">常见问题</a>
+          <a href="#features">功能特性</a>
+          <a href="#install">安装</a>
+          <a href="#login">登录</a>
+          <a href="#host-quickstart">Host</a>
+          <a href="#connect-quickstart">Connect</a>
+          <a href="#tunnel-management">隧道管理</a>
+          <a href="#port-management">端口管理</a>
+          <a href="#forwarding">端口转发</a>
+          <a href="#authentication">认证方式</a>
+          <a href="#command-reference">命令速查</a>
         </nav>
       </aside>
     </main>
   </div>
 
+  <div class="sidebar-backdrop" hidden></div>
   <script src="assets/app.js"></script>
 </body>
 </html>
