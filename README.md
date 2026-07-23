@@ -2,6 +2,8 @@
 
 面向 DevBridge 开发隧道使用者的 GitHub Pages 文档。主文档按 CLI 用户任务组织，覆盖安装、登录、隧道与端口管理、Host 和 Connect 远程端口转发。
 
+在线文档：<https://huaweicloud.github.io/devspace-devbridge/>
+
 ## Local preview
 
 页面不需要构建步骤，直接打开 `index.html` 即可。需要模拟站点路径时，可运行：
