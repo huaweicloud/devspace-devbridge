@@ -88,7 +88,7 @@
         <section id="overview" class="article-header" data-search-title="创建并托管开发隧道">
           <p class="eyebrow">快速入门</p>
           <h1>创建并托管开发隧道</h1>
-          <p class="lead">使用 <code>guacamole</code> CLI 将本机服务安全地开放给远程客户端，并控制谁可以访问。</p>
+          <p class="lead">使用 <code>devbridge</code> CLI 将本机服务安全地开放给远程客户端，并控制谁可以访问。</p>
           <div class="article-meta">预计用时：10 分钟 · 适用于 CLI 1.0.0</div>
         </section>
 
@@ -122,58 +122,21 @@
 
         <section id="install" data-search-title="安装 DevBridge CLI">
           <h2>安装</h2>
-          <p>使用 <code>install.sh</code> 安装 CLI。默认可执行文件目录是 <code>~/.huawei/bin</code>，默认配置目录是 <code>~/.huawei/devbridge</code>。</p>
-
-          <div class="tabs" data-tabs="install">
-            <div class="tab-list" role="tablist" aria-label="安装方式">
-              <button type="button" role="tab" id="tab-default" aria-controls="panel-default" aria-selected="true">默认安装</button>
-              <button type="button" role="tab" id="tab-directory" aria-controls="panel-directory" aria-selected="false">指定目录</button>
-              <button type="button" role="tab" id="tab-source" aria-controls="panel-source" aria-selected="false">指定下载源</button>
-              <button type="button" role="tab" id="tab-silent" aria-controls="panel-silent" aria-selected="false">静默安装</button>
-            </div>
-
-            <div id="panel-default" class="tab-panel" role="tabpanel" aria-labelledby="tab-default">
-              <div class="code-block">
-                <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-                <pre><code>bash install.sh -v 1.0.0</code></pre>
-              </div>
-              <p>将指定版本安装到 <code>~/.huawei/bin</code>。</p>
-            </div>
-
-            <div id="panel-directory" class="tab-panel" role="tabpanel" aria-labelledby="tab-directory" hidden>
-              <div class="code-block">
-                <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-                <pre><code>bash install.sh -d /path/to/bin -v 1.0.0</code></pre>
-              </div>
-              <p><code>-d</code> 指定 CLI 可执行文件的安装目录。</p>
-            </div>
-
-            <div id="panel-source" class="tab-panel" role="tabpanel" aria-labelledby="tab-source" hidden>
-              <div class="code-block">
-                <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-                <pre><code>bash install.sh -u https://downloads.example.com/devbridge -v 1.0.0</code></pre>
-              </div>
-              <p><code>-u</code> 指定安装包下载源，适用于内网镜像或测试仓库。</p>
-            </div>
-
-            <div id="panel-silent" class="tab-panel" role="tabpanel" aria-labelledby="tab-silent" hidden>
-              <div class="code-block">
-                <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-                <pre><code>bash install.sh -d ./bin -s</code></pre>
-              </div>
-              <p><code>-s</code> 以静默模式安装，只保留必要的结果和错误输出。</p>
-            </div>
+          <p>运行官方安装脚本。CLI 默认安装到 <code>~/.huawei/bin</code>，配置保存在 <code>~/.huawei/devbridge</code>。</p>
+          <div class="code-block">
+            <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
+            <pre><code>curl -fsSL https://res-hd.hc-cdn.cn/sharedata/hdspace/devbidge/install | bash</code></pre>
           </div>
 
           <p>安装完成后，将默认目录加入 <code>PATH</code> 并检查版本：</p>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
             <pre><code>export PATH="$HOME/.huawei/bin:$PATH"
-guacamole --version</code></pre>
+devbridge --version</code></pre>
           </div>
           <div class="notice note">
             <strong>持久化 PATH</strong>
-            <p>把上述 <code>export</code> 写入 <code>~/.bashrc</code> 或 <code>~/.zshrc</code>，重新打开终端后即可直接运行 <code>guacamole</code>。</p>
+            <p>把上述 <code>export</code> 写入 <code>~/.bashrc</code> 或 <code>~/.zshrc</code>，重新打开终端后即可直接运行 <code>devbridge</code>。</p>
           </div>
         </section>
 
@@ -182,7 +145,7 @@ guacamole --version</code></pre>
           <p>托管或连接隧道前必须先登录。个人开发环境优先使用交互登录：</p>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>guacamole auth login</code></pre>
+            <pre><code>devbridge auth login</code></pre>
           </div>
           <p>CLI 会引导你完成身份认证，并把登录凭据保存到受保护的凭证存储中。</p>
 
@@ -190,12 +153,12 @@ guacamole --version</code></pre>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
             <pre><code># 长期 AK/SK
-guacamole auth login \
+devbridge auth login \
   --access-key "$DEVBRIDGE_ACCESS_KEY" \
   --secret-key "$DEVBRIDGE_SECRET_KEY"
 
 # 临时 AK/SK
-guacamole auth login \
+devbridge auth login \
   --access-key "$DEVBRIDGE_ACCESS_KEY" \
   --secret-key "$DEVBRIDGE_SECRET_KEY" \
   --security-token "$DEVBRIDGE_SECURITY_TOKEN"</code></pre>
@@ -204,8 +167,8 @@ guacamole auth login \
           <p>检查当前身份或清除本地登录状态：</p>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>guacamole auth status
-guacamole auth logout</code></pre>
+            <pre><code>devbridge auth status
+devbridge auth logout</code></pre>
           </div>
           <div class="notice warning">
             <strong>不要把密钥写进命令历史</strong>
@@ -226,7 +189,7 @@ guacamole auth logout</code></pre>
           <h3>2. 托管端口</h3>
           <div class="code-block">
             <div class="code-header"><span>终端 2</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>guacamole host -p 8080 -d "Local web server" -e 8</code></pre>
+            <pre><code>devbridge host -p 8080 -d "Local web server" -e 8</code></pre>
           </div>
 
           <p>未指定隧道 ID 时，<code>host</code> 会创建临时隧道、配置端口并立即建立宿主连接。成功后输出类似：</p>
@@ -246,7 +209,7 @@ Auto reconnect: enabled</code></pre>
           <p>在另一台已经安装并登录 CLI 的设备上，使用 Host 输出的隧道 ID 建立连接：</p>
           <div class="code-block">
             <div class="code-header"><span>远程终端</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>guacamole connect km5q7d2a</code></pre>
+            <pre><code>devbridge connect km5q7d2a</code></pre>
           </div>
 
           <p>Connect 模式读取隧道的端口配置，并在本机建立对应映射。输出类似：</p>
@@ -270,7 +233,7 @@ Auto reconnect: enabled</code></pre>
           <h3>创建隧道</h3>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>guacamole create frontend -d "Frontend preview" -e 24</code></pre>
+            <pre><code>devbridge create frontend -d "Frontend preview" -e 24</code></pre>
           </div>
           <p><code>frontend</code> 是隧道名称，<code>-d</code> 设置描述，<code>-e</code> 设置有效期小时数。默认 72 小时，允许范围为 1 到 720 小时。</p>
 
@@ -278,29 +241,29 @@ Auto reconnect: enabled</code></pre>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
             <pre><code># 列出当前工作空间的有效隧道
-guacamole list
+devbridge list
 
 # 输出适合脚本处理的 JSON
-guacamole list -j
+devbridge list -j
 
 # 查看单条隧道
-guacamole show &lt;tunnelId&gt;</code></pre>
+devbridge show &lt;tunnelId&gt;</code></pre>
           </div>
 
           <h3>更新和删除</h3>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>guacamole update &lt;tunnelId&gt; -n "frontend" -d "Frontend preview" -e 48
-guacamole delete &lt;tunnelId&gt;
-guacamole delete-all</code></pre>
+            <pre><code>devbridge update &lt;tunnelId&gt; -n "frontend" -d "Frontend preview" -e 48
+devbridge delete &lt;tunnelId&gt;
+devbridge delete-all</code></pre>
           </div>
           <p><code>delete-all</code> 删除当前工作空间中的全部隧道，应在 CLI 二次确认后执行。删除隧道也会删除它的端口配置。</p>
 
           <h3>签发专用令牌</h3>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>guacamole token &lt;tunnelId&gt; -s host
-guacamole token &lt;tunnelId&gt; -s connect</code></pre>
+            <pre><code>devbridge token &lt;tunnelId&gt; -s host
+devbridge token &lt;tunnelId&gt; -s connect</code></pre>
           </div>
           <p>通常由 <code>host</code> 和 <code>connect</code> 自动获取令牌。只有集成其他客户端时才需要手动签发；每次执行都会返回新令牌。</p>
         </section>
@@ -310,19 +273,19 @@ guacamole token &lt;tunnelId&gt; -s connect</code></pre>
           <p>一条隧道可以开放多个端口。未配置的端口默认不能访问。</p>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code># 创建受保护的 HTTP 端口
-guacamole port create &lt;tunnelId&gt; -p 8080 --protocol http -d "Web API"
+            <pre><code># 创建禁止匿名访问的 HTTP 端口
+devbridge port create &lt;tunnelId&gt; -p 8080 --protocol http --deny-anonymous
 
 # 创建允许匿名访问的自动识别端口
-guacamole port create &lt;tunnelId&gt; -p 3000 --protocol auto -a
+devbridge port create &lt;tunnelId&gt; -p 3000 --protocol auto
 
 # 查询端口
-guacamole port list &lt;tunnelId&gt;
-guacamole port show &lt;tunnelId&gt; -p 8080
+devbridge port list &lt;tunnelId&gt;
+devbridge port show &lt;tunnelId&gt; -p 8080
 
 # 更新或删除端口
-guacamole port update &lt;tunnelId&gt; -p 8080 -d "Updated Web API" -a
-guacamole port delete &lt;tunnelId&gt; -p 8080</code></pre>
+devbridge port update &lt;tunnelId&gt; -p 8080 --deny-anonymous
+devbridge port delete &lt;tunnelId&gt; -p 8080</code></pre>
           </div>
 
           <table>
@@ -330,13 +293,12 @@ guacamole port delete &lt;tunnelId&gt; -p 8080</code></pre>
             <tbody>
               <tr><td><code>-p</code></td><td>本地或隧道端口，范围为 1 到 65535。</td></tr>
               <tr><td><code>--protocol</code></td><td><code>http</code>、<code>https</code> 或 <code>auto</code>。</td></tr>
-              <tr><td><code>-d, --description</code></td><td>便于识别端口用途的描述。</td></tr>
-              <tr><td><code>-a, --allow-anonymous</code></td><td>允许不登录的访问者连接该端口。</td></tr>
+              <tr><td><code>--deny-anonymous</code></td><td>禁止匿名访问，连接该端口时必须通过身份认证。</td></tr>
             </tbody>
           </table>
           <div class="notice warning">
-            <strong>匿名访问默认关闭</strong>
-            <p>只有明确需要公开的测试页面才使用 <code>-a</code>。管理后台、调试端点和包含用户数据的服务应保持受保护状态。</p>
+            <strong>谨慎开放匿名访问</strong>
+            <p>管理后台、调试端点和包含用户数据的服务应使用 <code>--deny-anonymous</code>。只有明确需要公开的测试页面才允许匿名访问。</p>
           </div>
         </section>
 
@@ -345,14 +307,14 @@ guacamole port delete &lt;tunnelId&gt; -p 8080</code></pre>
           <p>频繁操作同一条隧道时，可以把它设置为当前默认隧道：</p>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>guacamole set &lt;tunnelId&gt;
+            <pre><code>devbridge set &lt;tunnelId&gt;
 
 # 后续命令可以省略 tunnelId
-guacamole port list
-guacamole host -p 8080
+devbridge port list
+devbridge host -p 8080
 
 # 清除默认隧道
-guacamole unset</code></pre>
+devbridge unset</code></pre>
           </div>
           <p>默认隧道只影响本机 CLI 上下文，不会修改隧道归属或其他用户的设置。</p>
         </section>
@@ -364,20 +326,20 @@ guacamole unset</code></pre>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
             <pre><code># 托管一个端口
-guacamole host &lt;tunnelId&gt; -p 8080
+devbridge host &lt;tunnelId&gt; -p 8080
 
 # 同时托管多个端口
-guacamole host &lt;tunnelId&gt; -p 8080 -p 3000
+devbridge host &lt;tunnelId&gt; -p 8080 -p 3000
 
 # 创建临时隧道并立即托管
-guacamole host -p 8080 -d "Temporary preview" -e 8</code></pre>
+devbridge host -p 8080 -d "Temporary preview" -e 8</code></pre>
           </div>
 
           <h3>Connect 模式</h3>
           <p>Connect 模式运行在访问设备，连接隧道并为可用端口建立本地映射：</p>
           <div class="code-block">
             <div class="code-header"><span>Shell</span><button type="button" class="copy-button">复制</button></div>
-            <pre><code>guacamole connect &lt;tunnelId&gt;</code></pre>
+            <pre><code>devbridge connect &lt;tunnelId&gt;</code></pre>
           </div>
           <p>Host 和 Connect 都是长运行命令。保持进程运行即可持续转发；网络恢复后 CLI 会自动重连。</p>
         </section>
@@ -387,7 +349,7 @@ guacamole host -p 8080 -d "Temporary preview" -e 8</code></pre>
           <table>
             <thead><tr><th>方式</th><th>适用场景</th><th>命令</th></tr></thead>
             <tbody>
-              <tr><td>交互登录</td><td>开发人员日常使用</td><td><code>guacamole auth login</code></td></tr>
+              <tr><td>交互登录</td><td>开发人员日常使用</td><td><code>devbridge auth login</code></td></tr>
               <tr><td>AK/SK</td><td>固定服务账号或自动化任务</td><td><code>--access-key</code> + <code>--secret-key</code></td></tr>
               <tr><td>临时 AK/SK</td><td>短期任务和动态授权</td><td>AK/SK + <code>--security-token</code></td></tr>
             </tbody>
@@ -411,7 +373,7 @@ guacamole host -p 8080 -d "Temporary preview" -e 8</code></pre>
           <table>
             <thead><tr><th>目录</th><th>用途</th></tr></thead>
             <tbody>
-              <tr><td><code>~/.huawei/bin</code></td><td>默认 CLI 安装目录。可以通过安装参数 <code>-d</code> 修改。</td></tr>
+              <tr><td><code>~/.huawei/bin</code></td><td>CLI 默认安装目录。</td></tr>
               <tr><td><code>~/.huawei/devbridge</code></td><td>CLI 配置、当前默认隧道和运行状态目录。</td></tr>
             </tbody>
           </table>
@@ -424,20 +386,20 @@ guacamole host -p 8080 -d "Temporary preview" -e 8</code></pre>
             <table class="command-table">
               <thead><tr><th>命令</th><th>用途</th></tr></thead>
               <tbody>
-                <tr><td><code>guacamole auth login</code></td><td>登录 DevBridge。</td></tr>
-                <tr><td><code>guacamole create &lt;name&gt;</code></td><td>创建持久隧道。</td></tr>
-                <tr><td><code>guacamole list [-j]</code></td><td>列出有效隧道，可输出 JSON。</td></tr>
-                <tr><td><code>guacamole show &lt;tunnelId&gt;</code></td><td>查看隧道详情。</td></tr>
-                <tr><td><code>guacamole update &lt;tunnelId&gt;</code></td><td>更新名称、描述或有效期。</td></tr>
-                <tr><td><code>guacamole delete &lt;tunnelId&gt;</code></td><td>删除一条隧道。</td></tr>
-                <tr><td><code>guacamole port create</code></td><td>给隧道添加端口。</td></tr>
-                <tr><td><code>guacamole set &lt;tunnelId&gt;</code></td><td>设置默认隧道。</td></tr>
-                <tr><td><code>guacamole host</code></td><td>从服务设备托管本地端口。</td></tr>
-                <tr><td><code>guacamole connect &lt;tunnelId&gt;</code></td><td>从访问设备连接隧道。</td></tr>
+                <tr><td><code>devbridge auth login</code></td><td>登录 DevBridge。</td></tr>
+                <tr><td><code>devbridge create &lt;name&gt;</code></td><td>创建持久隧道。</td></tr>
+                <tr><td><code>devbridge list [-j]</code></td><td>列出有效隧道，可输出 JSON。</td></tr>
+                <tr><td><code>devbridge show &lt;tunnelId&gt;</code></td><td>查看隧道详情。</td></tr>
+                <tr><td><code>devbridge update &lt;tunnelId&gt;</code></td><td>更新名称、描述或有效期。</td></tr>
+                <tr><td><code>devbridge delete &lt;tunnelId&gt;</code></td><td>删除一条隧道。</td></tr>
+                <tr><td><code>devbridge port create</code></td><td>给隧道添加端口。</td></tr>
+                <tr><td><code>devbridge set &lt;tunnelId&gt;</code></td><td>设置默认隧道。</td></tr>
+                <tr><td><code>devbridge host</code></td><td>从服务设备托管本地端口。</td></tr>
+                <tr><td><code>devbridge connect &lt;tunnelId&gt;</code></td><td>从访问设备连接隧道。</td></tr>
               </tbody>
             </table>
           </div>
-          <p>使用 <code>guacamole --help</code> 或任意命令后的 <code>--help</code> 查看当前版本支持的全部参数。</p>
+          <p>使用 <code>devbridge --help</code> 或任意命令后的 <code>--help</code> 查看当前版本支持的全部参数。</p>
         </section>
 
         <section class="next-steps">

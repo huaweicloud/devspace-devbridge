@@ -20,4 +20,4 @@ python3 -m http.server 4173
 
 ## Source of truth
 
-控制面字段和路径以 Relay Controller 仓库的 `src/main/resources/static/openapi.yaml` 为准。CLI 命令以 Guacamole CLI 实现为准。修改 CLI、隧道业务或 Gateway 访问协议后，应同步本仓库的快速入门；修改 API 后还应同步 `openapi.yaml`。
+控制面字段和路径以 Relay Controller 仓库的 `src/main/resources/static/openapi.yaml` 为准。CLI 命令以 DevBridge CLI 实现为准。修改 CLI、隧道业务或 Gateway 访问协议后，应同步本仓库的快速入门；修改 API 后还应同步 `openapi.yaml`。
