@@ -1,0 +1,30 @@
+{
+  "name": "devspace-devbridge-docs",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "docs:dev": "vitepress dev docs --host 127.0.0.1",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs --host 127.0.0.1",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint:docs": "markdownlint-cli2 \"README.md\" \"docs/**/*.md\"",
+    "audit": "npm audit --audit-level=moderate",
+    "check": "npm run lint:docs && npm run format:check && npm run docs:build"
+  },
+  "devDependencies": {
+    "markdownlint-cli2": "0.23.1",
+    "prettier": "3.9.6",
+    "vitepress": "1.6.4"
+  },
+  "overrides": {
+    "vite": "6.4.3"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true
+  }
+}

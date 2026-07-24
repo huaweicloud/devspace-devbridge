@@ -391,7 +391,7 @@ components:
           format: int32
           minimum: 1
           maximum: 720
-          description: Expiration duration in hours. Defaults to 72 hours. Maximum is 720 hours.
+          description: Allowed inactivity in hours. Defaults to 72 hours. Maximum is 720 hours.
         type:
           type: string
           enum: [bridge, env]
@@ -410,7 +410,7 @@ components:
           format: int32
           minimum: 1
           maximum: 720
-          description: Expiration duration in hours from update time. Maximum is 720 hours.
+          description: Allowed inactivity in hours. Maximum is 720 hours.
         type:
           type: string
           enum: [bridge, env]
@@ -476,12 +476,16 @@ components:
         bandwidthUsed:
           type: integer
           format: int64
-        tunnelExpiration:
+        expirationHours:
           type: integer
           format: int32
           minimum: 1
           maximum: 720
-          description: Configured tunnel expiration duration in hours.
+          description: Configured inactivity window in hours.
+        tunnelExpiration:
+          type: integer
+          format: int64
+          description: Current inactivity expiration time as Unix seconds. Activity moves this time forward.
         created:
           type: integer
           format: int64
@@ -505,12 +509,16 @@ components:
           type: string
         description:
           type: string
-        tunnelExpiration:
+        expirationHours:
           type: integer
           format: int32
           minimum: 1
           maximum: 720
-          description: Configured tunnel expiration duration in hours.
+          description: Configured inactivity window in hours.
+        tunnelExpiration:
+          type: integer
+          format: int64
+          description: Current inactivity expiration time as Unix seconds. Activity moves this time forward.
         created:
           type: integer
           format: int64
