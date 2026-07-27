@@ -22,8 +22,7 @@ POST https://hdspace-partner.cn-north-4.myhuaweicloud.com/open-api-public/v1/rel
 ```
 
 请求体和响应体均使用 `application/json`，字段名采用下划线命名。
-本文与可下载的 OpenAPI YAML 使用同一份公共契约；未列出的字段不需要传入，
-也不保证在响应中返回。
+本页面定义公共接口契约；未列出的字段不需要传入，也不保证在响应中返回。
 
 ## 响应格式
 
@@ -309,6 +308,3 @@ DELETE /tunnels/aaaadysa/ports/8080
 - `expiration` 请求参数和 `expiration_hours` 响应字段以小时为单位。
 - `tunnel_expiration` 和令牌 `expiration` 使用 Unix 秒。
 - 时间字段均按 UTC 时间解释，展示时由客户端转换为本地时区。
-
-完整字段定义和数据约束可下载查看：
-[公共 REST API OpenAPI YAML](../openapi-public.yaml)。
