@@ -60,12 +60,8 @@ VitePress 1.6.4 默认依赖的 Vite 5 已存在安全告警，因此项目将 V
 ## Content ownership
 
 - CLI 命令以 DevBridge CLI 的实际行为为准。
-- 隧道、端口和令牌字段以 Relay Controller 的 OpenAPI 为准。
-- Host 和 Connect 的连接行为以 Relay Service 与 Relay Gateway 的实现为准。
+- 隧道、端口、Host 和 Connect 的说明以 DevBridge 已发布能力为准。
 - 修改相关业务后，应在同一个变更中更新对应 Markdown 页面。
-
-`docs/public/openapi.yaml` 是面向集成方发布的副本。更新 Relay Controller API 时应同步替换，
-并运行文档检查。
 
 ## Publishing
 

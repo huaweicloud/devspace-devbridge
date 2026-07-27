@@ -14,7 +14,7 @@
     "check": "npm run lint:docs && npm run format:check && npm run docs:build"
   },
   "devDependencies": {
-    "markdownlint-cli2": "0.23.1",
+    "markdownlint-cli2": "0.23.2",
     "prettier": "3.9.6",
     "vitepress": "1.6.4"
   },

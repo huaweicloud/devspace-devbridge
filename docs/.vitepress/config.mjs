@@ -27,7 +27,6 @@ const sidebar = [
       { text: "CLI 命令参考", link: "/reference/cli" },
       { text: "本地配置与目录", link: "/reference/configuration" },
       { text: "问题排查", link: "/reference/troubleshooting" },
-      { text: "OpenAPI", link: "/reference/api" },
     ],
   },
 ];
@@ -54,7 +53,6 @@ export default defineConfig({
     nav: [
       { text: "开发隧道", link: "/" },
       { text: "命令参考", link: "/reference/cli" },
-      { text: "OpenAPI", link: `${base}openapi.yaml`, target: "_blank" },
     ],
     sidebar,
     outline: {
