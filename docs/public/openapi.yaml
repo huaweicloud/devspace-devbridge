@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: DevBridge Tunnel API
+  title: DevBridge Public Tunnel API
   version: v1
   description: |
     Manage development tunnels, tunnel ports, and temporary connection tokens.
@@ -532,9 +532,9 @@ components:
       properties:
         error_code:
           type: string
-          pattern: "^[0-9]{5}$"
-          description: Numeric error code represented as a string.
-          example: "10002"
+          pattern: "^HD\\.[0-9]{8}$"
+          description: Public API error code.
+          example: HD.98320078
         error_msg:
           type: string
           description: Human-readable error message.
