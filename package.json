@@ -10,7 +10,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint:docs": "markdownlint-cli2 \"README.md\" \"docs/**/*.md\"",
-    "lint:openapi": "REDOCLY_TELEMETRY=off REDOCLY_SUPPRESS_UPDATE_NOTICE=true redocly lint docs/public/openapi.yaml --extends=spec",
+    "lint:openapi": "REDOCLY_TELEMETRY=off REDOCLY_SUPPRESS_UPDATE_NOTICE=true redocly lint docs/public/openapi-public.yaml --extends=spec",
     "audit": "npm audit --audit-level=moderate",
     "check": "npm run lint:docs && npm run lint:openapi && npm run format:check && npm run docs:build"
   },

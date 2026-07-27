@@ -3,7 +3,7 @@ info:
   title: DevBridge Public Tunnel API
   version: v1
   description: |
-    Manage development tunnels, tunnel ports, and temporary connection tokens.
+    Public API for managing development tunnels, tunnel ports, and temporary connection tokens.
     Request and response field names use snake_case.
 servers:
   - url: https://hdspace-partner.cn-north-4.myhuaweicloud.com/open-api-public/v1/relay

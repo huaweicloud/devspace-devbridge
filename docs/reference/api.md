@@ -311,4 +311,4 @@ DELETE /tunnels/aaaadysa/ports/8080
 - 时间字段均按 UTC 时间解释，展示时由客户端转换为本地时区。
 
 完整字段定义和数据约束可下载查看：
-[公共 REST API OpenAPI YAML](../openapi.yaml)。
+[公共 REST API OpenAPI YAML](../openapi-public.yaml)。
