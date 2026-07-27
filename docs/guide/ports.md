@@ -46,7 +46,7 @@ devbridge port create <tunnelId> -p 8080 --protocol http --deny-anonymous
 - 管理后台；
 - 调试和诊断端点；
 - 包含用户数据的服务；
-- 可以修改状态的内部 API。
+- 具备数据修改能力的接口。
 
 ::: warning
 匿名访问意味着持有隧道地址的访问者不需要 DevBridge 身份即可访问端口。只对明确需要公开的开发内容启用。

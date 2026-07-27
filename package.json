@@ -10,10 +10,12 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint:docs": "markdownlint-cli2 \"README.md\" \"docs/**/*.md\"",
+    "lint:openapi": "REDOCLY_TELEMETRY=off REDOCLY_SUPPRESS_UPDATE_NOTICE=true redocly lint docs/public/openapi.yaml --extends=spec",
     "audit": "npm audit --audit-level=moderate",
-    "check": "npm run lint:docs && npm run format:check && npm run docs:build"
+    "check": "npm run lint:docs && npm run lint:openapi && npm run format:check && npm run docs:build"
   },
   "devDependencies": {
+    "@redocly/cli": "2.40.0",
     "markdownlint-cli2": "0.23.2",
     "prettier": "3.9.6",
     "vitepress": "1.6.4"
