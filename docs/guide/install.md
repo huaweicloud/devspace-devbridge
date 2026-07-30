@@ -19,7 +19,7 @@ description: 使用官方安装脚本安装并验证 DevBridge CLI。
 
 运行：
 
-```bash一键安装
+```bash
 curl -fsSL https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge/install.sh | bash
 安装后执行
 source ~/.bashrc
