@@ -13,7 +13,14 @@ description: 排查 DevBridge 安装、登录、隧道、Host 和 Connect 问题
 
 ```bash
 export PATH="$HOME/.huawei/bin:$PATH"
-devbridge --version
+devbridge version
+```
+
+如果你使用 PowerShell，则执行：
+
+```powershell
+$env:Path = "$HOME/.huawei/bin;$env:Path"
+devbridge version
 ```
 
 如果仍然失败，重新运行[官方安装命令](../guide/install.md)并检查安装输出。
@@ -24,8 +31,9 @@ devbridge --version
 
 1. 当前网络是否允许访问安装地址；
 2. DNS 和 HTTPS 代理是否正常；
-3. `curl` 是否可用；
-4. 安装地址是否完整且没有被换行或截断。
+3. 如果使用 Bash 安装方式，`curl` 是否可用；
+4. 如果使用 PowerShell 安装方式，`irm` 是否可用；
+5. 安装地址是否完整且没有被换行或截断。
 
 不要在下载失败时改用来源不明的安装脚本。
 
@@ -121,7 +129,7 @@ devbridge port update <tunnelId> -p 8080 --protocol http
 
 收集以下非敏感信息：
 
-- `devbridge --version`；
+- `devbridge version`；
 - 操作系统和架构；
 - 执行的命令，不包含 AK、SK 和令牌；
 - 隧道 ID、端口和协议；

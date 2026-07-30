@@ -24,7 +24,13 @@ description: 了解 DevBridge CLI 的安装目录、配置目录、凭证和默�
 export PATH="$HOME/.huawei/bin:$PATH"
 ```
 
-若要持续生效，把该行加入当前 Shell 的启动文件，例如 `~/.bashrc` 或 `~/.zshrc`。
+如果你使用 PowerShell，则执行：
+
+```powershell
+$env:Path = "$HOME/.huawei/bin;$env:Path"
+```
+
+若要持续生效，把相应命令加入当前 Shell 的启动文件；Bash/Zsh 可写入 `~/.bashrc` 或 `~/.zshrc`，PowerShell 可写入 `$PROFILE`。
 
 ## 登录凭证
 

@@ -12,7 +12,7 @@ description: DevBridge CLI 的认证、隧道、端口、Host 和 Connect 命令
 | 命令                         | 说明                 |
 | ---------------------------- | -------------------- |
 | `devbridge --help`           | 显示 CLI 帮助。      |
-| `devbridge --version`        | 显示 CLI 版本。      |
+| `devbridge version`          | 显示 CLI 版本。      |
 | `devbridge <command> --help` | 显示指定命令的参数。 |
 
 ## 认证

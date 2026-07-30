@@ -13,7 +13,7 @@ description: 安装 DevBridge CLI，登录并通过开发隧道托管本地服�
 
 开始前，请确保：
 
-- 当前设备可以运行 Bash 和 `curl`；
+- 当前设备可运行 Bash 或 PowerShell；如使用 Bash 安装方式，需要 `curl`，如使用 PowerShell 安装方式，需要 PowerShell 5+ / PowerShell 7；
 - 你拥有可用的 DevBridge 身份或 AK/SK；
 - 另一台设备可用于验证 Connect 模式。
 
@@ -26,14 +26,27 @@ description: 安装 DevBridge CLI，登录并通过开发隧道托管本地服�
 运行官方安装脚本：
 
 ```bash
-curl -fsSL https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge/install | bash
+curl -fsSL https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge/install.sh | bash
+```
+
+如果你使用 PowerShell，可以运行：
+
+```powershell
+irm https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge/install .ps1 | iex
 ```
 
 CLI 默认安装到 `~/.huawei/bin`，配置保存在 `~/.huawei/devbridge`。如果当前终端找不到命令，将安装目录加入 `PATH`：
 
 ```bash
 export PATH="$HOME/.huawei/bin:$PATH"
-devbridge --version
+devbridge version
+```
+
+如果使用 PowerShell，则执行：
+
+```powershell
+$env:Path = "$HOME/.huawei/bin;$env:Path"
+devbridge version
 ```
 
 有关目录和环境配置的说明，请参阅[安装 DevBridge CLI](./guide/install.md)。
@@ -52,7 +65,7 @@ devbridge auth login
 devbridge auth status
 ```
 
-自动化环境可以使用 AK/SK 或临时 AK/SK。请参阅[登录与凭证](./guide/authentication.md)。
+自动化环境可以使用 AK/SK。请参阅[登录与凭证](./guide/authentication.md)。
 
 ## 托管本地服务
 
