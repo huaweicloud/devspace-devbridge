@@ -119,10 +119,11 @@ devbridge port show <tunnelId> -p 8080
 
 如果本地服务是普通 HTTP，协议应为 `http`；本地服务自身完成 TLS 时使用 `https`；只有确实需要自动识别时使用 `auto`。
 
-修改协议：
+当前 CLI 不支持直接修改已有端口的协议。需要修改时，删除端口并使用正确协议重新创建：
 
 ```bash
-devbridge port update <tunnelId> -p 8080 --protocol http
+devbridge port delete <tunnelId> -p 8080
+devbridge port create <tunnelId> -p 8080 --protocol http
 ```
 
 ## 仍然无法解决

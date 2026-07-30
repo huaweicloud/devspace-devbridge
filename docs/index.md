@@ -13,7 +13,7 @@ description: 安装 DevBridge CLI，登录并通过开发隧道托管本地服�
 
 开始前，请确保：
 
-- 当前设备可运行 Bash 或 PowerShell；如使用 Bash 安装方式，需要 `curl`，如使用 PowerShell 安装方式，需要 PowerShell 5+ / PowerShell 7；
+- 当前设备可以运行 Bash 和 `curl`，或者 PowerShell 5.1 及以上版本；
 - 你拥有可用的 DevBridge 身份或 AK/SK；
 - 另一台设备可用于验证 Connect 模式。
 
@@ -32,7 +32,7 @@ curl -fsSL https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge/install.sh | bas
 如果你使用 PowerShell，可以运行：
 
 ```powershell
-irm https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge/install .ps1 | iex
+irm https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge/install.ps1 | iex
 ```
 
 CLI 默认安装到 `~/.huawei/bin`，配置保存在 `~/.huawei/devbridge`。如果当前终端找不到命令，将安装目录加入 `PATH`：
@@ -65,7 +65,7 @@ devbridge auth login
 devbridge auth status
 ```
 
-自动化环境可以使用 AK/SK。请参阅[登录与凭证](./guide/authentication.md)。
+自动化环境可以使用 AK/SK 或临时 AK/SK。请参阅[登录与凭证](./guide/authentication.md)。
 
 ## 托管本地服务
 

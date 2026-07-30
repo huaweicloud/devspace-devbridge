@@ -9,7 +9,7 @@ description: 配置隧道端口、协议和匿名访问策略。
 
 ## 创建端口
 
-创建一个禁止匿名访问的 HTTP 端口（`--deny-anonymous` 可选，默认禁止匿名访问）：
+创建一个明确禁止匿名访问的 HTTP 端口。端口默认也是禁止匿名访问：
 
 ```bash
 devbridge port create <tunnelId> -p 8080 --protocol http --deny-anonymous
@@ -21,13 +21,13 @@ devbridge port create <tunnelId> -p 8080 --protocol http --deny-anonymous
 devbridge port create <tunnelId> -p 8080 --protocol http -a
 ```
 
-创建一个使用自动协议识别的端口：
+创建一个使用默认 `auto` 协议的端口：
 
 ```bash
-devbridge port create <tunnelId> -p 3000 --protocol auto
+devbridge port create <tunnelId> -p 3000
 ```
 
-创建时必须提供端口和协议。端口范围为 `1` 到 `65535`，同一条隧道内不能重复。
+创建时必须提供端口，协议默认为 `auto`。端口范围为 `1` 到 `65535`，同一条隧道内不能重复。
 
 ## 选择协议
 
@@ -86,12 +86,6 @@ devbridge port show <tunnelId> -p 8080
 
 ## 更新端口
 
-只更新协议：
-
-```bash
-devbridge port update <tunnelId> -p 8080 --protocol https
-```
-
 将端口改为禁止匿名访问：
 
 ```bash
@@ -104,7 +98,8 @@ devbridge port update <tunnelId> -p 8080 --deny-anonymous
 devbridge port update <tunnelId> -p 8080 -a
 ```
 
-更新时，`--protocol` 和匿名访问选项不是必填；未指定的字段保持不变。端口不支持描述字段，因此端口命令中没有 `-d`。
+更新命令只修改匿名访问策略。当前 CLI 不支持直接修改已有端口的协议；需要变更协议时，
+先删除端口，再使用新协议重新创建。端口不支持描述字段，因此端口命令中没有 `-d`。
 
 ## 删除端口
 

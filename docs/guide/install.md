@@ -9,31 +9,26 @@ description: 使用官方安装脚本安装并验证 DevBridge CLI。
 
 ## 系统要求
 
-- Bash 或 PowerShell；
-- `curl`（适用于 Bash 安装方式）；
-- `irm`（适用于 PowerShell 安装方式）；
+- Bash 和 `curl`，或者 PowerShell 5.1 及以上版本；
+- x86-64 或 ARM64 架构；
 - 可以访问 DevBridge 安装源；
 - 对 `~/.huawei` 目录具有写权限。
 
 ## 安装
 
-运行：
+### Bash
 
 ```bash
 curl -fsSL https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge/install.sh | bash
-安装后执行
-source ~/.bashrc
 ```
 
-如果你使用 PowerShell，可以运行：
+### PowerShell
 
 ```powershell
-irm https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge/install .ps1 | iex
-安装后执行
-$env:Path = [System.Environment]::GetEnvironmentVariable('Path','User')
+irm https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge/install.ps1 | iex
 ```
 
-安装脚本使用固定目录，不提供版本、安装目录、下载源或静默安装选项。
+标准安装会安装当前发布版本并使用默认目录，不需要指定版本或下载源。
 
 | 内容           | 默认位置              |
 | -------------- | --------------------- |
@@ -54,11 +49,13 @@ export PATH="$HOME/.huawei/bin:$PATH"
 $env:Path = "$HOME/.huawei/bin;$env:Path"
 ```
 
-若要对后续终端持续生效，把相应命令加入对应 shell 的启动文件；Bash/Zsh 可写入 `~/.bashrc` 或 `~/.zshrc`，PowerShell 可写入 `$PROFILE`，然后重新打开终端。
+若要对后续终端持续生效，把相应命令加入 Shell 启动文件。Bash 或 Zsh 可写入
+`~/.bashrc` 或 `~/.zshrc`，PowerShell 可写入 `$PROFILE`。也可以重新打开终端，
+使用安装程序已经写入的用户 `PATH`。
 
 ## 验证安装
 
-```bash
+```console
 devbridge version
 devbridge --help
 ```

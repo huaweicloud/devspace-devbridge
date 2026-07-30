@@ -61,24 +61,26 @@ description: DevBridge CLI 的认证、隧道、端口、Host 和 Connect 命令
 
 ## 端口
 
-| 命令                                                               | 说明           |
-| ------------------------------------------------------------------ | -------------- |
-| `devbridge port create <tunnelId> -p <port> --protocol <protocol>` | 创建端口。     |
-| `devbridge port list <tunnelId>`                                   | 列出隧道端口。 |
-| `devbridge port show <tunnelId> -p <port>`                         | 查看端口详情。 |
-| `devbridge port update <tunnelId> -p <port>`                       | 更新端口。     |
-| `devbridge port delete <tunnelId> -p <port>`                       | 删除端口。     |
+| 命令                                                               | 说明                     |
+| ------------------------------------------------------------------ | ------------------------ |
+| `devbridge port create <tunnelId> -p <port> --protocol <protocol>` | 创建端口。               |
+| `devbridge port list <tunnelId>`                                   | 列出隧道端口。           |
+| `devbridge port list <tunnelId> -j`                                | 使用 JSON 输出端口列表。 |
+| `devbridge port show <tunnelId> -p <port>`                         | 查看端口详情。           |
+| `devbridge port update <tunnelId> -p <port>`                       | 更新匿名访问策略。       |
+| `devbridge port delete <tunnelId> -p <port>`                       | 删除端口。               |
 
 ### 端口参数
 
-| 参数                      | 说明                                                         |
-| ------------------------- | ------------------------------------------------------------ |
-| `-p`                      | 端口号，范围为 `1` 到 `65535`。                              |
-| `--protocol`              | `http`、`https` 或 `auto`。创建时默认为 `auto`，更新时可选。 |
-| `--deny-anonymous`        | 禁止匿名访问该端口。                                         |
-| `-a`、`--allow-anonymous` | 允许匿名访问该端口。                                         |
+| 参数                      | 说明                                                     |
+| ------------------------- | -------------------------------------------------------- |
+| `-p`                      | 端口号，范围为 `1` 到 `65535`。                          |
+| `--protocol`              | `http`、`https` 或 `auto`。仅创建时可用，默认为 `auto`。 |
+| `--deny-anonymous`        | 创建或更新时禁止匿名访问。                               |
+| `-a`、`--allow-anonymous` | 创建或更新时允许匿名访问。                               |
+| `-j`、`--json`            | 使用 JSON 输出端口列表。                                 |
 
-端口命令不支持 `-d` 描述参数，也不提供端口批量删除命令。
+当前 CLI 不支持修改已有端口的协议。端口命令不支持 `-d` 描述参数，也不提供端口批量删除命令。
 
 ## Host
 
