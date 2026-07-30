@@ -9,12 +9,16 @@ description: 配置隧道端口、协议和匿名访问策略。
 
 ## 创建端口
 
-创建一个禁止匿名访问的 HTTP 端口：
+创建一个禁止匿名访问的 HTTP 端口（--deny-anonymous可传可不传，默认创建禁止匿名访问）：
 
 ```bash
 devbridge port create <tunnelId> -p 8080 --protocol http --deny-anonymous
 ```
+创建一个允许匿名访问的 HTTP 端口：
 
+```bash
+devbridge port create <tunnelId> -p 8080 --protocol http -a
+```
 创建一个使用自动协议识别的端口：
 
 ```bash
@@ -35,13 +39,18 @@ devbridge port create <tunnelId> -p 3000 --protocol auto
 
 ## 控制匿名访问
 
+`-a 、--allow-anonymous` 表示该端口可匿名访问：
+
+```bash
+devbridge port create <tunnelId> -p 8080 --protocol http -a
+```
 `--deny-anonymous` 表示该端口必须经过身份认证：
 
 ```bash
 devbridge port create <tunnelId> -p 8080 --protocol http --deny-anonymous
 ```
 
-未添加该参数时，端口按允许匿名访问创建。以下服务应始终禁止匿名访问：
+以下服务应始终禁止匿名访问：
 
 - 管理后台；
 - 调试和诊断端点；
@@ -85,7 +94,11 @@ devbridge port update <tunnelId> -p 8080 --protocol https
 ```bash
 devbridge port update <tunnelId> -p 8080 --deny-anonymous
 ```
+将端口改为允许匿名访问：
 
+```bash
+devbridge port update <tunnelId> -p 8080 -a
+```
 更新时，`--protocol` 和匿名访问选项不是必填；未指定的字段保持不变。端口不支持描述字段，因此端口命令中没有 `-d`。
 
 ## 删除端口
