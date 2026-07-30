@@ -14,14 +14,19 @@ description: 使用 Host 模式把一个或多个本地端口连接到 DevBridge
 ```bash
 python3 -m http.server 8080
 ```
+确认对应端口已经配置在同一条隧道上，通过该命令查询：
+
+```bash
+devbridge port list <tunnelId>
+```
 
 然后托管已创建隧道的端口：
 
 ```bash
-devbridge host <tunnelId> -p 8080
+devbridge host <tunnelId>
 ```
 
-Host 会自动申请新的 Host 令牌、连接中继服务并开始转发。命令在前台持续运行，按 `Ctrl+C` 停止。
+Host 会自动申请新的 Host 令牌、开始监听所有端口、连接中继服务并开始转发。命令在前台持续运行，按 `Ctrl+C` 停止。
 
 ## 同时托管多个端口
 
