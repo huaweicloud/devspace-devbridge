@@ -84,11 +84,10 @@ description: DevBridge CLI 的认证、隧道、端口、Host 和 Connect 命令
 
 ## Host
 
-| 命令                                                   | 说明                       |
-| ------------------------------------------------------ | -------------------------- |
-| `devbridge host <tunnelId> -p <port>`                  | 在已有隧道中托管一个端口。 |
-| `devbridge host <tunnelId> -p <port> -p <port>`        | 同时托管多个端口。         |
-| `devbridge host -p <port> -d <description> -e <hours>` | 创建隧道并立即托管端口。   |
+| 命令                                                   | 说明                           |
+| ------------------------------------------------------ | ------------------------------ |
+| `devbridge host <tunnelId>`                            | 托管已有隧道中配置的全部端口。 |
+| `devbridge host -p <port> -d <description> -e <hours>` | 创建隧道并立即托管端口。       |
 
 Host 是前台长运行命令。`-d` 和 `-e` 只在 Host 同时创建隧道时描述新隧道。
 

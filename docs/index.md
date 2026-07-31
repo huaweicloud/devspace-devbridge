@@ -95,7 +95,7 @@ https://<tunnelId>.<clusterId>.myhuaweicloud.com
 
 ::: tip 重复使用隧道
 需要保留固定地址或配置多个端口时，先创建持久隧道，再使用
-`devbridge host <tunnelId> -p <port>` 托管。详见[管理隧道](./guide/tunnels.md)。
+`devbridge host <tunnelId>` 托管其中配置的全部端口。详见[管理隧道](./guide/tunnels.md)。
 :::
 
 ## 从另一台设备连接
