@@ -82,7 +82,7 @@ devbridge port list
 devbridge port show <tunnelId> -p 8080
 ```
 
-结果包含端口、协议和匿名访问状态。
+结果包含隧道ID、端口、协议和匿名访问状态。
 
 ## 更新端口
 
