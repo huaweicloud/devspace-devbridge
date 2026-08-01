@@ -28,7 +28,7 @@ jobs:
           node-version: 24
           cache: npm
       - name: Configure Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Install dependencies
         run: npm ci
       - name: Check documentation
