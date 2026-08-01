@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: "gomod"
-  schedule:
+    schedule:
     interval: "weekly"
       open-pull-requests-limit: 20
   - package-ecosystem: "github-actions"
