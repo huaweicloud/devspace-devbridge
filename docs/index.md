@@ -23,33 +23,26 @@ description: 安装 DevBridge CLI，登录并通过开发隧道托管本地服�
 
 ## 安装
 
-运行官方安装脚本：
+使用 Bash 运行官方安装脚本：
 
 ```bash
 curl -fsSL https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge/install.sh | bash
 ```
 
-如果你使用 PowerShell，可以运行：
+使用 PowerShell 时运行：
 
 ```powershell
 irm https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge/install.ps1 | iex
 ```
 
-CLI 默认安装到 `~/.huawei/bin`，配置保存在 `~/.huawei/devbridge`。如果当前终端找不到命令，将安装目录加入 `PATH`：
+安装完成后验证 CLI：
 
 ```bash
-export PATH="$HOME/.huawei/bin:$PATH"
 devbridge version
 ```
 
-如果使用 PowerShell，则执行：
-
-```powershell
-$env:Path = "$HOME/.huawei/bin;$env:Path"
-devbridge version
-```
-
-有关目录和环境配置的说明，请参阅[安装 DevBridge CLI](./guide/install.md)。
+如果终端找不到命令，或者需要了解系统要求、PATH 和安装目录，请参阅
+[安装 DevBridge CLI](./guide/install.md)。
 
 ## 登录
 
