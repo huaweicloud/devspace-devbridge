@@ -28,6 +28,7 @@ const sidebar = [
       { text: "REST API", link: "/reference/api" },
       { text: "本地配置与目录", link: "/reference/configuration" },
       { text: "问题排查", link: "/reference/troubleshooting" },
+      { text: "更新日志", link: "/changelog" },
     ],
   },
 ];
@@ -55,6 +56,7 @@ export default defineConfig({
       { text: "开发隧道", link: "/" },
       { text: "命令参考", link: "/reference/cli" },
       { text: "REST API", link: "/reference/api" },
+      { text: "更新日志", link: "/changelog" },
     ],
     sidebar,
     outline: {
