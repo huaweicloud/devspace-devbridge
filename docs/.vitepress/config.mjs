@@ -19,7 +19,10 @@ const sidebar = [
       { text: "管理端口", link: "/guide/ports" },
       { text: "Host：托管本地服务", link: "/guide/host" },
       { text: "Connect：连接远程服务", link: "/guide/connect" },
-      { text: "Host 与 Connect 实践示例", link: "/guide/host-connect-walkthrough" },
+      {
+        text: "Host 与 Connect 实践示例",
+        link: "/guide/host-connect-walkthrough",
+      },
     ],
   },
   {
