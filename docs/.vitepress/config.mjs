@@ -26,6 +26,7 @@ const sidebar = [
     text: "参考",
     items: [
       { text: "CLI 命令参考", link: "/reference/cli" },
+      { text: "AI Agent Skill", link: "/reference/skill" },
       { text: "REST API", link: "/reference/api" },
       { text: "本地配置与目录", link: "/reference/configuration" },
       { text: "问题排查", link: "/reference/troubleshooting" },
