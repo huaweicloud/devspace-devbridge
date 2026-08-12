@@ -34,7 +34,7 @@ Host 会自动申请新的 Host 令牌，加载隧道中的全部端口配置，
 没有可复用隧道时，可以让 Host 创建一条临时使用的隧道：
 
 ```bash
-devbridge host -p 8080 -d "Temporary preview" -e 8
+devbridge host -p 8080 -d "隧道描述信息" -e 8
 ```
 
 这里的 `-d` 和 `-e` 属于新建隧道：分别设置隧道描述和有效期小时数。它们不是端口参数。

@@ -10,7 +10,7 @@ description: 创建、查询、更新、选择和删除 DevBridge 隧道。
 ## 创建隧道
 
 ```bash
-devbridge create frontend -d "Frontend preview" -e 24
+devbridge create frontend -d "隧道描述信息" -e 24
 ```
 
 参数含义：
@@ -57,7 +57,7 @@ devbridge show <tunnelId>
 ## 更新隧道
 
 ```bash
-devbridge update <tunnelId> -n "frontend-v2" -d "Updated preview" -e 48
+devbridge update <tunnelId> -n "frontend-v2" -d "隧道描述信息" -e 48
 ```
 
 只传需要修改的选项。`-e` 仍以小时为单位，最大为 720 小时。成功修改隧道或端口会刷新当前到期时间。

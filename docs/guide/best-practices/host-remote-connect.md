@@ -54,7 +54,7 @@ devbridge host -p 8080
 如需设置描述和有效期：
 
 ```bash
-devbridge host -p 8080 -d "Temporary preview" -e 8
+devbridge host -p 8080 -d "隧道描述信息" -e 8
 ```
 
 - `-p 8080`：托管本地 `8080` 端口。
