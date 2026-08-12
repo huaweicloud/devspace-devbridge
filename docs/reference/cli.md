@@ -15,6 +15,13 @@ description: DevBridge CLI 的认证、隧道、端口、Host 和 Connect 命令
 | `devbridge version`          | 显示 CLI 版本。      |
 | `devbridge <command> --help` | 显示指定命令的参数。 |
 
+### 全局参数
+
+| 参数              | 说明                                     |
+| ----------------- | ---------------------------------------- |
+| `--help`、`-h`    | 显示当前命令的帮助。                     |
+| `--verbose`、`-v` | 输出更详细的运行日志，便于排查问题。   |
+
 ## 认证
 
 | 命令                                                                                | 说明                  |
@@ -98,6 +105,71 @@ Host 是前台长运行命令。`-d` 和 `-e` 只在 Host 同时创建隧道时�
 | `devbridge connect <tunnelId>` | 连接隧道并建立本地端口映射。 |
 
 当前文档不声明 Connect 支持 `--port`；应以当前 CLI 的 `--help` 输出为准。
+
+## 配额查询
+
+| 命令             | 说明                       |
+| ---------------- | -------------------------- |
+| `devbridge limits` | 查看账户配额与当前用量。 |
+
+输出包含：
+
+- 重置时间；
+- 流量配额与已用流量；
+- 活跃隧道数；
+- 隧道、端口、Host 数量上限；
+- 隧道带宽上限；
+- 单端口 HTTP 请求频率上限；
+- 单端口连接数上限。
+
+## 调试工具
+
+### echo
+
+启动一个 HTTP echo 服务，用于验证隧道链路是否通畅。
+
+| 命令                          | 说明                                   |
+| ----------------------------- | -------------------------------------- |
+| `devbridge echo`              | 启动 echo 服务，默认随机端口，监听 `127.0.0.1`。 |
+| `devbridge echo -p 8080`      | 指定监听端口。                         |
+| `devbridge echo -p 8080 -i 0.0.0.0` | 指定监听端口和监听地址。         |
+
+### ping
+
+对指定 URI 发起 HTTP ping 探测，用于检查隧道地址的连通性和延迟。
+
+| 命令                                              | 说明                             |
+| ------------------------------------------------- | -------------------------------- |
+| `devbridge ping <uri>`                           | 对 URI 发起探测，默认 1000ms 间隔。 |
+| `devbridge ping <uri> -i 500`                     | 指定探测间隔，单位为毫秒。       |
+
+示例：
+
+```bash
+devbridge ping https://<tunnelId>-8080.cn-north-4-bridge.myhuaweicloud.com
+devbridge ping http://127.0.0.1:8080 -i 3000
+```
+
+输出形如：
+
+```text
+HTTP 200 OK -- 4 ms
+```
+
+### 调试日志
+
+任一命令追加 `-v` / `--verbose` 启用 Debug 级别日志：
+
+```bash
+devbridge -v host <tunnelId>
+devbridge connect <tunnelId> --verbose
+```
+
+## 补全
+
+| 命令                                           | 说明                                 |
+| ---------------------------------------------- | ------------------------------------ |
+| `devbridge completion [bash|zsh|fish|powershell]` | 生成 Shell 自动补全脚本（Cobra 内置命令）。 |
 
 ## 相关内容
 

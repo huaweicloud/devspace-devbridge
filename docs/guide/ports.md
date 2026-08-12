@@ -64,6 +64,16 @@ devbridge port create <tunnelId> -p 8080 --protocol http --deny-anonymous
 匿名访问意味着持有隧道地址的访问者不需要 DevBridge 身份即可访问端口。只对明确需要公开的开发内容启用。
 :::
 
+### 浏览器访问行为
+
+在浏览器中直接打开隧道地址 `https://<tunnelId>.<clusterId>.myhuaweicloud.com` 时，行为取决于端口的匿名访问策略：
+
+- **允许匿名访问**：直接打开地址即可访问，不需要登录或凭证。
+- **禁止匿名访问**：跳转到登录页，完成认证获取凭证后即可访问。
+
+不需要在本地安装 CLI 或建立 Connect 连接，即可通过浏览器直接访问隧道地址。详见
+[Host：托管本地服务](./host.md#访问隧道地址)。
+
 ## 列出端口
 
 ```bash
