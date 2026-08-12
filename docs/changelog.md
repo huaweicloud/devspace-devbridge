@@ -2,7 +2,7 @@
 
 本文件记录 DevBridge 文档站点的变更内容。
 
-## 2026-08-11 变更
+## 2026-08-11
 
 ### 端侧变更
 
@@ -27,7 +27,7 @@
 - 全局新增 `-v` / `--verbose` 参数，启用 Debug 级别日志。
 - 适用于全部命令，例如 `devbridge -v host <tunnelId>`、`devbridge connect <tunnelId> --verbose`。
 
-## 2026-07-31 变更
+## 2026-07-31
 
 ### 端侧变更
 

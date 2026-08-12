@@ -1,11 +1,11 @@
 ---
-title: Host 与 Connect 实践示例
-description: 从启动本地服务到远端访问的完整 Host/Connect 端到端演练。
+title: 托管与远程连接
+description: 在本地托管服务后，从远端通过 Connect 建立连接并访问。
 ---
 
-# Host 与 Connect 实践示例
+# 托管与远程连接
 
-<p class="lead">本页通过一个完整示例演示 Host 与 Connect 的配合使用：在本地启动服务、托管端口、从另一台设备连接并访问。</p>
+<p class="lead">在设备 A 上启动服务并托管，在远端设备 B 通过 Connect 建立本地端口映射，以 localhost 访问远程服务。</p>
 
 ## 场景说明
 
@@ -17,7 +17,7 @@ description: 从启动本地服务到远端访问的完整 Host/Connect 端到�
 | 设备 A | Host    | 运行本地服务，托管端口到 DevBridge。 |
 | 设备 B | Connect | 连接隧道，在本地建立端口映射并访问。 |
 
-两台设备都需要已安装并登录 DevBridge CLI。若尚未安装，参阅[安装 DevBridge CLI](./install.md)。
+两台设备都需要已安装并登录 DevBridge CLI。若尚未安装，参阅[安装 DevBridge CLI](../install.md)。
 
 ## 第一步：在设备 A 启动本地服务
 
@@ -161,22 +161,6 @@ http://127.0.0.1:8080
 
 两者等价，都指向设备 B 本地建立的端口映射，再由 DevBridge 转发到设备 A 的 `8080` 服务。
 
-### 直接访问隧道地址
-
-除了通过 Connect 建立本地映射访问外，也可以在任意设备的浏览器中直接打开隧道地址：
-
-```text
-https://<tunnelId>.<clusterId>.myhuaweicloud.com
-```
-
-访问行为取决于端口的匿名访问策略：
-
-- **允许匿名访问**：直接打开地址即可访问，不需要 DevBridge 身份或凭证。
-- **禁止匿名访问**：跳转到登录页，完成认证获取凭证后即可访问。
-
-这种方式不需要在访问端安装 CLI 或建立 Connect 连接，适合快速分享和验证。详见
-[Host：托管本地服务](./host.md#访问隧道地址)。
-
 ## 完整流程速查
 
 | 步骤 | 设备   | 终端   | 命令                           | 说明                     |
@@ -232,7 +216,8 @@ devbridge delete <tunnelId>
 
 ## 相关内容
 
-- [Host：托管本地服务](./host.md)
-- [Connect：连接远程服务](./connect.md)
-- [什么是开发隧道](./overview.md)
-- [排查 Host 与 Connect 问题](../reference/troubleshooting.md)
+- [托管与公网访问](./host-public-access.md)
+- [Host：托管本地服务](../host.md)
+- [Connect：连接远程服务](../connect.md)
+- [什么是开发隧道](../overview.md)
+- [排查 Host 与 Connect 问题](../../reference/troubleshooting.md)

@@ -19,10 +19,14 @@ const sidebar = [
       { text: "管理端口", link: "/guide/ports" },
       { text: "Host：托管本地服务", link: "/guide/host" },
       { text: "Connect：连接远程服务", link: "/guide/connect" },
-      {
-        text: "Host 与 Connect 实践示例",
-        link: "/guide/host-connect-walkthrough",
-      },
+      { text: "配额查询与调试工具", link: "/guide/quota-and-debug" },
+    ],
+  },
+  {
+    text: "最佳实践",
+    items: [
+      { text: "托管与公网访问", link: "/guide/best-practices/host-public-access" },
+      { text: "托管与远程连接", link: "/guide/best-practices/host-remote-connect" },
     ],
   },
   {
