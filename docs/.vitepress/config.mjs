@@ -25,8 +25,14 @@ const sidebar = [
   {
     text: "最佳实践",
     items: [
-      { text: "托管与公网访问", link: "/guide/best-practices/host-public-access" },
-      { text: "托管与远程连接", link: "/guide/best-practices/host-remote-connect" },
+      {
+        text: "托管与公网访问",
+        link: "/guide/best-practices/host-public-access",
+      },
+      {
+        text: "托管与远程连接",
+        link: "/guide/best-practices/host-remote-connect",
+      },
     ],
   },
   {
