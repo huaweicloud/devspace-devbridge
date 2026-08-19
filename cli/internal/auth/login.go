@@ -53,11 +53,9 @@ func (c *Credential) UnmarshalJSON(data []byte) error {
 }
 
 type callbackResponse struct {
-	APIKey    string `json:"api_key"`
-	Access    string `json:"access"`
-	ExpiresAt string `json:"expires_at"`
-	UserName  string `json:"userName"`
-	UserID    string `json:"userId"`
+	APIKey   string `json:"apiKey"`
+	UserName string `json:"userName"`
+	UserID   string `json:"userId"`
 }
 
 var (
@@ -68,7 +66,7 @@ var (
 
 const (
 	loginOriginParam = "devbridge"
-	loginPageURL     = "%s/space/auth/redirect?%s"
+	loginPageURL     = "%s/space/devbridge/redirect?%s"
 	envHWAPIKey      = "HW_API_KEY"
 )
 
@@ -117,12 +115,8 @@ func hcBrowserLogin() (Credential, *UserInfo, error) {
 	slog.Debug("waiting for browser login callback", "port", port)
 	select {
 	case resp := <-resultCh:
-		apiKey := resp.APIKey
-		if apiKey == "" {
-			apiKey = resp.Access
-		}
 		cred := Credential{
-			APIKey:    apiKey,
+			APIKey:    resp.APIKey,
 			LoginType: "huaweicloud",
 		}
 		var userInfo *UserInfo
@@ -162,7 +156,7 @@ func handleLoginCallback(w http.ResponseWriter, r *http.Request, origin string, 
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-	if resp.APIKey == "" && resp.Access == "" {
+	if resp.APIKey == "" {
 		errCh <- errMissingAPIKey
 		http.Error(w, "missing api key", http.StatusBadRequest)
 		return

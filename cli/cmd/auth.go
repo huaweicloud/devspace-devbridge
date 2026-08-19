@@ -25,6 +25,15 @@ var loginCmd = &cobra.Command{
 	Short: i18n.T(i18n.Msg.Auth.LoginShort),
 	Args:  cobra.NoArgs,
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
+		// 命令行未传 --api-key 时，先复用本地已有凭证：远程校验通过则直接登录成功
+		if hcLoginAPIKey == "" {
+			if cred := auth.ReadValidAPIKey(); cred != nil {
+				if _, err := auth.VerifyAPIKey(cred.APIKey); err == nil {
+					fmt.Println(i18n.T(i18n.Msg.Auth.LoginSuccess))
+					return nil
+				}
+			}
+		}
 		cred, userInfo, err := auth.HCAuth(hcLoginAPIKey, hcLoginHuaweiCloud)
 		if err != nil {
 			return err
