@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"huawei.com/devbridge/internal/api"
+	"huawei.com/devbridge/internal/auth"
 	client "huawei.com/devbridge/internal/connect"
 )
 
@@ -76,6 +77,9 @@ var hostCmd = &cobra.Command{
 		var ports []int
 		var jwtToken string
 
+		if hostAPIKey != "" {
+			auth.SetOverrideAPIKey(hostAPIKey)
+		}
 		if hostToken != "" {
 			// --token 模式：用户直接提供 JWT token，跳过 API 调用
 			// tunnelId 必须指定，端口由 gateway 通过 relay channel 下发
@@ -90,21 +94,8 @@ var hostCmd = &cobra.Command{
 				fmt.Println("Note: --ports is ignored in --token mode, ports will be fetched from gateway")
 			}
 			jwtToken = hostToken
-		} else if hostAPIKey != "" {
-			// --api-key 模式：跳过 AKSK 和 TunnelToken，端口由网关下发
-			if len(args) == 0 || args[0] == "" {
-				log.Fatalf("tunnelId is required when using --api-key")
-			}
-			tunnelId = args[0]
-			if err := validateTunnelID(tunnelId); err != nil {
-				log.Fatalf("%v", err)
-			}
-			if cmd.Flags().Changed("ports") {
-				fmt.Println("Note: --ports is ignored in --api-key mode, ports will be fetched from gateway")
-			}
-			jwtToken = "" // 不使用 JWT
 		} else {
-
+			// 默认模式或 --api-key 模式：正常走 API 调用（API Key 认证）
 			if len(args) > 0 && args[0] != "" {
 				// 指定了 tunnelId：从 API 查询该隧道绑定的所有端口，-p 参数忽略
 				tunnelId = args[0]
@@ -149,12 +140,14 @@ var hostCmd = &cobra.Command{
 				}
 			}
 
-			// 通过 TunnelToken 接口获取 host JWT
-			tokenResult, err := api.TunnelToken(tunnelId, "host")
-			if err != nil {
-				log.Fatalf("Failed to get host token: %v", err)
+			// --api-key 模式跳过 TunnelToken，直接用 API Key 鉴权
+			if hostAPIKey == "" {
+				tokenResult, err := api.TunnelToken(tunnelId, "host")
+				if err != nil {
+					log.Fatalf("Failed to get host token: %v", err)
+				}
+				jwtToken = tokenResult.Token
 			}
-			jwtToken = tokenResult.Token
 		}
 
 		client.Listen(tunnelId, ports, jwtToken, hostAPIKey)
@@ -175,23 +168,15 @@ var connectCmd = &cobra.Command{
 		var jwtToken string
 		var ports []int
 
+		if connectAPIKey != "" {
+			auth.SetOverrideAPIKey(connectAPIKey)
+		}
 		if connectToken != "" {
-			// -token 模式：用户直接提供 JWT token，跳过 TunnelToken 和 ListPorts
+			// --token 模式：用户直接提供 JWT token，跳过 TunnelToken 和 ListPorts
 			// 端口列表由 host 端通过 SSH ForwardFromRemotePort 协商下发
 			jwtToken = connectToken
-		} else if connectAPIKey != "" {
-			// --api-key 模式：跳过 TunnelToken 和 ListPorts
-			// 端口由 host 端通过 SSH ForwardFromRemotePort 下发
-			jwtToken = ""
 		} else {
-			// 默认模式：通过 API 获取 token 和端口列表
-
-			tokenResult, err := api.TunnelToken(tunnelId, "connect")
-			if err != nil {
-				log.Fatalf("Failed to get connect token: %v", err)
-			}
-			jwtToken = tokenResult.Token
-
+			// 默认模式或 --api-key 模式：通过 API 获取端口列表
 			portsResult, err := api.ListPorts(tunnelId)
 			if err != nil {
 				log.Fatalf("Failed to list ports: %v", err)
@@ -200,6 +185,15 @@ var connectCmd = &cobra.Command{
 				log.Fatalf("No ports configured for tunnel %s", tunnelId)
 			}
 			ports = portResultsToInt(portsResult)
+
+			// --api-key 模式跳过 TunnelToken，直接用 API Key 鉴权
+			if connectAPIKey == "" {
+				tokenResult, err := api.TunnelToken(tunnelId, "connect")
+				if err != nil {
+					log.Fatalf("Failed to get connect token: %v", err)
+				}
+				jwtToken = tokenResult.Token
+			}
 		}
 
 		client.Send(tunnelId, jwtToken, ports, connectAPIKey)
@@ -213,7 +207,7 @@ func init() {
 	hostCmd.Flags().StringVarP(&hostDescription, "description", "d", "", "Description for new tunnel")
 	hostCmd.Flags().IntVarP(&hostExpiration, "expiration", "e", 0, "Tunnel expiration (hours, 1-720)")
 	hostCmd.Flags().StringVarP(&hostToken, "token", "t", "", "JWT token for host (skip API token and port lookup)")
-	hostCmd.Flags().StringVarP(&hostAPIKey, "api-key", "k", "", "API key for host (skip AKSK auth and token API)")
+	hostCmd.Flags().StringVarP(&hostAPIKey, "api-key", "k", "", "API key for host (skip TunnelToken, use X-API-Key for WebSocket auth)")
 	connectCmd.Flags().StringVarP(&connectToken, "token", "t", "", "JWT token for connect (skip API token and port lookup)")
-	connectCmd.Flags().StringVarP(&connectAPIKey, "api-key", "k", "", "API key for connect (skip AKSK auth and token API)")
+	connectCmd.Flags().StringVarP(&connectAPIKey, "api-key", "k", "", "API key for connect (skip TunnelToken, use X-API-Key for WebSocket auth)")
 }
