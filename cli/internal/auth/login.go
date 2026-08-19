@@ -1,0 +1,186 @@
+package auth
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"log/slog"
+	"net"
+	"net/http"
+	"net/url"
+	"time"
+
+	"huawei.com/devbridge/internal/i18n"
+
+	"github.com/cli/browser"
+)
+
+type Credential struct {
+	APIKey    string `json:"api_key"    yaml:"api_key"`
+	ExpiresAt string `json:"expires_at" yaml:"expires_at"`
+	LoginType string `json:"login_type" yaml:"login_type"`
+}
+
+type UserInfo struct {
+	UserName string `json:"user_name" yaml:"user_name"`
+	UserID   string `json:"user_id"   yaml:"user_id"`
+}
+
+type legacyCredential struct {
+	APIKey    string `json:"api_key"`
+	Access    string `json:"access"`
+	ExpiresAt string `json:"expires_at"`
+}
+
+func (c *Credential) UnmarshalJSON(data []byte) error {
+	type alias Credential
+	if err := json.Unmarshal(data, (*alias)(c)); err == nil && c.APIKey != "" {
+		return nil
+	}
+	var old legacyCredential
+	if err := json.Unmarshal(data, &old); err != nil {
+		return err
+	}
+	if old.APIKey != "" {
+		c.APIKey = old.APIKey
+	} else {
+		c.APIKey = old.Access
+	}
+	c.ExpiresAt = old.ExpiresAt
+	return nil
+}
+
+type callbackResponse struct {
+	APIKey    string `json:"api_key"`
+	Access    string `json:"access"`
+	ExpiresAt string `json:"expires_at"`
+	UserName  string `json:"userName"`
+	UserID    string `json:"userId"`
+}
+
+var (
+	errMissingAPIKey   = errors.New("missing api key")
+	errLoginTimeout    = errors.New("login timeout")
+	errHuaweiCloudOnly = errors.New("only huaweicloud login is allowed")
+)
+
+const (
+	loginOriginParam = "devbridge"
+	loginPageURL     = "%s/space/auth/redirect?%s"
+	envHWAPIKey      = "HW_API_KEY"
+)
+
+var LoginURL = "https://devstation.ulanqab.huawei.com"
+
+func hcBrowserLogin() (Credential, *UserInfo, error) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		return Credential{}, nil, err
+	}
+	defer listener.Close()
+	port := listener.Addr().(*net.TCPAddr).Port
+
+	lang := "en-us"
+	if i18n.DetectSystemLang() == i18n.ZH {
+		lang = "zh-cn"
+	}
+	params := url.Values{}
+	params.Set("origin", loginOriginParam)
+	params.Set("language", lang)
+	params.Set("callback", fmt.Sprintf("%d", port))
+	redirectURL := fmt.Sprintf(loginPageURL, LoginURL, params.Encode())
+
+	slog.Debug(i18n.T(i18n.Msg.Auth.OpenBrowser))
+	if err := browser.OpenURL(redirectURL); err != nil {
+		slog.Debug("open browser failed", "err", err)
+		return Credential{}, nil, errors.New(i18n.T(i18n.Msg.Auth.NoBrowserHint))
+	}
+	slog.Debug(i18n.T(i18n.Msg.Auth.BrowserOpened))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	resultCh := make(chan callbackResponse, 1)
+	errCh := make(chan error, 1)
+
+	server := &http.Server{
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handleLoginCallback(w, r, LoginURL, resultCh, errCh)
+		}),
+	}
+	go func() {
+		_ = server.Serve(listener)
+	}()
+
+	slog.Debug("waiting for browser login callback", "port", port)
+	select {
+	case resp := <-resultCh:
+		apiKey := resp.APIKey
+		if apiKey == "" {
+			apiKey = resp.Access
+		}
+		cred := Credential{
+			APIKey:    apiKey,
+			LoginType: "huaweicloud",
+		}
+		var userInfo *UserInfo
+		if resp.UserName != "" || resp.UserID != "" {
+			userInfo = &UserInfo{UserName: resp.UserName, UserID: resp.UserID}
+		}
+		return cred, userInfo, nil
+	case err := <-errCh:
+		return Credential{}, nil, err
+	case <-ctx.Done():
+		return Credential{}, nil, errLoginTimeout
+	}
+}
+
+func handleLoginCallback(w http.ResponseWriter, r *http.Request, origin string, resultCh chan<- callbackResponse, errCh chan<- error) {
+	w.Header().Set("Access-Control-Allow-Origin", origin)
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 4096))
+	if err != nil {
+		errCh <- err
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	var resp callbackResponse
+	if err := json.Unmarshal(body, &resp); err != nil {
+		errCh <- err
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	if resp.APIKey == "" && resp.Access == "" {
+		errCh <- errMissingAPIKey
+		http.Error(w, "missing api key", http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte("OK"))
+	resultCh <- resp
+}
+
+func HCAuth(apiKey string, huaweiCloud bool) (Credential, *UserInfo, error) {
+	if !huaweiCloud {
+		return Credential{}, nil, errHuaweiCloudOnly
+	}
+	if apiKey != "" {
+		return Credential{
+			APIKey:    apiKey,
+			LoginType: "huaweicloud",
+		}, nil, nil
+	}
+	return hcBrowserLogin()
+}

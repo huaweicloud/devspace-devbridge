@@ -1,0 +1,57 @@
+package auth
+
+import (
+	"log/slog"
+
+	"huawei.com/devbridge/internal/logging"
+)
+
+func maskSecret(s string) string {
+	if len(s) <= 8 {
+		return "****"
+	}
+	return s[:4] + "****" + s[len(s)-4:]
+}
+
+func ReadValidAPIKey() *Credential {
+	cred := readValidAPIKey()
+	if cred != nil && logging.LogLevel() <= slog.LevelDebug {
+		slog.Debug("read valid API key",
+			"apiKey", maskSecret(cred.APIKey),
+			"expiresAt", cred.ExpiresAt,
+			"loginType", cred.LoginType,
+		)
+	}
+	return cred
+}
+
+func readValidAPIKey() *Credential {
+	if cred := loadFromEnv(); cred != nil && isValidAPIKey(cred) {
+		return cred
+	}
+	if cred := loadFromConfigFile(); cred != nil && isValidAPIKey(cred) {
+		return cred
+	}
+	if cred, _, err := LoadCredential(CredentialName); err == nil && cred != nil && isValidAPIKey(cred) {
+		return cred
+	}
+	return nil
+}
+
+func isValidAPIKey(cred *Credential) bool {
+	if cred == nil {
+		return false
+	}
+	return isPermanentAPIKey(cred) || !isAPIKeyExpired(cred)
+}
+
+func isPermanentAPIKey(cred *Credential) bool {
+	return cred != nil && cred.APIKey != "" && cred.ExpiresAt == ""
+}
+
+func isAPIKeyExpired(cred *Credential) bool {
+	if cred == nil {
+		return true
+	}
+	return isExpired(cred.ExpiresAt)
+}
