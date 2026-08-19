@@ -24,7 +24,9 @@ var echoCmd = &cobra.Command{
 		if len(args) > 0 && args[0] != "http" {
 			return fmt.Errorf("%s: %s", i18n.T(i18n.Msg.Port.ProtocolInvalid), args[0])
 		}
-		if echoPort < 1 || echoPort > 65535 {
+		// Only validate port when -p is explicitly provided.
+		// When -p is omitted, echoPort stays 0 and net.Listen picks a random free port.
+		if cmd.Flags().Changed("port") && (echoPort < 1 || echoPort > 65535) {
 			return fmt.Errorf("Invalid port number %d (Port must be between 1 and 65535)", echoPort)
 		}
 		addr := echoInterface

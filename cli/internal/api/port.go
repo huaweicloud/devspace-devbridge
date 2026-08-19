@@ -41,7 +41,7 @@ type ShowPortResult struct {
 
 func validatePortNumber(port int) error {
 	if port < 1 || port > 65535 {
-		return fmt.Errorf("%s: %d", i18n.T(i18n.Msg.Port.PortInvalid), port)
+		return fmt.Errorf("%s", i18n.T(i18n.Msg.Port.PortInvalid))
 	}
 	return nil
 }

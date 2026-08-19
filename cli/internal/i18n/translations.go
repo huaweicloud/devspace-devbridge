@@ -70,7 +70,7 @@ func init() {
 	Msg.Port.AllowAnonymous = Message{ZH: "允许匿名", EN: "Allow Anonymous"}
 	Msg.Port.PortCreated = Message{ZH: "端口创建成功", EN: "Port created successfully"}
 	Msg.Port.PortUpdated = Message{ZH: "端口更新成功", EN: "Port updated successfully"}
-	Msg.Port.PortInvalid = Message{ZH: "端口号无效 (1-65535)", EN: "Invalid port number (1-65535)"}
+	Msg.Port.PortInvalid = Message{ZH: "端口必须为 1 到 65535 之间", EN: "port must be between 1 and 65535"}
 	Msg.Port.ProtocolInvalid = Message{ZH: "协议无效 (http, https, auto)", EN: "Invalid protocol (http, https, auto)"}
 	Msg.Port.PortListEmpty = Message{ZH: "该隧道没有绑定端口", EN: "No ports bound to this tunnel."}
 	Msg.Port.Port = Message{ZH: "端口", EN: "Port"}

@@ -50,6 +50,7 @@ var pingCmd = &cobra.Command{
 					fmt.Printf("%s %s -- %d ms (err: %v)\n",
 						scheme, statusText,
 						result.Latency.Milliseconds(), result.Err)
+					return nil
 				} else {
 					fmt.Printf("%s %s -- %d ms\n",
 						scheme, statusText,
