@@ -1,0 +1,27 @@
+name: Sync to GitCode
+on:
+  push:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Push to GitCode
+        env:
+          GITCODE_TOKEN: ${{ secrets.GITCODE_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add gitcode "https://oauth2:${{{GITCODE_TOKEN}}}@gitcode.com/CloudDeveloperDepartment/devbrige.git"
+          for branch in $(git for-each-ref --format='%(refname)' refs/remotes/origin | grep -v '/HEAD$'); do
+            git push gitcode "$branch:refs/heads/${branch#refs/remotes/origin/}" --force
+          done
+          git push gitcode --tags --force
