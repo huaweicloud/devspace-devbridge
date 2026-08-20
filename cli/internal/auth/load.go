@@ -11,8 +11,3 @@ func loadFromEnv() *Credential {
 		APIKey: apiKey,
 	}
 }
-
-func loadFromConfigFile() *Credential {
-	cred, _ := loadFromConfig()
-	return cred
-}
