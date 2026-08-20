@@ -195,9 +195,6 @@ func request(method, path string, body interface{}, result interface{}) error {
 	}
 	logHTTPResponse(resp, respBody, time.Since(start))
 
-	// 打印接口响应体（Debug 级别，-v 可见）
-	logAPIResponseBody(method, path, respBody)
-
 	// 兼容两种响应格式：
 	// 1. 封装体：{"result": ..., "error_code": "0000", "error_msg": ""}
 	// 2. 裸数据：直接返回 result（数组或对象），无 error_code/error_msg 外层封装
@@ -236,19 +233,6 @@ func isWrappedResponse(body []byte) bool {
 		return false // 非 JSON 对象（如数组）→ 裸数据
 	}
 	return probe.ErrorCode != nil || probe.Result != nil
-}
-
-// logAPIResponseBody 在 Debug 级别打印接口响应体（封装体或裸数据均打印）。
-func logAPIResponseBody(method, path string, body []byte) {
-	if !isDebugEnabled() {
-		return
-	}
-	slog.Debug("API response body",
-		"method", method,
-		"path", path,
-		"body", string(body),
-		"size", fmt.Sprintf("%d bytes", len(body)),
-	)
 }
 
 func get(path string, result interface{}) error {
