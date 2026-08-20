@@ -30,7 +30,7 @@ func decodeCredential(blob string) (*Credential, bool) {
 	parts := strings.Split(blob, ":")
 	// 兼容旧格式：4 段（apikey:login_type:account_namespace:namespace）
 	// 5 段（apikey:expires_at:login_type:account_namespace:namespace）
-	// 3 段（apikey:expires_at:login_type）或 2 段（apikey:expires_at / apikey:login_type）
+	// 3 段（apikey:expires_at:login_type）或 2 段（apikey:login_type）
 	if len(parts) != credPartsNum && len(parts) != 5 && len(parts) != 4 && len(parts) != 3 && len(parts) != 2 {
 		return nil, false
 	}
@@ -46,17 +46,11 @@ func decodeCredential(blob string) (*Credential, bool) {
 		if err != nil {
 			return nil, false
 		}
-	} else {
-		// 旧格式：expiresAt 位于 parts[1]
-		cred.ExpiresAt, err = decodeBase64(parts[1])
+	} else if len(parts) >= 3 {
+		// 旧格式：parts[1] 为已废弃的 expires_at，login_type 位于 parts[2]
+		cred.LoginType, err = decodeBase64(parts[2])
 		if err != nil {
 			return nil, false
-		}
-		if len(parts) >= 3 {
-			cred.LoginType, err = decodeBase64(parts[2])
-			if err != nil {
-				return nil, false
-			}
 		}
 	}
 	return cred, true
@@ -206,7 +200,6 @@ func parseCredAndUserFromMap(cfg map[string]any) (*Credential, *UserInfo) {
 		if m, ok := v.(map[string]any); ok {
 			cred = &Credential{
 				APIKey:    getString(m, "api_key"),
-				ExpiresAt: getString(m, "expires_at"),
 				LoginType: getString(m, "login_type"),
 			}
 		}
@@ -239,4 +232,3 @@ func loadFromConfig() (*Credential, *UserInfo) {
 	}
 	return parseCredAndUserFromMap(cfg)
 }
-

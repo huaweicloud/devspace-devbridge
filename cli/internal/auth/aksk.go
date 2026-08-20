@@ -26,7 +26,6 @@ func ReadValidAPIKey() *Credential {
 	if cred != nil && logging.LogLevel() <= slog.LevelDebug {
 		slog.Debug("read valid API key",
 			"apiKey", maskSecret(cred.APIKey),
-			"expiresAt", cred.ExpiresAt,
 			"loginType", cred.LoginType,
 		)
 	}
@@ -48,20 +47,7 @@ func readValidAPIKey() *Credential {
 	return nil
 }
 
+// isValidAPIKey 判断凭证是否有效。API Key 不会过期，因此只需检查非空。
 func isValidAPIKey(cred *Credential) bool {
-	if cred == nil {
-		return false
-	}
-	return isPermanentAPIKey(cred) || !isAPIKeyExpired(cred)
-}
-
-func isPermanentAPIKey(cred *Credential) bool {
-	return cred != nil && cred.APIKey != "" && cred.ExpiresAt == ""
-}
-
-func isAPIKeyExpired(cred *Credential) bool {
-	if cred == nil {
-		return true
-	}
-	return isExpired(cred.ExpiresAt)
+	return cred != nil && cred.APIKey != ""
 }

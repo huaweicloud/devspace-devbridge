@@ -19,7 +19,6 @@ import (
 
 type Credential struct {
 	APIKey    string `json:"api_key"    yaml:"api_key"`
-	ExpiresAt string `json:"expires_at" yaml:"expires_at"`
 	LoginType string `json:"login_type" yaml:"login_type"`
 }
 
@@ -29,9 +28,8 @@ type UserInfo struct {
 }
 
 type legacyCredential struct {
-	APIKey    string `json:"api_key"`
-	Access    string `json:"access"`
-	ExpiresAt string `json:"expires_at"`
+	APIKey string `json:"api_key"`
+	Access string `json:"access"`
 }
 
 func (c *Credential) UnmarshalJSON(data []byte) error {
@@ -48,7 +46,6 @@ func (c *Credential) UnmarshalJSON(data []byte) error {
 	} else {
 		c.APIKey = old.Access
 	}
-	c.ExpiresAt = old.ExpiresAt
 	return nil
 }
 
