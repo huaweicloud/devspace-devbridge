@@ -5,10 +5,10 @@
 # 版本号与环境相关配置。产物分发到 GitHub Releases 或仅存为 workflow artifact。
 #
 # 触发:
-#   - push main       → 环境 prod，存 artifact
 #   - push develop    → 环境 test，存 artifact
 #   - push tag v*     → 环境 prod；版本号含 "release" 则发 Release
 #   - 手动 dispatch   → 可输入版本号；含 "release" 则发 Release
+#   注: main 分支无 cli/ 代码，不触发自动构建；手动 dispatch 可选 develop 分支运行
 #
 # 发 Release 规则:
 #   解析出的版本号包含子串 "release" → 创建 GitHub Release 并挂全部产物
@@ -24,14 +24,14 @@ name: Build CLI
 
 on:
   push:
-    branches: [main, develop]
-    tags: ['v*']
+    branches: [develop]
+    tags: ["v*"]
   workflow_dispatch:
     inputs:
       version:
         description: '版本号（留空则用 git describe；含 "release" 则发布 GitHub Release）'
         required: false
-        default: ''
+        default: ""
 
 # 创建 Release 需要写 contents 权限
 permissions:
@@ -86,7 +86,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.26'
+          go-version: "1.26"
           cache-dependency-path: cli/go.sum
 
       # ---- 构建：调 build.sh，-e 选环境，-v 指定版本号 ----
