@@ -1,0 +1,127 @@
+# =============================================================================
+# Build and Release DevBridge CLI
+#
+# 构建端侧 Go CLI 二进制（跨 6 平台 + SHA256 校验），通过 ldflags 注入
+# 版本号与环境相关配置。产物分发到 GitHub Releases 或仅存为 workflow artifact。
+#
+# 触发:
+#   - push main       → 环境 prod，存 artifact
+#   - push develop    → 环境 test，存 artifact
+#   - push tag v*     → 环境 prod；版本号含 "release" 则发 Release
+#   - 手动 dispatch   → 可输入版本号；含 "release" 则发 Release
+#
+# 发 Release 规则:
+#   解析出的版本号包含子串 "release" → 创建 GitHub Release 并挂全部产物
+#   否则 → 仅 upload-artifact（可在 Actions 页面下载）
+#
+# 注入参数控制（4 通道）:
+#   VERSION    → git describe 自动 / 手动输入覆盖        （git 元数据）
+#   环境四件套  → build.sh -e <env>，env 由分支映射决定    （环境映射）
+#   签名        → 暂不启用                                 （敏感，留口子）
+#   发不发 Release → 版本号是否含 "release"               （人工/版本控制）
+# =============================================================================
+name: Build CLI
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号（留空则用 git describe；含 "release" 则发布 GitHub Release）'
+        required: false
+        default: ''
+
+# 创建 Release 需要写 contents 权限
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # ---- 拉代码，fetch-depth: 0 让 git describe 拿到完整 tag 历史 ----
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ---- 解析版本号、环境、是否发 Release ----
+      - name: Resolve metadata
+        id: meta
+        run: |
+          # 版本号：手动输入优先，否则 git describe
+          if [ -n "${{ inputs.version }}" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="$(git describe --tags --always --dirty 2>/dev/null || echo dev)"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "  版本号: $VERSION"
+
+          # 环境映射：tag→prod, main→prod, develop→test, 其他→dev
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            ENV=prod
+          else
+            case "${{ github.ref_name }}" in
+              main)    ENV=prod ;;
+              develop) ENV=test ;;
+              *)       ENV=dev ;;
+            esac
+          fi
+          echo "env=$ENV" >> "$GITHUB_OUTPUT"
+          echo "  环境: $ENV"
+
+          # 发 Release 规则：版本号含 "release"
+          if [[ "$VERSION" == *release* ]]; then
+            echo "publish=true"  >> "$GITHUB_OUTPUT"
+            echo "  → 将发布 GitHub Release"
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "  → 仅存 artifact"
+          fi
+
+      # ---- 装 Go（go.mod 声明 1.26）----
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+          cache-dependency-path: cli/go.sum
+
+      # ---- 构建：调 build.sh，-e 选环境，-v 指定版本号 ----
+      # build.sh 内部用 ENV_CONFIG[*,<env>] 取四件套注入值，跨 6 平台 + sha256
+      - name: Build all platforms
+        working-directory: cli
+        run: |
+          ./scripts/build.sh -e "${{ steps.meta.outputs.env }}" -v "${{ steps.meta.outputs.version }}"
+
+      # ---- 验证注入生效：跑一下 linux 产物，打印内嵌版本号 ----
+      - name: Verify injected version
+        working-directory: cli
+        run: |
+          BIN="bin/devbridge_linux_amd64_${{ steps.meta.outputs.version }}"
+          echo "实际注入的版本号: $(./"$BIN" version)"
+          [ "$(./"$BIN" version)" = "${{ steps.meta.outputs.version }}" ] || \
+            { echo "❌ 版本号注入不匹配！"; exit 1; }
+
+      # ---- 始终存 artifact（无论是否发 Release，都能从 Actions 页下载）----
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: devbridge-${{ steps.meta.outputs.version }}
+          path: cli/bin/devbridge_*
+          if-no-files-found: error
+
+      # ---- 仅当版本号含 "release" 时，创建 GitHub Release 挂产物 ----
+      - name: Create GitHub Release
+        if: steps.meta.outputs.publish == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.version }}
+          name: ${{ steps.meta.outputs.version }}
+          files: cli/bin/devbridge_*
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
