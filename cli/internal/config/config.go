@@ -60,6 +60,10 @@ func Save(cfg map[string]any) error {
 	if err := os.Chmod(dir, 0o700); err != nil {
 		return err
 	}
+	// 没有数据时写空文件，而不是 "{}"
+	if len(cfg) == 0 {
+		return os.WriteFile(path, nil, 0o600)
+	}
 	data, err := yaml.Marshal(cfg)
 	if err != nil {
 		return err
