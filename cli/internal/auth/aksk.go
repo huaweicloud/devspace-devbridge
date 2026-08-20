@@ -41,7 +41,7 @@ func readValidAPIKey() *Credential {
 		return cred
 	}
 	// LoadCredential tries keyring (password vault) first, then config file,
-	// matching the save order in StoreCredential (keyring first, config file second).
+	// matching StoreCredential: keyring first, config file only as fallback when keyring is unavailable.
 	if cred, _, err := LoadCredential(CredentialName); err == nil && cred != nil && isValidAPIKey(cred) {
 		return cred
 	}
