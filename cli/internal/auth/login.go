@@ -90,7 +90,8 @@ func hcBrowserLogin() (Credential, *UserInfo, error) {
 	slog.Debug(i18n.T(i18n.Msg.Auth.OpenBrowser))
 	if err := browser.OpenURL(redirectURL); err != nil {
 		slog.Debug("open browser failed", "err", err)
-		return Credential{}, nil, errors.New(i18n.T(i18n.Msg.Auth.NoBrowserHint))
+		apikeyPageURL := LoginURL + "/space/devbridge/apikey"
+		return Credential{}, nil, fmt.Errorf(i18n.T(i18n.Msg.Auth.NoBrowserHint), apikeyPageURL)
 	}
 	slog.Debug(i18n.T(i18n.Msg.Auth.BrowserOpened))
 

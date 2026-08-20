@@ -21,7 +21,7 @@ func init() {
 	Msg.Auth.UserName = Message{ZH: "用户名", EN: "User Name"}
 	Msg.Auth.OpenBrowser = Message{ZH: "正在打开浏览器...", EN: "Opening browser..."}
 	Msg.Auth.BrowserOpened = Message{ZH: "浏览器已打开，请在浏览器中完成登录", EN: "Browser opened, please complete login in browser"}
-	Msg.Auth.NoBrowserHint = Message{ZH: "无可用浏览器，请手动登录，for example: ./devbridge auth login --api-key=YOUR_API_KEY", EN: "No browser available, please login manually, for example: ./devbridge auth login --api-key=YOUR_API_KEY"}
+	Msg.Auth.NoBrowserHint = Message{ZH: "无可用浏览器，请手动登录。API Key 管理页面: %s\n例如: ./devbridge auth login --api-key=YOUR_API_KEY", EN: "No browser available, please login manually. API Key management page: %s\nFor example: ./devbridge auth login --api-key=YOUR_API_KEY"}
 	Msg.Auth.LoginShort = Message{ZH: "登录华为云", EN: "Login to Huawei Cloud"}
 	Msg.Auth.LoggedInHuaweiCloud = Message{ZH: "已登录 (华为云 IAM)", EN: "Logged in (Huawei Cloud IAM)"}
 	Msg.Auth.LoggedInUnknown = Message{ZH: "已登录 (未知)", EN: "Logged in (Unknown)"}
