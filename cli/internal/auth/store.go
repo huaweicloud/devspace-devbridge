@@ -64,36 +64,6 @@ func decodeBase64(s string) (string, error) {
 	return string(data), nil
 }
 
-func encodeUserInfo(info *UserInfo) string {
-	return base64.StdEncoding.EncodeToString([]byte(info.UserName)) + ":" +
-		base64.StdEncoding.EncodeToString([]byte(info.UserID))
-}
-
-func decodeUserInfo(blob string) (*UserInfo, bool) {
-	parts := strings.Split(blob, ":")
-	if len(parts) != 2 {
-		return nil, false
-	}
-	userName, err := decodeBase64(parts[0])
-	if err != nil {
-		return nil, false
-	}
-	userID, err := decodeBase64(parts[1])
-	if err != nil {
-		return nil, false
-	}
-	return &UserInfo{UserName: userName, UserID: userID}, true
-}
-
-func loadUserInfoFromKeyring(name string) *UserInfo {
-	if blob, err := keyring.Get(name, "UserInfo"); err == nil && blob != "" {
-		if info, ok := decodeUserInfo(blob); ok {
-			return info
-		}
-	}
-	return nil
-}
-
 func StoreCredential(name string, cred *Credential, userInfo *UserInfo) error {
 	blob := encodeCredential(cred)
 
@@ -109,13 +79,9 @@ func StoreCredential(name string, cred *Credential, userInfo *UserInfo) error {
 		cfg[credentialsKey] = credToMap(cred)
 	}
 
-	// user_info：同样 keyring 优先，失败降级配置文件
+	// user_info：直接写入配置文件（不走 keyring/保险箱）
 	if userInfo != nil {
-		if err := keyring.Set(name, "UserInfo", encodeUserInfo(userInfo)); err == nil {
-			delete(cfg, userInfoKey)
-		} else {
-			cfg[userInfoKey] = userInfoToMap(userInfo)
-		}
+		cfg[userInfoKey] = userInfoToMap(userInfo)
 	}
 
 	return config.Save(cfg)
@@ -138,17 +104,12 @@ func LoadCredential(name string) (*Credential, *UserInfo, error) {
 		return nil, nil, fmt.Errorf("no credential found")
 	}
 
-	// user_info：keyring 优先，配置文件兜底
-	userInfo := loadUserInfoFromKeyring(name)
-	if userInfo == nil {
-		userInfo = cfgUserInfo
-	}
-	return cred, userInfo, nil
+	// user_info：仅从配置文件读取
+	return cred, cfgUserInfo, nil
 }
 
 func DeleteCredential(name string) error {
 	_ = keyring.Delete(name, "Credentials")
-	_ = keyring.Delete(name, "UserInfo")
 	cfg, err := config.Load()
 	if err != nil {
 		return err
