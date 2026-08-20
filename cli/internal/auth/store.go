@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -135,8 +136,12 @@ func LoadDefaultTunnel() (string, error) {
 }
 
 // DeleteDefaultTunnel 从配置文件删除默认隧道 ID。
+// 没设过默认隧道（key 不存在）视为已删除，不返回错误。
 func DeleteDefaultTunnel() error {
-	return config.Delete(defaultTunnelKey)
+	if err := config.Delete(defaultTunnelKey); err != nil && !errors.Is(err, config.ErrKeyNotFound) {
+		return err
+	}
+	return nil
 }
 
 func credToMap(cred *Credential) map[string]any {

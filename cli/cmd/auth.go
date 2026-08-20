@@ -59,7 +59,7 @@ var logoutCmd = &cobra.Command{
 			slog.Warn("failed to delete credential", "err", err)
 		}
 		if err := auth.DeleteDefaultTunnel(); err != nil {
-			slog.Debug("no default tunnel to delete", "err", err)
+			slog.Warn("failed to delete default tunnel", "err", err)
 		}
 		fmt.Println(i18n.T(i18n.Msg.Auth.LogoutSuccess))
 		return nil
