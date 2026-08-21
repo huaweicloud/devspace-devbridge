@@ -1,14 +1,21 @@
 # =============================================================================
-# Build and Release DevBridge CLI（手动触发：构建 + 部署 Release）
+# Build and Release DevBridge CLI
 #
-# 手动 dispatch 触发：跨 6 平台构建 + SHA256 校验 + ldflags 注入版本号与环境配置。
-# 当版本号包含 "release" 时，额外生成一键安装脚本并发布到 GitHub Release + GitCode Release。
-# 版本号不含 "release" 时，仅构建并存为 workflow artifact（不发布 Release）。
+# 触发:
+#   pull_request       提 PR 时自动构建 + 测试（验证代码能编译，不发布 Release）
+#   workflow_dispatch  手动触发（构建 + 可选发布 Release）
 #
-# 触发: workflow_dispatch（手动）
+# PR 触发:
+#   自动运行，环境固定 test，版本号用 git describe（不含 release，不会发布）
+#
+# 手动触发:
 #   inputs.version       版本号（留空则 git describe --tags --always）
 #   inputs.env           环境 test/prod（默认 prod）
 #   inputs.gitcode_token GitCode 个人访问令牌（留空则跳过 GitCode 上传）
+#
+# 发布逻辑:
+#   版本号包含 "release" → 烤制安装脚本 + 发布 GitHub Release + 上传 GitCode Release
+#   版本号不含 "release" → 仅构建并存为 workflow artifact
 #
 # Release 附件（散装单文件，可直接 curl 下载）:
 #   devbridge_{OS}_{Arch}_{Version}[.exe]         ×6 平台二进制
@@ -19,9 +26,6 @@
 #   GitHub:  https://github.com/<repo>/releases/download/<Version>/install.sh
 #   GitCode: https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/<Version>
 #
-# 一键安装（用户无需知道版本号）:
-#   curl -fsSL https://github.com/<repo>/releases/download/<Version>/install.sh | bash
-#
 # 注意:
 #   gitcode_token 通过 workflow input 传入（因仓库 Write 权限无法配 Secret）。
 #   该值会出现在 workflow run 的 Inputs 面板中，有仓库 Read 权限的人可见。
@@ -30,6 +34,8 @@
 name: Build CLI
 
 on:
+  pull_request:
+    branches: [develop, main]
   workflow_dispatch:
     inputs:
       version:
@@ -73,7 +79,11 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "  版本号: $VERSION"
 
+          # 环境：手动输入优先，PR 触发时 inputs.env 为空，默认 test
           ENV="${{ inputs.env }}"
+          if [ -z "$ENV" ]; then
+            ENV="test"
+          fi
           echo "env=$ENV" >> "$GITHUB_OUTPUT"
           echo "  环境: $ENV"
 
@@ -97,6 +107,11 @@ jobs:
         with:
           go-version: '1.26'
           cache-dependency-path: cli/go.sum
+
+      # ---- 跑单元测试 ----
+      - name: Run tests
+        working-directory: cli
+        run: go test ./...
 
       # ---- 构建：调 build.sh，-e 选环境，-v 指定版本号 ----
       - name: Build all platforms
