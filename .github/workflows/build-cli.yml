@@ -6,7 +6,7 @@
 #
 # 触发: workflow_dispatch（手动）
 #   inputs.version  版本号（留空则 git describe --tags --always）
-#   inputs.env      环境 dev/test/prod（默认 prod）
+#   inputs.env      环境 test/prod（默认 prod）
 #
 # Release 附件（散装单文件，可直接 curl 下载）:
 #   devbridge_{OS}_{Arch}_{Version}[.exe]         ×6 平台二进制
@@ -30,7 +30,7 @@ on:
         required: false
         default: 'prod'
         type: choice
-        options: [dev, test, prod]
+        options: [test, prod]
 
 permissions:
   contents: write

@@ -26,23 +26,19 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 OUTPUT_DIR="${PROJECT_ROOT}/bin"
-ENV="dev"
+ENV="test"
 VERSION=""
 PLATFORMS=()
 SIGN_KEY=""
 
 # 环境配置（与 Makefile/run.sh 保持一致）
 declare -A ENV_CONFIG
-ENV_CONFIG[SERVER_DOMAIN,dev]="https://devstation-desktop-dev.cn-north-7.myhuaweicloud.com"
-ENV_CONFIG[SERVER_DOMAIN,test]="https://devstation-desktop.cn-north-7.myhuaweicloud.com"
+ENV_CONFIG[SERVER_DOMAIN,test]="http://100.85.118.163:8443"
 ENV_CONFIG[SERVER_DOMAIN,prod]="https://devstation.myhuaweicloud.com"
-ENV_CONFIG[LOGIN_URL,dev]="https://devstation.ulanqab.huawei.com"
 ENV_CONFIG[LOGIN_URL,test]="https://devstation.ulanqab.huawei.com"
 ENV_CONFIG[LOGIN_URL,prod]="https://devstation.connect.huaweicloud.com"
-ENV_CONFIG[GATEWAY_ADDR,dev]="100.85.218.138:443"
-ENV_CONFIG[GATEWAY_ADDR,test]="100.85.218.138:443"
-ENV_CONFIG[GATEWAY_ADDR,prod]="gateway.cn-north-4-bridge.huaweicloud.com:443"
-ENV_CONFIG[CLUSTER_DOMAIN,dev]="cn-north-4-bridge.myhuaweicloud.com"
+ENV_CONFIG[GATEWAY_ADDR,test]="100.85.117.75:443"
+ENV_CONFIG[GATEWAY_ADDR,prod]="gateway.cn-north-4-bridge.myhuaweicloud.com:443"
 ENV_CONFIG[CLUSTER_DOMAIN,test]="cn-north-4-bridge.myhuaweicloud.com"
 ENV_CONFIG[CLUSTER_DOMAIN,prod]="cn-north-4-bridge.myhuaweicloud.com"
 
@@ -75,7 +71,7 @@ DevBridge 统一跨平台构建脚本
 
 选项:
   -v, --version VERSION    版本号（默认从 git tag 推导: git describe --tags --always）
-  -e, --env ENV            环境配置: dev|test|prod（默认: dev）
+  -e, --env ENV            环境配置: test|prod（默认: test）
   -p, --platform PLAT      只构建指定平台（格式: os/arch，如 linux/amd64），可多次指定
   -o, --output DIR         输出目录（默认: bin/）
   -s, --sign-key FILE      RSA 私钥路径，用于签名产物
@@ -109,7 +105,7 @@ parse_args() {
 
     # 校验环境
     if [[ -z "${ENV_CONFIG[SERVER_DOMAIN,${ENV}]:-}" ]]; then
-        log_error "无效环境: ${ENV}（可选: dev|test|prod）"
+        log_error "无效环境: ${ENV}（可选: test|prod）"
     fi
 
     # 默认全平台
