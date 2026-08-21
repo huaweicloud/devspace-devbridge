@@ -43,7 +43,7 @@ jobs:
     steps:
       # ---- 拉代码，fetch-depth: 0 让 git describe 拿到完整 tag 历史 ----
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
