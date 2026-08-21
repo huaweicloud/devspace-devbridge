@@ -174,7 +174,7 @@ Environment Variables:
     # Get-BinaryName - 获取远程产物二进制文件名
     # ---------------------------------------------------------------------------
     function Get-BinaryName {
-        return "$($Script:APP_NAME)_$($Script:PLATFORM)_$($Script:VERSION)$($Script:EXE_SUFFIX)"
+        return "$($Script:APP_NAME)_$($Script:GOOS)_$($Script:ARCH)_$($Script:VERSION)$($Script:EXE_SUFFIX)"
     }
 
     # ---------------------------------------------------------------------------
@@ -232,7 +232,7 @@ Environment Variables:
     function Test-RemoteHash {
         param([string]$BinaryPath)
 
-        $hashUrl = "$($Script:ARTIFACT_URL)/$($Script:APP_NAME)_$($Script:PLATFORM)_$($Script:VERSION).sha256"
+        $hashUrl = "$($Script:ARTIFACT_URL)/$($Script:APP_NAME)_$($Script:GOOS)_$($Script:ARCH)_$($Script:VERSION).sha256"
 
         Write-Step "Downloading hash from $hashUrl"
         $remoteHashes = Get-WebContent -Url $hashUrl -BestEffort
@@ -281,9 +281,10 @@ Environment Variables:
     function Find-Artifact {
         param([string]$SearchDir)
 
-        $pattern = "$($Script:APP_NAME)_$($Script:PLATFORM)_*$($Script:EXE_SUFFIX)"
+        $pattern = "$($Script:APP_NAME)_$($Script:GOOS)_$($Script:ARCH)_*$($Script:EXE_SUFFIX)"
 
         $found = Get-ChildItem -Path $SearchDir -Filter $pattern -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -notmatch '\.sha256$' } |
             Sort-Object Name -Descending |
             Select-Object -First 1
 
@@ -307,8 +308,8 @@ Environment Variables:
         Write-Step "Downloading ${remoteUrl} ..."
         Invoke-HttpGet -Url $remoteUrl -Output $localFile
 
-        Invoke-HttpGet -Url "${Url}/$($Script:APP_NAME)_$($Script:PLATFORM)_$($Script:VERSION).sha256" `
-                       -Output (Join-Path $OutputDir "$($Script:APP_NAME)_$($Script:PLATFORM)_$($Script:VERSION).sha256") `
+        Invoke-HttpGet -Url "${Url}/$($Script:APP_NAME)_$($Script:GOOS)_$($Script:ARCH)_$($Script:VERSION).sha256" `
+                       -Output (Join-Path $OutputDir "$($Script:APP_NAME)_$($Script:GOOS)_$($Script:ARCH)_$($Script:VERSION).sha256") `
                        -BestEffort
 
         return $localFile

@@ -210,7 +210,7 @@ check_platform() {
 # get_binary_name - 获取远程产物二进制文件名
 # ---------------------------------------------------------------------------
 get_binary_name() {
-    echo "${APP_NAME}_${PLATFORM}_${VERSION}${EXE_SUFFIX}"
+    echo "${APP_NAME}_${GOOS}_${ARCH}_${VERSION}${EXE_SUFFIX}"
 }
 
 # ---------------------------------------------------------------------------
@@ -281,7 +281,7 @@ check_existing_install() {
 # ---------------------------------------------------------------------------
 check_remote_hash() {
     local binary_path="$1"
-    local hash_url="${ARTIFACT_URL}/${APP_NAME}_${PLATFORM}_${VERSION}.sha256"
+    local hash_url="${ARTIFACT_URL}/${APP_NAME}_${GOOS}_${ARCH}_${VERSION}.sha256"
 
     step "Downloading hash from ${hash_url}"
     local tmp_file
@@ -336,11 +336,11 @@ prompt_clean_old_data() {
 # ---------------------------------------------------------------------------
 find_artifact() {
     local search_dir="$1"
-    local pattern="${APP_NAME}_${PLATFORM}_*${EXE_SUFFIX}"
+    local pattern="${APP_NAME}_${GOOS}_${ARCH}_*${EXE_SUFFIX}"
 
     local found=""
     for f in "${search_dir}"/${pattern}; do
-        if [[ -f "$f" ]]; then
+        if [[ -f "$f" ]] && [[ "$f" != *.sha256 ]]; then
             if [[ -z "$found" ]] || [[ "$f" > "$found" ]]; then
                 found="$f"
             fi
@@ -363,8 +363,8 @@ download_binary() {
     verbose "Downloading ${remote_url} ..."
     http_get "${remote_url}" "${local_file}"
 
-    http_get "${url}/${APP_NAME}_${PLATFORM}_${VERSION}.sha256" \
-             "${output_dir}/${APP_NAME}_${PLATFORM}_${VERSION}.sha256" \
+    http_get "${url}/${APP_NAME}_${GOOS}_${ARCH}_${VERSION}.sha256" \
+             "${output_dir}/${APP_NAME}_${GOOS}_${ARCH}_${VERSION}.sha256" \
              "besteffort"
 
     echo "${local_file}"
