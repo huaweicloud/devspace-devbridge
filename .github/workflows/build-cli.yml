@@ -35,7 +35,7 @@ name: Build CLI
 
 on:
   pull_request:
-    branches: [develop, main]
+    branches: [develop, main, master]
   workflow_dispatch:
     inputs:
       version:
