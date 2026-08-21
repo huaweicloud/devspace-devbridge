@@ -3,18 +3,29 @@
 #
 # 手动 dispatch 触发：跨 6 平台构建 + SHA256 校验 + ldflags 注入版本号与环境配置，
 # 生成"版本与下载地址已内置"的一键安装脚本，全部作为 GitHub Release 附件发布。
+# 同时将产物镜像上传到 GitCode Release（CloudDeveloperDepartment/devbrige）。
 #
 # 触发: workflow_dispatch（手动）
-#   inputs.version  版本号（留空则 git describe --tags --always）
-#   inputs.env      环境 test/prod（默认 prod）
+#   inputs.version       版本号（留空则 git describe --tags --always）
+#   inputs.env           环境 test/prod（默认 prod）
+#   inputs.gitcode_token GitCode 个人访问令牌（留空则跳过 GitCode 上传）
 #
 # Release 附件（散装单文件，可直接 curl 下载）:
 #   devbridge_{OS}_{Arch}_{Version}[.exe]         ×6 平台二进制
 #   devbridge_{OS}_{Arch}_{Version}[.exe].sha256  ×6 校验文件
 #   install.sh / install.ps1                      版本与 Release 地址已内置
 #
+# 发布目标:
+#   GitHub:  https://github.com/<repo>/releases/download/<Version>/install.sh
+#   GitCode: https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/<Version>
+#
 # 一键安装（用户无需知道版本号）:
 #   curl -fsSL https://github.com/<repo>/releases/download/<Version>/install.sh | bash
+#
+# 注意:
+#   gitcode_token 通过 workflow input 传入（因仓库 Write 权限无法配 Secret）。
+#   该值会出现在 workflow run 的 Inputs 面板中，有仓库 Read 权限的人可见。
+#   如后续获得 Admin 权限，建议改用 repository secret 更安全。
 # =============================================================================
 name: Build CLI
 
@@ -31,6 +42,10 @@ on:
         default: 'prod'
         type: choice
         options: [test, prod]
+      gitcode_token:
+        description: 'GitCode 令牌（留空则跳过 GitCode 上传）'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -134,3 +149,34 @@ jobs:
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---- 镜像上传到 GitCode Release（CloudDeveloperDepartment/devbrige）----
+      # 产物与 GitHub Release 完全相同；GitCode Release 用同一 tag。
+      # 令牌通过 workflow input 传入（仓库 Write 权限无法配 Secret）。
+      - name: Upload to GitCode Release
+        working-directory: cli
+        env:
+          GITCODE_TOKEN: ${{ inputs.gitcode_token }}
+        run: |
+          if [ -z "$GITCODE_TOKEN" ]; then
+            echo "⚠️  未传入 gitcode_token，跳过 GitCode Release 上传"
+            echo "    如需上传：触发 workflow 时在 gitcode_token 输入框填入 GitCode 个人访问令牌"
+            exit 0
+          fi
+
+          # 确保 jq 可用（ubuntu-latest 默认已装，防御性检查）
+          if ! command -v jq >/dev/null 2>&1; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq jq
+          fi
+
+          # 令牌不回显到日志
+          echo "GitCode 令牌已接收（${#GITCODE_TOKEN} 字符），开始上传..."
+
+          ./scripts/upload-gitcode-release.sh \
+            -t "$GITCODE_TOKEN" \
+            -o CloudDeveloperDepartment \
+            -r devbrige \
+            -v "${{ steps.meta.outputs.version }}" \
+            -d bin \
+            -n "${{ steps.meta.outputs.version }}" \
+            -b "DevBridge CLI ${{ steps.meta.outputs.version }} - 同步自 GitHub Release"
