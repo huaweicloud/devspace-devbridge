@@ -1,9 +1,9 @@
 # =============================================================================
 # Build and Release DevBridge CLI（手动触发：构建 + 部署 Release）
 #
-# 手动 dispatch 触发：跨 6 平台构建 + SHA256 校验 + ldflags 注入版本号与环境配置，
-# 生成"版本与下载地址已内置"的一键安装脚本，全部作为 GitHub Release 附件发布。
-# 同时将产物镜像上传到 GitCode Release（CloudDeveloperDepartment/devbrige）。
+# 手动 dispatch 触发：跨 6 平台构建 + SHA256 校验 + ldflags 注入版本号与环境配置。
+# 当版本号包含 "release" 时，额外生成一键安装脚本并发布到 GitHub Release + GitCode Release。
+# 版本号不含 "release" 时，仅构建并存为 workflow artifact（不发布 Release）。
 #
 # 触发: workflow_dispatch（手动）
 #   inputs.version       版本号（留空则 git describe --tags --always）
@@ -77,6 +77,15 @@ jobs:
           echo "env=$ENV" >> "$GITHUB_OUTPUT"
           echo "  环境: $ENV"
 
+          # 判断是否为 release 版本（版本号包含 "release"）
+          if echo "$VERSION" | grep -qi "release"; then
+            echo "is_release=true" >> "$GITHUB_OUTPUT"
+            echo "  发布 Release: 是"
+          else
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
+            echo "  发布 Release: 否（仅构建，不发布 Release）"
+          fi
+
           # Release 下载基址（tag = 版本号）；install 脚本据此拼接单个二进制 URL
           RELEASE_URL="${{ github.server_url }}/${{ github.repository }}/releases/download/${VERSION}"
           echo "release_url=$RELEASE_URL" >> "$GITHUB_OUTPUT"
@@ -105,7 +114,9 @@ jobs:
             { echo "❌ 版本号注入不匹配！"; exit 1; }
 
       # ---- 烤制一键安装脚本：注入版本号 + Release 下载基址 ----
+      # 仅 release 版本执行（非 release 版本不需要安装脚本）
       - name: Bake install scripts
+        if: steps.meta.outputs.is_release == 'true'
         working-directory: cli
         run: |
           VERSION="${{ steps.meta.outputs.version }}"
@@ -136,7 +147,9 @@ jobs:
           if-no-files-found: error
 
       # ---- 创建 GitHub Release，挂全部产物 + 安装脚本 ----
+      # 仅 release 版本执行
       - name: Create GitHub Release
+        if: steps.meta.outputs.is_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.meta.outputs.version }}
@@ -153,7 +166,9 @@ jobs:
       # ---- 镜像上传到 GitCode Release（CloudDeveloperDepartment/devbrige）----
       # 产物与 GitHub Release 完全相同；GitCode Release 用同一 tag。
       # 令牌通过 workflow input 传入（仓库 Write 权限无法配 Secret）。
+      # 仅 release 版本执行
       - name: Upload to GitCode Release
+        if: steps.meta.outputs.is_release == 'true'
         working-directory: cli
         env:
           GITCODE_TOKEN: ${{ inputs.gitcode_token }}
