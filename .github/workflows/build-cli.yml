@@ -1,39 +1,58 @@
 # =============================================================================
 # Build and Release DevBridge CLI
 #
-# 构建端侧 Go CLI 二进制（跨 6 平台 + SHA256 校验），通过 ldflags 注入
-# 版本号与环境相关配置。产物分发到 GitHub Releases 或仅存为 workflow artifact。
-#
 # 触发:
-#   - push develop    → 环境 test，存 artifact
-#   - push tag v*     → 环境 prod；版本号含 "release" 则发 Release
-#   - 手动 dispatch   → 可输入版本号；含 "release" 则发 Release
-#   注: main 分支无 cli/ 代码，不触发自动构建；手动 dispatch 可选 develop 分支运行
+#   pull_request       提 PR 时自动构建 + 测试（验证代码能编译，不发布 Release）
+#   workflow_dispatch  手动触发（构建 + 可选发布 Release）
 #
-# 发 Release 规则:
-#   解析出的版本号包含子串 "release" → 创建 GitHub Release 并挂全部产物
-#   否则 → 仅 upload-artifact（可在 Actions 页面下载）
+# PR 触发:
+#   自动运行，环境固定 test，版本号用 git describe（不含 release，不会发布）
 #
-# 注入参数控制（4 通道）:
-#   VERSION    → git describe 自动 / 手动输入覆盖        （git 元数据）
-#   环境四件套  → build.sh -e <env>，env 由分支映射决定    （环境映射）
-#   签名        → 暂不启用                                 （敏感，留口子）
-#   发不发 Release → 版本号是否含 "release"               （人工/版本控制）
+# 手动触发:
+#   inputs.version       版本号（留空则 git describe --tags --always）
+#   inputs.env           环境 test/prod（默认 prod）
+#   inputs.gitcode_token GitCode 个人访问令牌（留空则跳过 GitCode 上传）
+#
+# 发布逻辑:
+#   版本号包含 "release" → 烤制安装脚本 + 发布 GitHub Release + 上传 GitCode Release
+#   版本号不含 "release" → 仅构建并存为 workflow artifact
+#
+# Release 附件（散装单文件，可直接 curl 下载）:
+#   devbridge_{OS}_{Arch}_{Version}[.exe]         ×6 平台二进制
+#   devbridge_{OS}_{Arch}_{Version}[.exe].sha256  ×6 校验文件
+#   install.sh / install.ps1                      版本与 Release 地址已内置
+#
+# 发布目标:
+#   GitHub:  https://github.com/<repo>/releases/download/<Version>/install.sh
+#   GitCode: https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/<Version>
+#
+# 注意:
+#   gitcode_token 通过 workflow input 传入（因仓库 Write 权限无法配 Secret）。
+#   该值会出现在 workflow run 的 Inputs 面板中，有仓库 Read 权限的人可见。
+#   如后续获得 Admin 权限，建议改用 repository secret 更安全。
 # =============================================================================
 name: Build CLI
 
 on:
-  push:
-    branches: [develop]
-    tags: ["v*"]
+  pull_request:
+    branches: [develop, main, master]
   workflow_dispatch:
     inputs:
       version:
-        description: '版本号（留空则用 git describe；含 "release" 则发布 GitHub Release）'
+        description: '版本号（留空则用 git describe --tags --always）'
         required: false
-        default: ""
+        default: ''
+      env:
+        description: '环境'
+        required: false
+        default: 'prod'
+        type: choice
+        options: [test, prod]
+      gitcode_token:
+        description: 'GitCode 令牌（留空则跳过 GitCode 上传）'
+        required: false
+        default: ''
 
-# 创建 Release 需要写 contents 权限
 permissions:
   contents: write
 
@@ -47,7 +66,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      # ---- 解析版本号、环境、是否发 Release ----
+      # ---- 解析版本号、环境、Release 下载基址 ----
       - name: Resolve metadata
         id: meta
         run: |
@@ -60,37 +79,41 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "  版本号: $VERSION"
 
-          # 环境映射：tag→prod, main→prod, develop→test, 其他→dev
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            ENV=prod
-          else
-            case "${{ github.ref_name }}" in
-              main)    ENV=prod ;;
-              develop) ENV=test ;;
-              *)       ENV=dev ;;
-            esac
+          # 环境：手动输入优先，PR 触发时 inputs.env 为空，默认 test
+          ENV="${{ inputs.env }}"
+          if [ -z "$ENV" ]; then
+            ENV="test"
           fi
           echo "env=$ENV" >> "$GITHUB_OUTPUT"
           echo "  环境: $ENV"
 
-          # 发 Release 规则：版本号含 "release"
-          if [[ "$VERSION" == *release* ]]; then
-            echo "publish=true"  >> "$GITHUB_OUTPUT"
-            echo "  → 将发布 GitHub Release"
+          # 判断是否为 release 版本（版本号包含 "release"）
+          if echo "$VERSION" | grep -qi "release"; then
+            echo "is_release=true" >> "$GITHUB_OUTPUT"
+            echo "  发布 Release: 是"
           else
-            echo "publish=false" >> "$GITHUB_OUTPUT"
-            echo "  → 仅存 artifact"
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
+            echo "  发布 Release: 否（仅构建，不发布 Release）"
           fi
+
+          # Release 下载基址（tag = 版本号）；install 脚本据此拼接单个二进制 URL
+          RELEASE_URL="${{ github.server_url }}/${{ github.repository }}/releases/download/${VERSION}"
+          echo "release_url=$RELEASE_URL" >> "$GITHUB_OUTPUT"
+          echo "  Release URL: $RELEASE_URL"
 
       # ---- 装 Go（go.mod 声明 1.26）----
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.26"
+          go-version: '1.26'
           cache-dependency-path: cli/go.sum
 
+      # ---- 跑单元测试 ----
+      - name: Run tests
+        working-directory: cli
+        run: go test ./...
+
       # ---- 构建：调 build.sh，-e 选环境，-v 指定版本号 ----
-      # build.sh 内部用 ENV_CONFIG[*,<env>] 取四件套注入值，跨 6 平台 + sha256
       - name: Build all platforms
         working-directory: cli
         run: |
@@ -105,23 +128,85 @@ jobs:
           [ "$(./"$BIN" version)" = "${{ steps.meta.outputs.version }}" ] || \
             { echo "❌ 版本号注入不匹配！"; exit 1; }
 
-      # ---- 始终存 artifact（无论是否发 Release，都能从 Actions 页下载）----
+      # ---- 烤制一键安装脚本：注入版本号 + Release 下载基址 ----
+      # 仅 release 版本执行（非 release 版本不需要安装脚本）
+      - name: Bake install scripts
+        if: steps.meta.outputs.is_release == 'true'
+        working-directory: cli
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          RELEASE_URL="${{ steps.meta.outputs.release_url }}"
+          # install.sh: 替换首行赋值（^锚定，跳过 if 块里的缩进回退行）
+          sed -e "s|^DEFAULT_ARTIFACT_URL=.*|DEFAULT_ARTIFACT_URL=\"${RELEASE_URL}\"|" \
+              -e "s|^DEFAULT_VERSION=.*|DEFAULT_VERSION=\"${VERSION}\"|" \
+              install.sh > bin/install.sh
+          chmod +x bin/install.sh
+          # install.ps1: 替换 $Script:DEFAULT_* 赋值
+          sed -e "s|DEFAULT_ARTIFACT_URL = \".*\"|DEFAULT_ARTIFACT_URL = \"${RELEASE_URL}\"|" \
+              -e "s|DEFAULT_VERSION = \".*\"|DEFAULT_VERSION = \"${VERSION}\"|" \
+              install.ps1 > bin/install.ps1
+          echo "=== baked install.sh ==="
+          grep -E '^DEFAULT_ARTIFACT_URL=|^DEFAULT_VERSION=' bin/install.sh
+          echo "=== baked install.ps1 ==="
+          grep -E 'DEFAULT_ARTIFACT_URL = "|DEFAULT_VERSION = "' bin/install.ps1 | head -2
+
+      # ---- 存 artifact（备份，含安装脚本）----
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: devbridge-${{ steps.meta.outputs.version }}
-          path: cli/bin/devbridge_*
+          path: |
+            cli/bin/devbridge_*
+            cli/bin/install.sh
+            cli/bin/install.ps1
           if-no-files-found: error
 
-      # ---- 仅当版本号含 "release" 时，创建 GitHub Release 挂产物 ----
+      # ---- 创建 GitHub Release，挂全部产物 + 安装脚本 ----
+      # 仅 release 版本执行
       - name: Create GitHub Release
-        if: steps.meta.outputs.publish == 'true'
+        if: steps.meta.outputs.is_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.meta.outputs.version }}
           name: ${{ steps.meta.outputs.version }}
-          files: cli/bin/devbridge_*
+          files: |
+            cli/bin/devbridge_*
+            cli/bin/install.sh
+            cli/bin/install.ps1
           generate_release_notes: true
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---- 镜像上传到 GitCode Release（CloudDeveloperDepartment/devbrige）----
+      # 产物与 GitHub Release 完全相同；GitCode Release 用同一 tag。
+      # 令牌通过 workflow input 传入（仓库 Write 权限无法配 Secret）。
+      # 仅 release 版本执行
+      - name: Upload to GitCode Release
+        if: steps.meta.outputs.is_release == 'true'
+        working-directory: cli
+        env:
+          GITCODE_TOKEN: ${{ inputs.gitcode_token }}
+        run: |
+          if [ -z "$GITCODE_TOKEN" ]; then
+            echo "⚠️  未传入 gitcode_token，跳过 GitCode Release 上传"
+            echo "    如需上传：触发 workflow 时在 gitcode_token 输入框填入 GitCode 个人访问令牌"
+            exit 0
+          fi
+
+          # 确保 jq 可用（ubuntu-latest 默认已装，防御性检查）
+          if ! command -v jq >/dev/null 2>&1; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq jq
+          fi
+
+          # 令牌不回显到日志
+          echo "GitCode 令牌已接收（${#GITCODE_TOKEN} 字符），开始上传..."
+
+          ./scripts/upload-gitcode-release.sh \
+            -t "$GITCODE_TOKEN" \
+            -o CloudDeveloperDepartment \
+            -r devbrige \
+            -v "${{ steps.meta.outputs.version }}" \
+            -d bin \
+            -n "${{ steps.meta.outputs.version }}" \
+            -b "DevBridge CLI ${{ steps.meta.outputs.version }} - 同步自 GitHub Release"
