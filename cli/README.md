@@ -1,4 +1,4 @@
-# HDGuacamoleClient (DevBridge)
+# DevBridge CLI
 
 华为云 DevStation 远程隧道端口转发 CLI 工具，基于 WebSocket + SSH 隧道实现安全的远程端口转发，支持跨平台运行。
 
@@ -31,55 +31,51 @@
 
 ### 安装
 
-**一键安装（Linux/macOS/Windows Git Bash）：**
+**一键安装（Linux / macOS）：**
 
 ```bash
-# 从远程制品仓库安装（自动获取最新版本）
-bash install.sh -u https://artifact.example.com/devbridge
+# 从 GitHub Release 安装最新版本
+curl -fsSL https://github.com/huaweicloud/devspace-devbridge/releases/latest/download/install.sh | bash
 
-# 指定版本安装
-bash install.sh -u https://artifact.example.com/devbridge -v 1.0.0
+# 从 GitHub Release 安装指定版本
+curl -fsSL https://github.com/huaweicloud/devspace-devbridge/releases/download/v1.0.0/install.sh | bash
 
-# 从本地产物目录安装
-bash install.sh -d /path/to/artifacts -v 1.0.0
+# 从 GitCode Release 安装最新版本
+curl -fsSL https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/latest/install.sh | bash
 
-# 指定安装前缀目录（默认 ~/.huawei/bin）
-bash install.sh -d /path/to/artifacts -v 1.0.0 -p /opt/devbridge
-
-# 静默安装（CI/CD）
-bash install.sh -d ./bin -s
-
-# 跳过校验和验证
-bash install.sh -u https://artifact.example.com/devbridge --skip-checksum
+# 从 GitCode Release 安装指定版本
+curl -fsSL https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/v1.0.0/install.sh | bash
 ```
 
 **一键安装（Windows PowerShell）：**
 
 ```powershell
-# 从远程制品仓库安装（自动获取最新版本）
-.\install.ps1 -Url https://artifact.example.com/devbridge
+# 从 GitHub Release 安装最新版本
+irm https://github.com/huaweicloud/devspace-devbridge/releases/latest/download/install.ps1 | iex
 
-# 指定版本安装
-.\install.ps1 -Url https://artifact.example.com/devbridge -Version 1.0.0
+# 从 GitHub Release 安装指定版本
+irm https://github.com/huaweicloud/devspace-devbridge/releases/download/v1.0.0/install.ps1 | iex
 
-# 从本地产物目录安装
-.\install.ps1 -Dir C:\path\to\artifacts -Version 1.0.0
+# 从 GitCode Release 安装最新版本
+irm https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/latest/install.ps1 | iex
+```
 
-# 指定安装前缀目录（默认 ~/.huawei/bin）
-.\install.ps1 -Dir C:\path\to\artifacts -Version 1.0.0 -Prefix C:\opt\devbridge
+安装脚本会自动检测平台、下载对应二进制、校验 SHA256、安装到 `~/.huawei/bin/` 并配置 PATH。
 
-# 静默安装（CI/CD）
-.\install.ps1 -Dir .\bin -Silent
+**安装选项（可选）：**
+
+```bash
+# 指定安装目录（默认 ~/.huawei/bin）
+curl -fsSL <release-url>/install.sh | bash -s -- -p /opt/devbridge
+
+# 静默安装（CI/CD 场景，跳过交互提示）
+curl -fsSL <release-url>/install.sh | bash -s -- -s
 
 # 跳过校验和验证
-.\install.ps1 -Url https://artifact.example.com/devbridge -SkipChecksum
+curl -fsSL <release-url>/install.sh | bash -s -- --skip-checksum
 ```
 
 安装目录：`~/.huawei/bin/`，配置目录：`~/.huawei/devbridge/`
-
-**手动安装：**
-
-从 [Releases](../../releases) 下载对应平台的压缩包，解压后将二进制文件放入 `PATH` 即可。
 
 ### 登录
 
@@ -246,8 +242,6 @@ devbridge connect <tunnel-id> --verbose
 
 ### 本地构建
 
-**Linux/macOS：**
-
 ```bash
 # 开发环境
 make build-dev
@@ -258,16 +252,11 @@ make build-test
 # 生产环境
 make build-prod
 
+# 跨平台构建（6 平台 + SHA256 校验）
+make build-all
+
 # 自定义参数
 make build VERSION=1.0.0 SERVER_DOMAIN=https://xxx LOGIN_URL=https://xxx GATEWAY_ADDR=host:port CLUSTER_DOMAIN=xxx
-```
-
-**Windows：**
-
-```cmd
-build.bat dev
-build.bat test
-build.bat prod
 ```
 
 ### 编译时注入参数
@@ -284,13 +273,21 @@ build.bat prod
 
 ### CI/CD 构建
 
-项目使用华为云 CloudBuild 流水线，支持 6 个平台并行构建：
+项目使用 GitHub Actions（`.github/workflows/build-cli.yml`），手动触发后支持 6 个平台并行构建：
 
 - Linux amd64 / arm64
 - Windows amd64 / arm64
 - Darwin amd64 / arm64
 
-构建流程：Go 编译 → RSA-PSS 签名追加 → SHA256 校验文件生成 → 打包（tar.gz/zip）
+构建流程：Go 编译 → 版本号注入 → SHA256 校验文件生成 → 烤制一键安装脚本 → 发布 GitHub Release → 镜像上传到 GitCode Release
+
+产物以散装单文件形式发布到 Release（非 zip 包），可直接 `curl` 下载：
+
+| 产物 | 数量 |
+|------|------|
+| `devbridge_{OS}_{Arch}_{Version}[.exe]` | 6 个平台二进制 |
+| `devbridge_{OS}_{Arch}_{Version}[.exe].sha256` | 6 个校验文件 |
+| `install.sh` / `install.ps1` | 2 个一键安装脚本 |
 
 ## 命令参考
 
@@ -379,14 +376,16 @@ devbridge [-v|--verbose]                      # 全局调试日志标志
 │   ├── i18n/               # 国际化（中/英双语 + 显示宽度对齐）
 │   ├── logging/            # 结构化日志（slog Handler + 动态级别）
 │   └── netutil/            # 网络工具（URI ping + 系统代理探测）
+├── scripts/                # 构建与发布脚本
+│   ├── build.sh            # 跨平台构建脚本（6 平台 + SHA256 + ldflags 注入）
+│   └── upload-gitcode-release.sh  # GitCode Release 上传脚本（含 latest 滚动）
 ├── Makefile                # Make 构建脚本
-├── build.bat               # Windows 构建脚本
-├── install.sh              # 一键安装脚本 - Bash（支持远程/本地、SHA256 校验、跨平台）
+├── install.sh              # 一键安装脚本 - Bash（远程下载 + SHA256 校验 + 跨平台）
 ├── install.ps1             # 一键安装脚本 - PowerShell
 ├── go.mod                  # Go 模块定义
-└── .cloudbuild/            # CloudBuild CI/CD 流水线配置
+└── go.sum                  # Go 依赖校验
 ```
 
 ## 许可证
 
-内部项目，未经授权不得分发。
+[Apache License 2.0](../LICENSE)
