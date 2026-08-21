@@ -116,49 +116,116 @@ api_url() {
 }
 
 # ---------------------------------------------------------------------------
-# 通用：查找或创建 Release，返回 release_id
+# resolve_release_id - 多策略获取 Release ID
+#
+# GitCode API 与标准 Gitea 有两处差异:
+#   1. 创建 Release 返回 HTTP 200 而非 201
+#   2. 响应体可能没有顶层 id 字段
+#
+# 本函数按以下顺序尝试获取 release_id:
+#   策略 1: 直接从传入的 JSON 文件中读取 .id
+#   策略 2: GET /releases/tags/{tag} 回查，读取 .id
+#   策略 3: GET /releases 列出所有 release，按 tag_name 匹配后读取 .id
+# ---------------------------------------------------------------------------
+resolve_release_id() {
+  local tag="$1" json_file="$2"
+  local rid=""
+
+  # 策略 1: 直接从已有响应中读取
+  rid=$(jq -r '.id // empty' "$json_file" 2>/dev/null)
+  if [[ -n "$rid" && "$rid" != "null" ]]; then
+    echo "$rid"
+    return 0
+  fi
+
+  log_warn "  响应无顶层 id，回查获取..."
+
+  # 策略 2: GET by tag
+  local code
+  code=$(curl -s -o /tmp/gc_rid_tag.json -w "%{http_code}" \
+    -H "Authorization: Bearer ${TOKEN}" \
+    "$(api_url "/releases/tags/${tag}")")
+
+  if [[ "$code" == "200" ]]; then
+    rid=$(jq -r '.id // empty' /tmp/gc_rid_tag.json 2>/dev/null)
+    if [[ -n "$rid" && "$rid" != "null" ]]; then
+      log_info "  策略 2 (GET by tag) 成功: id=${rid}"
+      echo "$rid"
+      return 0
+    fi
+  fi
+
+  # 策略 3: 列出所有 release，按 tag_name 匹配
+  log_warn "  GET by tag 也无 id，列出所有 release 匹配..."
+  code=$(curl -s -o /tmp/gc_rid_list.json -w "%{http_code}" \
+    -H "Authorization: Bearer ${TOKEN}" \
+    "$(api_url "/releases?per_page=100")")
+
+  if [[ "$code" == "200" ]]; then
+    rid=$(jq -r --arg tag "$tag" \
+      '.[] | select(.tag_name == $tag) | .id // empty' \
+      /tmp/gc_rid_list.json 2>/dev/null)
+    if [[ -n "$rid" && "$rid" != "null" ]]; then
+      log_info "  策略 3 (list + match) 成功: id=${rid}"
+      echo "$rid"
+      return 0
+    fi
+  fi
+
+  log_error "  所有策略均未能获取 release_id for tag=${tag}"
+}
+
+# ---------------------------------------------------------------------------
+# find_or_create_release - 查找或创建 Release，返回 release_id
 # ---------------------------------------------------------------------------
 find_or_create_release() {
   local tag="$1" name="$2" body="${3:-}"
-  local rid=""
 
-  # 先按 tag 查询
+  # 先按 tag 查询是否已存在
   local code
   code=$(curl -s -o /tmp/gc_rel_find.json -w "%{http_code}" \
     -H "Authorization: Bearer ${TOKEN}" \
     "$(api_url "/releases/tags/${tag}")")
 
   if [[ "$code" == "200" ]]; then
-    rid=$(jq -r '.id' /tmp/gc_rel_find.json)
-    log_info "Release 已存在（tag=${tag}），复用 release_id=${rid}"
-  elif [[ "$code" == "404" ]]; then
-    log_info "Release 不存在（tag=${tag}），创建..."
-    code=$(curl -s -o /tmp/gc_rel_create.json -w "%{http_code}" \
-      -X POST \
-      -H "Authorization: Bearer ${TOKEN}" \
-      -H "Content-Type: application/json" \
-      "$(api_url "/releases")" \
-      -d "$(jq -n \
-        --arg t "$tag" \
-        --arg n "$name" \
-        --arg b "$body" \
-        '{tag_name: $t, name: $n, body: $b}')")
+    local rid
+    rid=$(resolve_release_id "$tag" /tmp/gc_rel_find.json)
+    log_info "Release 已存在（tag=${tag}），release_id=${rid}"
+    echo "$rid"
+    return 0
+  fi
 
-    if [[ "$code" == "201" ]]; then
-      rid=$(jq -r '.id' /tmp/gc_rel_create.json)
-      log_info "Release 创建成功，release_id=${rid}"
-    else
-      log_error "创建 Release 失败 (HTTP ${code}): $(cat /tmp/gc_rel_create.json)"
-    fi
-  else
+  if [[ "$code" != "404" ]]; then
     log_error "查询 Release 失败 (HTTP ${code}): $(cat /tmp/gc_rel_find.json)"
   fi
 
+  # 404 → 创建
+  log_info "Release 不存在（tag=${tag}），创建..."
+
+  code=$(curl -s -o /tmp/gc_rel_create.json -w "%{http_code}" \
+    -X POST \
+    -H "Authorization: Bearer ${TOKEN}" \
+    -H "Content-Type: application/json" \
+    "$(api_url "/releases")" \
+    -d "$(jq -n \
+      --arg t "$tag" \
+      --arg n "$name" \
+      --arg b "$body" \
+      '{tag_name: $t, name: $n, body: $b}')")
+
+  # GitCode 返回 200 或 201 均为成功
+  if [[ "$code" != "200" && "$code" != "201" ]]; then
+    log_error "创建 Release 失败 (HTTP ${code}): $(cat /tmp/gc_rel_create.json)"
+  fi
+
+  local rid
+  rid=$(resolve_release_id "$tag" /tmp/gc_rel_create.json)
+  log_info "Release 创建成功，release_id=${rid}"
   echo "$rid"
 }
 
 # ---------------------------------------------------------------------------
-# 通用：删除 Release 的所有现有附件
+# delete_all_assets - 删除 Release 的所有现有附件
 # ---------------------------------------------------------------------------
 delete_all_assets() {
   local release_id="$1"
@@ -193,7 +260,7 @@ delete_all_assets() {
 }
 
 # ---------------------------------------------------------------------------
-# 通用：上传单个文件到 Release
+# upload_asset - 上传单个文件到 Release
 # ---------------------------------------------------------------------------
 upload_asset() {
   local release_id="$1" file="$2"
