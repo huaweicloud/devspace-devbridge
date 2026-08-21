@@ -4,12 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "docs:dev": "vitepress dev docs --host 127.0.0.1",
-    "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs --host 127.0.0.1",
+    "docs:dev": "vitepress dev . --host 127.0.0.1",
+    "docs:build": "vitepress build .",
+    "docs:preview": "vitepress preview . --host 127.0.0.1",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint:docs": "markdownlint-cli2 \"README.md\" \"docs/**/*.md\"",
+    "lint:docs": "markdownlint-cli2 \"../README.md\" \"**/*.md\"",
     "audit": "npm audit --audit-level=moderate",
     "check": "npm run lint:docs && npm run format:check && npm run docs:build"
   },
