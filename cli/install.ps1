@@ -4,7 +4,6 @@ function Install-DevBridge {
     param(
         [string]$Version = "",
         [string]$Url = "",
-        [string]$Dir = "",
         [string]$Prefix = "",
         [switch]$Silent,
         [switch]$SkipChecksum,
@@ -29,9 +28,8 @@ function Install-DevBridge {
     if ($Script:DEFAULT_VERSION -match '^__.*__$') {
         $Script:DEFAULT_VERSION = ""
     }
-    $Script:ARTIFACT_DIR = if ($Dir) { $Dir } elseif ($env:ARTIFACT_DIR_FROM_ENV) { $env:ARTIFACT_DIR_FROM_ENV } else { "" }
-    $Script:ARTIFACT_URL = if ($Url) { $Url } elseif ($env:ARTIFACT_URL_FROM_ENV) { $env:ARTIFACT_URL_FROM_ENV } else { "" }
-    $Script:VERSION = if ($Version) { $Version } elseif ($env:APP_VERSION) { $env:APP_VERSION } else { "" }
+    $Script:ARTIFACT_URL = if ($Url) { $Url } elseif ($env:ARTIFACT_URL_FROM_ENV) { $env:ARTIFACT_URL_FROM_ENV } else { $Script:DEFAULT_ARTIFACT_URL }
+    $Script:VERSION = if ($Version) { $Version } elseif ($env:APP_VERSION) { $env:APP_VERSION } else { $Script:DEFAULT_VERSION }
     $Script:SKIP_CHECKSUM = $SkipChecksum
     $Script:SILENT_MODE = $Silent
     $Script:PLATFORM = ""
@@ -96,22 +94,19 @@ $Script:APP_DISPLAY_NAME Installer (PowerShell)
 Usage: install.ps1 [options]
 
 Options:
-    -Version VERSION     Version to install (required for remote mode)
-    -Url URL             Base URL of artifact repository
-    -Dir DIR             Local artifact directory (pipeline workspace)
-    -Prefix DIR          Installation prefix (default: $Script:INSTALL_DIR)
+    -Version VERSION     Version to install (default: $($Script:DEFAULT_VERSION))
+    -Url URL             Base URL of artifact repository (default: $($Script:DEFAULT_ARTIFACT_URL))
+    -Prefix DIR          Installation prefix (default: $($Script:INSTALL_DIR))
     -Silent              Silent mode, skip interactive prompts
     -SkipChecksum        Skip SHA256 checksum verification
     -Help                Show this help message
 
 Examples:
-    .\install.ps1 -Url https://artifact.example.com/devbridge
-    .\install.ps1 -Url https://artifact.example.com/devbridge -Version 1.0.0
-    .\install.ps1 -Dir C:\path\to\artifacts -Version 1.0.0
-    .\install.ps1 -Dir .\bin -Silent
+    irm https://github.com/<repo>/releases/latest/download/install.ps1 | iex
+    .\install.ps1 -Version 1.0.0
+    .\install.ps1 -Url https://gitcode.com/<owner>/<repo>/releases/download/<version> -Version 1.0.0
 
 Environment Variables:
-    ARTIFACT_DIR_FROM_ENV  Same as -Dir
     ARTIFACT_URL_FROM_ENV  Same as -Url
     APP_VERSION            Same as -Version
 "@
@@ -210,7 +205,7 @@ Environment Variables:
         }
 
         if ($Script:SILENT_MODE) {
-            if ($Script:ARTIFACT_URL -and (Test-RemoteHash $binaryPath)) {
+            if (Test-RemoteHash $binaryPath) {
                 Write-Info "$Script:APP_DISPLAY_NAME is already up to date."
                 return $true
             }
@@ -273,25 +268,6 @@ Environment Variables:
                 Write-Host "✗ Clean old config data failed." -ForegroundColor Red
             }
         }
-    }
-
-    # ---------------------------------------------------------------------------
-    # Find-Artifact - 在本地目录中查找最新匹配的二进制产物
-    # ---------------------------------------------------------------------------
-    function Find-Artifact {
-        param([string]$SearchDir)
-
-        $pattern = "$($Script:APP_NAME)_$($Script:GOOS)_$($Script:ARCH)_*$($Script:EXE_SUFFIX)"
-
-        $found = Get-ChildItem -Path $SearchDir -Filter $pattern -File -ErrorAction SilentlyContinue |
-            Where-Object { $_.Name -notmatch '\.sha256$' } |
-            Sort-Object Name -Descending |
-            Select-Object -First 1
-
-        if ($found) {
-            return $found.FullName
-        }
-        return ""
     }
 
     # ---------------------------------------------------------------------------
@@ -420,17 +396,12 @@ Environment Variables:
         Detect-Platform
         Check-Platform
 
-        if ([string]::IsNullOrEmpty($Script:ARTIFACT_DIR) -and [string]::IsNullOrEmpty($Script:ARTIFACT_URL)) {
-            $Script:ARTIFACT_URL = $Script:DEFAULT_ARTIFACT_URL
-            Write-Step "No artifact source specified, using default: $($Script:ARTIFACT_URL)"
+        if ([string]::IsNullOrEmpty($Script:VERSION)) {
+            Write-ErrorAndExit "No version specified. Use -Version <version>, or run the CI-built install script which has a built-in version."
         }
 
-        if (-not [string]::IsNullOrEmpty($Script:ARTIFACT_URL) -and [string]::IsNullOrEmpty($Script:VERSION)) {
-            $Script:VERSION = $Script:DEFAULT_VERSION
-            if ([string]::IsNullOrEmpty($Script:VERSION)) {
-                Write-ErrorAndExit "No version specified. Use -Version <version> to specify, or run the CI-built install script which has a built-in version."
-            }
-        }
+        Write-Step "Artifact URL: $($Script:ARTIFACT_URL)"
+        Write-Step "Version: $($Script:VERSION)"
 
         if (Check-ExistingInstall) {
             Show-PostInstallNotice
@@ -439,25 +410,13 @@ Environment Variables:
 
         Prompt-CleanOldData
 
-        $binaryFile = ""
+        $downloadDir = New-Item -ItemType Directory -Path (Join-Path $env:TEMP "devbridge-install-$(Get-Random)") -Force
 
-        if (-not [string]::IsNullOrEmpty($Script:ARTIFACT_DIR)) {
-            Write-Step "Looking for binary in local directory: $($Script:ARTIFACT_DIR)"
-            $binaryFile = Find-Artifact $Script:ARTIFACT_DIR
-            if ([string]::IsNullOrEmpty($binaryFile)) {
-                Write-ErrorAndExit "No binary found for $($Script:PLATFORM) in $($Script:ARTIFACT_DIR)"
-            }
-            Write-Step "Found binary: $binaryFile"
+        Write-Step "Downloading from remote repository: $($Script:ARTIFACT_URL)"
 
-        } elseif (-not [string]::IsNullOrEmpty($Script:ARTIFACT_URL)) {
-            $downloadDir = New-Item -ItemType Directory -Path (Join-Path $env:TEMP "devbridge-install-$(Get-Random)") -Force
-
-            Write-Step "Downloading from remote repository: $($Script:ARTIFACT_URL)"
-
-            $binaryFile = Download-Binary -Url $Script:ARTIFACT_URL -OutputDir $downloadDir.FullName
-            if (-not (Test-Path $binaryFile)) {
-                Write-ErrorAndExit "Failed to download binary"
-            }
+        $binaryFile = Download-Binary -Url $Script:ARTIFACT_URL -OutputDir $downloadDir.FullName
+        if (-not (Test-Path $binaryFile)) {
+            Write-ErrorAndExit "Failed to download binary"
         }
 
         Verify-Checksum -BinaryFile $binaryFile

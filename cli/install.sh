@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
 # =============================================================================
-# install_bash.sh - DevBridge CLI 安装脚本 (Bash)
+# install.sh - DevBridge CLI 一键安装脚本 (Bash)
 #
-# 支持两种安装模式：
-#   1. 本地模式：从流水线产物目录安装 (-d)
-#   2. 远程模式：从制品仓库 URL 下载安装 (-u)
+# 从 Release 下载对应平台的二进制并安装到 ~/.huawei/bin/。
+# CI 构建时会用 sed 把 DEFAULT_VERSION 和 DEFAULT_ARTIFACT_URL 替换为实际值，
+# 因此用户无需传任何参数即可安装。
 #
-# 远程产物为解压后的二进制文件，命名规范：
+# 产物命名规范：
 #   Linux/Darwin: devbridge_{OS}_{Arch}_{Version}
 #   Windows:      devbridge_{OS}_{Arch}_{Version}.exe
 #
 # 支持平台：Linux/Darwin/Windows x amd64/arm64
+#
+# 用法：
+#   curl -fsSL <release-url>/install.sh | bash                          # 安装默认版本
+#   curl -fsSL <release-url>/install.sh | bash -s -- -v 1.0.0           # 指定版本
+#   curl -fsSL <release-url>/install.sh | bash -s -- -u <other-url>     # 换源
 # =============================================================================
 
 if [ -z "$BASH_VERSION" ]; then
@@ -59,7 +64,6 @@ DEFAULT_VERSION="0.1.13-release"
 if [[ "${DEFAULT_VERSION}" == __*__ ]]; then
     DEFAULT_VERSION=""
 fi
-ARTIFACT_DIR=""
 ARTIFACT_URL=""
 VERSION=""
 SKIP_CHECKSUM=false
@@ -115,12 +119,11 @@ usage() {
     cat <<EOF
 ${APP_DISPLAY_NAME} Installer
 
-Usage: install_bash.sh [options]
+Usage: install.sh [options]
 
 Options:
-    -v, --version VERSION       Version/timestamp to install (required for remote mode)
-    -u, --url URL               Base URL of artifact repository
-    -d, --dir DIR               Local artifact directory (pipeline workspace)
+    -v, --version VERSION       Version to install (default: ${DEFAULT_VERSION:-baked-in})
+    -u, --url URL               Base URL of artifact repository (default: ${DEFAULT_ARTIFACT_URL})
     -p, --prefix DIR            Installation prefix (default: ${INSTALL_DIR})
     -s, --silent                Silent mode, skip interactive prompts
     --skip-checksum             Skip SHA256 checksum verification
@@ -128,13 +131,11 @@ Options:
     -h, --help                  Show this help message
 
 Examples:
-    curl -fsSL https://your-domain.com/install.sh | bash -s -- -v 20260716144213
-    bash install_bash.sh -d /path/to/artifacts -v 1.0.0
-    bash install_bash.sh -u https://artifact.example.com/devbridge -v 1.0.0
-    bash install_bash.sh -d ./bin -s
+    curl -fsSL https://github.com/<repo>/releases/latest/download/install.sh | bash
+    bash install.sh -v 1.0.0
+    bash install.sh -u https://gitcode.com/<owner>/<repo>/releases/download/<version> -v 1.0.0
 
 Environment Variables:
-    ARTIFACT_DIR_FROM_ENV  Same as --dir
     ARTIFACT_URL_FROM_ENV  Same as --url
     APP_VERSION            Same as --version
 EOF
@@ -149,7 +150,6 @@ parse_args() {
         case "$1" in
             -v|--version)       VERSION="$2"; shift 2 ;;
             -u|--url)           ARTIFACT_URL="$2"; shift 2 ;;
-            -d|--dir)           ARTIFACT_DIR="$2"; shift 2 ;;
             -p|--prefix)        INSTALL_DIR="$2"; shift 2 ;;
             -s|--silent)        SILENT_MODE=true; shift ;;
             --skip-checksum)    SKIP_CHECKSUM=true; shift ;;
@@ -159,9 +159,8 @@ parse_args() {
         esac
     done
 
-    ARTIFACT_DIR="${ARTIFACT_DIR:-${ARTIFACT_DIR_FROM_ENV:-}}"
-    ARTIFACT_URL="${ARTIFACT_URL:-${ARTIFACT_URL_FROM_ENV:-}}"
-    VERSION="${VERSION:-${APP_VERSION:-}}"
+    ARTIFACT_URL="${ARTIFACT_URL:-${ARTIFACT_URL_FROM_ENV:-${DEFAULT_ARTIFACT_URL}}}"
+    VERSION="${VERSION:-${APP_VERSION:-${DEFAULT_VERSION}}}"
 }
 
 # ---------------------------------------------------------------------------
@@ -259,7 +258,7 @@ check_existing_install() {
     fi
 
     if [[ "${SILENT_MODE}" == true ]]; then
-        if [[ -n "${ARTIFACT_URL}" ]] && check_remote_hash "${binary_path}"; then
+        if check_remote_hash "${binary_path}"; then
             info "${APP_DISPLAY_NAME} is already up to date."
             return 0
         fi
@@ -329,25 +328,6 @@ prompt_clean_old_data() {
             echo -e "${RED}✗ Clean old config data failed.${NC}"
         fi
     fi
-}
-
-# ---------------------------------------------------------------------------
-# find_artifact - 在本地目录中查找最新匹配的二进制产物
-# ---------------------------------------------------------------------------
-find_artifact() {
-    local search_dir="$1"
-    local pattern="${APP_NAME}_${GOOS}_${ARCH}_*${EXE_SUFFIX}"
-
-    local found=""
-    for f in "${search_dir}"/${pattern}; do
-        if [[ -f "$f" ]] && [[ "$f" != *.sha256 ]]; then
-            if [[ -z "$found" ]] || [[ "$f" > "$found" ]]; then
-                found="$f"
-            fi
-        fi
-    done
-
-    echo "${found}"
 }
 
 # ---------------------------------------------------------------------------
@@ -491,17 +471,12 @@ main() {
     detect_platform
     check_platform
 
-    if [[ -z "${ARTIFACT_DIR}" ]] && [[ -z "${ARTIFACT_URL}" ]]; then
-        ARTIFACT_URL="${DEFAULT_ARTIFACT_URL}"
-        verbose "No artifact source specified, using default: ${ARTIFACT_URL}"
+    if [[ -z "${VERSION}" ]]; then
+        error "No version specified. Use -v <version>, or run the CI-built install script which has a built-in version."
     fi
 
-    if [[ -n "${ARTIFACT_URL}" ]] && [[ -z "${VERSION}" ]]; then
-        VERSION="${DEFAULT_VERSION}"
-        if [[ -z "${VERSION}" ]]; then
-            error "No version specified. Use -v <version> to specify, or run the CI-built install script which has a built-in version."
-        fi
-    fi
+    verbose "Artifact URL: ${ARTIFACT_URL}"
+    verbose "Version: ${VERSION}"
 
     if check_existing_install; then
         show_post_install_notice
@@ -510,25 +485,16 @@ main() {
 
     prompt_clean_old_data
 
-    local binary_file=""
+    local download_dir
+    download_dir=$(mktemp -d)
+    _cleanup_tmp_dirs+=("${download_dir}")
+    trap 'for d in "${_cleanup_tmp_dirs[@]}"; do rm -rf "$d"; done' EXIT
 
-    if [[ -n "${ARTIFACT_DIR}" ]]; then
-        step "Looking for binary in local directory: ${ARTIFACT_DIR}"
-        binary_file=$(find_artifact "${ARTIFACT_DIR}")
-        [[ -z "${binary_file}" ]] && error "No binary found for ${PLATFORM} in ${ARTIFACT_DIR}"
-        step "Found binary: ${binary_file}"
+    verbose "Downloading from remote repository: ${ARTIFACT_URL}"
 
-    elif [[ -n "${ARTIFACT_URL}" ]]; then
-        local download_dir
-        download_dir=$(mktemp -d)
-        _cleanup_tmp_dirs+=("${download_dir}")
-        trap 'for d in "${_cleanup_tmp_dirs[@]}"; do rm -rf "$d"; done' EXIT
-
-        verbose "Downloading from remote repository: ${ARTIFACT_URL}"
-
-        binary_file=$(download_binary "${ARTIFACT_URL}" "${download_dir}")
-        [[ ! -f "${binary_file}" ]] && error "Failed to download binary"
-    fi
+    local binary_file
+    binary_file=$(download_binary "${ARTIFACT_URL}" "${download_dir}")
+    [[ ! -f "${binary_file}" ]] && error "Failed to download binary"
 
     verify_checksum "${binary_file}"
     install_binary "${binary_file}"
