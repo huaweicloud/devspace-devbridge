@@ -107,7 +107,7 @@ jobs:
 
       # ---- 始终存 artifact（无论是否发 Release，都能从 Actions 页下载）----
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: devbridge-${{ steps.meta.outputs.version }}
           path: cli/bin/devbridge_*
