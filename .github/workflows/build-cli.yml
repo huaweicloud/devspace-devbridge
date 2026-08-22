@@ -116,7 +116,7 @@ jobs:
       # ---- 仅当版本号含 "release" 时，创建 GitHub Release 挂产物 ----
       - name: Create GitHub Release
         if: steps.meta.outputs.publish == 'true'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.meta.outputs.version }}
           name: ${{ steps.meta.outputs.version }}
