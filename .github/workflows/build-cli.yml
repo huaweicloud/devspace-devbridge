@@ -6,7 +6,7 @@
 #   workflow_dispatch  手动触发（构建 + 可选发布 Release）
 #
 # PR 触发:
-#   自动运行，环境固定 test，版本号用 git describe（不含 release，不会发布）
+#   自动运行，环境固定 test，强制不发布 Release（即使版本号含 "release"）
 #
 # 手动触发:
 #   inputs.version       版本号（留空则 git describe --tags --always）
@@ -14,6 +14,7 @@
 #   inputs.gitcode_token GitCode 个人访问令牌（留空则跳过 GitCode 上传）
 #
 # 发布逻辑:
+#   PR 触发            → 仅构建 + 测试，不发布 Release（无论版本号是否含 "release"）
 #   版本号包含 "release" → 烤制安装脚本 + 发布 GitHub Release + 上传 GitCode Release
 #   版本号不含 "release" → 仅构建并存为 workflow artifact
 #
@@ -62,7 +63,7 @@ jobs:
     steps:
       # ---- 拉代码，fetch-depth: 0 让 git describe 拿到完整 tag 历史 ----
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -87,8 +88,12 @@ jobs:
           echo "env=$ENV" >> "$GITHUB_OUTPUT"
           echo "  环境: $ENV"
 
-          # 判断是否为 release 版本（版本号包含 "release"）
-          if echo "$VERSION" | grep -qi "release"; then
+          # 判断是否为 release 版本
+          # PR 触发时强制不发布（即使版本号含 "release"，避免误发 Release）
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
+            echo "  发布 Release: 否（PR 触发，跳过发布）"
+          elif echo "$VERSION" | grep -qi "release"; then
             echo "is_release=true" >> "$GITHUB_OUTPUT"
             echo "  发布 Release: 是"
           else
@@ -103,7 +108,7 @@ jobs:
 
       # ---- 装 Go（go.mod 声明 1.26）----
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version: '1.26'
           cache-dependency-path: cli/go.sum
@@ -152,7 +157,7 @@ jobs:
 
       # ---- 存 artifact（备份，含安装脚本）----
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: devbridge-${{ steps.meta.outputs.version }}
           path: |
@@ -165,7 +170,7 @@ jobs:
       # 仅 release 版本执行
       - name: Create GitHub Release
         if: steps.meta.outputs.is_release == 'true'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.meta.outputs.version }}
           name: ${{ steps.meta.outputs.version }}
