@@ -62,7 +62,6 @@ func init() {
 	Msg.Tunnel.FlagExpiration = Message{ZH: "过期时间(小时, 1-720)", EN: "Expiration hours (1-720)"}
 	Msg.Tunnel.FlagName = Message{ZH: "隧道名称", EN: "Tunnel name"}
 	Msg.Tunnel.FlagScope = Message{ZH: "令牌范围, 选项: host, connect (必填)", EN: "Token scope, options: host, connect (required)"}
-	Msg.Tunnel.FlagJSON = Message{ZH: "以 JSON 格式输出", EN: "Output in JSON format"}
 
 	Msg.Port.Protocol = Message{ZH: "协议", EN: "Protocol"}
 	Msg.Port.AllowAnonymous = Message{ZH: "允许匿名", EN: "Allow Anonymous"}
