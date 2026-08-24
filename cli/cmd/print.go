@@ -104,12 +104,21 @@ func formatBytes(b int64) string {
 	if b < unit {
 		return fmt.Sprintf("%d B", b)
 	}
-	div, exp := int64(unit), 0
-	for n := b / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
+
+	// 声明单位后缀
+	suffix := []string{"KB", "MB", "GB", "TB", "PB", "EB"}
+
+	// 将 b 转换为浮点数进行除法计算
+	f := float64(b) / unit
+	i := 0
+
+	// 每次除以 1024，直到小于 1024
+	for f >= unit && i < len(suffix)-1 {
+		f /= unit
+		i++
 	}
-	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "KMGTPE"[exp])
+
+	return fmt.Sprintf("%.1f %s", f, suffix[i])
 }
 
 func formatTime(ts int64) string {
