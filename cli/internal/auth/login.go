@@ -105,7 +105,9 @@ func hcBrowserLogin() (Credential, *UserInfo, error) {
 		}),
 	}
 	go func() {
-		_ = server.Serve(listener)
+		if err := server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.Warn("login callback server error", "err", err)
+		}
 	}()
 
 	slog.Debug("waiting for browser login callback", "port", port)
