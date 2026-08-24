@@ -16,7 +16,6 @@ var (
 	tunnelExpiration  int
 	tunnelName        string
 	tunnelScope       string
-	tunnelJSON        bool
 )
 
 var listCmd = &cobra.Command{
@@ -27,27 +26,6 @@ var listCmd = &cobra.Command{
 		tunnels, err := api.ListTunnels()
 		if err != nil {
 			return err
-		}
-		if tunnelJSON {
-			type tunnelJSONItem struct {
-				Name             string `json:"name"`
-				TunnelId         string `json:"tunnelId"`
-				TunnelExpiration string `json:"tunnelExpiration"`
-				Description      string `json:"description"`
-				PortCount        int    `json:"portCount"`
-			}
-			out := make([]tunnelJSONItem, 0, len(tunnels))
-			for _, t := range tunnels {
-				out = append(out, tunnelJSONItem{
-					Name:             t.Name,
-					TunnelId:         t.TunnelId,
-					TunnelExpiration: FormatTunnelRemaining(int64(t.TunnelExpiration)),
-					Description:      t.Description,
-					PortCount:        t.PortCount,
-				})
-			}
-			printJSON(out)
-			return nil
 		}
 		if len(tunnels) == 0 {
 			fmt.Println(i18n.T(i18n.Msg.Tunnel.TunnelListEmpty))
@@ -265,7 +243,6 @@ func init() {
 	tokenCmd.Flags().StringVarP(&tunnelScope, "scope", "s", "", i18n.T(i18n.Msg.Tunnel.FlagScope))
 	_ = tokenCmd.MarkFlagRequired("scope")
 
-	listCmd.Flags().BoolVarP(&tunnelJSON, "json", "j", false, i18n.T(i18n.Msg.Tunnel.FlagJSON))
 
 	RootCmd.AddCommand(listCmd, createCmd, showCmd, updateCmd, deleteCmd, deleteAllCmd, tokenCmd, setCmd, unsetCmd)
 }
