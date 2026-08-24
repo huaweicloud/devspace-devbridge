@@ -133,6 +133,10 @@ func doRequest(req *http.Request) (*http.Response, error) {
 		if strings.Contains(string(body), "APIGW.0301") {
 			return nil, fmt.Errorf("%w: %s", errors.New(i18n.T(i18n.Msg.API.APIKeyExpired)), string(body))
 		}
+		// 尝试解析 {"error":{"code","message","target"}} 错误结构
+		if apiErr := parseErrorBody(body); apiErr != nil {
+			return nil, apiErr
+		}
 		return nil, fmt.Errorf("%w: %s", errors.New(i18n.T(i18n.Msg.API.Unauthorized)), string(body))
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
