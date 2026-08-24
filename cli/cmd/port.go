@@ -15,7 +15,6 @@ var (
 	portProtocol  string
 	portAllowAnon bool
 	portDenyAnon  bool
-	portJSON      bool
 )
 
 var validProtocols = map[string]bool{
@@ -83,10 +82,6 @@ var portListCmd = &cobra.Command{
 		ports, err := api.ListPorts(tunnelId)
 		if err != nil {
 			return err
-		}
-		if portJSON {
-			printJSON(ports)
-			return nil
 		}
 		if len(ports) == 0 {
 			fmt.Println(i18n.T(i18n.Msg.Port.PortListEmpty))
@@ -176,7 +171,6 @@ func init() {
 	portCreateCmd.Flags().BoolVar(&portDenyAnon, "deny-anonymous", false, i18n.T(i18n.Msg.Port.FlagDenyAnon))
 	_ = portCreateCmd.MarkFlagRequired("port-number")
 
-	portListCmd.Flags().BoolVarP(&portJSON, "json", "j", false, i18n.T(i18n.Msg.Tunnel.FlagJSON))
 
 	portShowCmd.Flags().IntVarP(&portNumber, "port-number", "p", 0, i18n.T(i18n.Msg.Port.FlagPortNumber))
 	_ = portShowCmd.MarkFlagRequired("port-number")
