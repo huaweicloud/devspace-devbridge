@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
 	"strconv"
@@ -58,15 +57,6 @@ func printTable(headers []string, rows [][]string) {
 		}
 		fmt.Println()
 	}
-}
-
-func printJSON(v interface{}) {
-	data, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(string(data))
 }
 
 func FormatTunnelExpiration(tunnelExpiration int64) string {
