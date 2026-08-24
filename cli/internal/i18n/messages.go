@@ -64,7 +64,6 @@ type TunnelMessages struct {
 	FlagExpiration        Message
 	FlagName              Message
 	FlagScope             Message
-	FlagJSON              Message
 }
 
 type PortMessages struct {
