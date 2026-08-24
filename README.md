@@ -1,35 +1,42 @@
-# DevBridge tunnel documentation
+# DevBridge
 
-面向 DevBridge 开发隧道使用者的文档站点。正文使用 Markdown 编写，由
-[VitePress](https://vitepress.dev/) 生成并发布到 GitHub Pages。
+DevBridge 使用独立子目录组织文档和其他项目，避免不同工具链相互影响。
 
 在线文档：<https://huaweicloud.github.io/devspace-devbridge/>
 
-## Local development
+## Repository structure
 
-需要 Node.js 24。
+```text
+.
+├── .github/              # 仓库级 CI、发布和同步工作流
+├── docs/                 # VitePress 文档站点及其 Node.js 工具链
+└── README.md             # 仓库总览
+```
+
+后续项目应各自使用独立的首层目录，并将构建配置和依赖文件保存在对应目录中。
+
+## Documentation
+
+文档正文使用 Markdown 编写，由 [VitePress](https://vitepress.dev/) 生成并发布到
+GitHub Pages。开发文档需要 Node.js 24：
 
 ```bash
+cd docs
 npm ci
 npm run docs:dev
 ```
 
 本地开发地址是 `http://127.0.0.1:5173/devspace-devbridge/`。
 
-提交前执行完整检查：
+提交文档前执行：
 
 ```bash
+cd docs
 npm run check
+npm run audit
 ```
 
-生产版本可以这样预览：
-
-```bash
-npm run docs:build
-npm run docs:preview
-```
-
-## Project structure
+文档目录结构：
 
 ```text
 docs/
@@ -37,25 +44,25 @@ docs/
 ├── guide/                   # 按用户任务组织的指南
 ├── reference/               # CLI、配置和 API 参考
 ├── public/                  # 原样发布的静态文件
+├── package.json             # 文档构建与校验命令
 └── .vitepress/
     ├── config.mjs           # 导航、侧栏、搜索和站点信息
     └── theme/               # 小范围主题定制
 ```
 
-每个主题独立成页。新增页面时：
+新增页面时：
 
 1. 在 `docs/guide` 或 `docs/reference` 中新增 Markdown 文件。
 2. 在 `docs/.vitepress/config.mjs` 的 `sidebar` 中加入入口。
 3. 使用相对链接连接相关主题。
-4. 运行 `npm run check`。
+4. 在 `docs/` 中运行 `npm run check`。
 
 不要直接编辑 `docs/.vitepress/dist`，它是构建产物且不会提交。
 
 ## Dependency policy
 
-依赖版本和安装脚本许可都固定在 `package.json` 与 `package-lock.json` 中。
-VitePress 1.6.4 默认依赖的 Vite 5 已存在安全告警，因此项目将 Vite 覆盖为兼容的
-`6.4.3`。调整或删除该覆盖前，必须同时通过 `npm run check` 和 `npm run audit`。
+文档依赖固定在 `docs/package.json` 与 `docs/package-lock.json` 中。调整依赖和 Vite
+覆盖版本时，必须同时通过 `npm run check` 和 `npm run audit`。
 
 ## Content ownership
 
@@ -65,5 +72,5 @@ VitePress 1.6.4 默认依赖的 Vite 5 已存在安全告警，因此项目将 V
 
 ## Publishing
 
-推送到 `main` 后，GitHub Actions 会校验 Markdown、构建 VitePress 并发布
-`docs/.vitepress/dist`。GitHub Pages 的 Source 必须设置为 **GitHub Actions**。
+推送到 `main` 后，GitHub Actions 会在 `docs/` 中校验 Markdown、构建 VitePress，
+并发布 `docs/.vitepress/dist`。GitHub Pages 的 Source 必须设置为 **GitHub Actions**。

@@ -5,4 +5,5 @@ export default {
     MD025: false,
     MD033: false,
   },
+  ignores: ["node_modules/**", ".vitepress/cache/**", ".vitepress/dist/**"],
 };
