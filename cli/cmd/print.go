@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"strconv"
 	"time"
 
 	"huawei.com/devbridge/internal/i18n"
@@ -93,12 +94,9 @@ func FormatTunnelRemaining(expireAt int64) string {
 // formatRemaining formats a value with one decimal place, ceiling rounded.
 // If the decimal part is 0, only the integer part is shown.
 func formatRemaining(v float64, unit string) string {
-	// Ceiling round to 1 decimal place: ceil(v * 10) / 10
 	rounded := math.Ceil(v*10) / 10
-	if rounded == math.Trunc(rounded) {
-		return fmt.Sprintf("%d %s", int(rounded), unit)
-	}
-	return fmt.Sprintf("%.1f %s", rounded, unit)
+	// 'f' 表示常规格式，-1 表示自动去掉末尾无效的 0
+	return strconv.FormatFloat(rounded, 'f', -1, 64) + " " + unit
 }
 
 func formatBytes(b int64) string {
