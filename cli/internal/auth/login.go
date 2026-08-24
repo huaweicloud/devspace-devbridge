@@ -105,7 +105,7 @@ func hcBrowserLogin() (Credential, *UserInfo, error) {
 		}),
 	}
 	go func() {
-		if err := server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) && !errors.Is(err, net.ErrClosed) {
 			slog.Warn("login callback server error", "err", err)
 		}
 	}()
