@@ -128,32 +128,6 @@ func dialWebSocket(ctx context.Context, wsURL, host string, header http.Header, 
 	return websocket.NetConn(ctx, conn, websocket.MessageBinary), nil
 }
 
-var caCert = []byte(`-----BEGIN CERTIFICATE-----
-MIIEGzCCAoOgAwIBAgIUE5r3H5raO0s3FQGXcrrFm4yttkMwDQYJKoZIhvcNAQEL
-BQAwHTEbMBkGA1UEAwwSTW9jayBMb2NhbCBSb290IENBMB4XDTI2MDcwNzA2Mjk1
-NloXDTM2MDcwNDA2Mjk1NlowHTEbMBkGA1UEAwwSTW9jayBMb2NhbCBSb290IENB
-MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAknEJQtH5SXOYOZ2GNd8S
-bkGw1XZ3NhKNQZIg+Oa0PTpfwfrLw6H1Ce78JpeRUXuHiT3eXgk0MMUUiGD2Ta5H
-tkAOj4x526/oeN6Ge9y07n8+zmpaLq2m295XJiUgYY4rjTScsGOJLSixqR5chMPF
-KqE/jxfwJBFyFSyO1HXkHQAqmxBGH0uxyAZ3QacZynPdtAbZHgHm7nTld0olvD04
-j8nyGGUixUnOH5zySqO3ch3V/hl6eruGv3M76buFUo8BL48U9oK4xlkz/K6ai2S0
-TIIipeYyb9pFOQamBTEgEamJn35/Nij+ggR5SYgLE/8dWVUB+PtbDNS+2ZIHqBK5
-wsHd+QnbhDOTg0Z4YIV0LDO8g+2jgmipUVA561Xxx6ahSc0PKCEE+DyEiKJsEuc6
-i+1h8Jvtgxs8vlxM+FifNKluf78lyobWguK+autiKKuHqrpA2lypPsbf32SFOFx9
-j5K5EQwFODVoTDmmy4iRgxiO24YhDFqOIgSr4MA9IYv1AgMBAAGjUzBRMB0GA1Ud
-DgQWBBR+tk9hb1UjHc5WQrHq6qN5fPmvWTAfBgNVHSMEGDAWgBR+tk9hb1UjHc5W
-QrHq6qN5fPmvWTAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IBgQBQ
-A8Rs0WikyMJqzWXBsBQtAbzvfnfACFHY4CjR5MjDwIZatdRoXaAJ9YAeG552/P0S
-Zt0UpL+R7aac+p142AgItFFD5k4N5q88w1zqQ0kARf1ea1taweB1ZGPp0QeHd50H
-3pvb0EYKNhNL0/vNyj0SarzfUCYSCHQf+eVFUiWuI0Oe2++O2zWzTBlkRVG3cXed
-rds1CXtd4Chpz1uKLuMeF8IJO8Avo26FNUDiC9hxnIJzUwbeeJTVylKhiWp7/i/O
-jpGhgXcwAsLTaXPzLKpcrZNn6990eCDCOqrzgpQN/rNc2kcTKFUDna6F9uMVC+1W
-nkUC9heEYACEbsaRQK+PUMhE/0pjYR5mPyPjpRVjltRBQWnVXT1HqMfjHCl2NyJe
-f3DKOEWdkHNVkzZA4L7qu5gTDsaUL2K1U3B21mZF4PVgMqqq4XuxEL+uAyxhkpi3
-hbrxv7TeS3kQ4OgX0rorzWsq6eGhiAvwRQcqUSrG2nfkl9gAhkEDxULex9GqvqQ=
------END CERTIFICATE-----
-`)
-
 func getHttpClient(serverHost string) *http.Client {
 	dialer := &net.Dialer{}
 	return &http.Client{
@@ -172,7 +146,6 @@ func createTLSConfig(serverHost string) *tls.Config {
 	if err != nil {
 		rootPool = x509.NewCertPool()
 	}
-	rootPool.AppendCertsFromPEM(caCert)
 	return &tls.Config{
 		MinVersion: tls.VersionTLS12,
 		MaxVersion: tls.VersionTLS13,
