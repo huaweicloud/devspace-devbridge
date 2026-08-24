@@ -14,6 +14,8 @@ import (
 
 var verbose bool
 
+var version = "dev"
+
 var RootCmd = &cobra.Command{
 	Use:   "devbridge",
 	Short: i18n.T(i18n.Msg.Common.VersionInfo),
@@ -27,6 +29,15 @@ var RootCmd = &cobra.Command{
 	},
 }
 
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: i18n.T(i18n.Msg.Common.VersionInfo),
+	Args:  cobra.NoArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(version)
+	},
+}
+
 // runError wraps a RunE function to print errors without "Error:" prefix and suppress usage.
 func runError(fn func(cmd *cobra.Command, args []string) error) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
@@ -34,11 +45,13 @@ func runError(fn func(cmd *cobra.Command, args []string) error) func(cmd *cobra.
 		if err != nil {
 			cmd.SilenceUsage = true
 			cmd.SilenceErrors = true
-			fmt.Fprintln(os.Stderr, err)
+			cmd.PrintErrln(err)
 		}
 		return err
 	}
 }
+
 func init() {
 	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, i18n.T(i18n.Msg.Common.FlagVerbose))
+	RootCmd.AddCommand(versionCmd)
 }
