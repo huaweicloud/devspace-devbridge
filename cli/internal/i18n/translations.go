@@ -7,7 +7,6 @@ func init() {
 	Msg.Common.Expired = Message{ZH: "已过期", EN: "expired"}
 	Msg.Common.AuthCommands = Message{ZH: "认证命令", EN: "Authentication commands"}
 	Msg.Common.FlagAPIKey = Message{ZH: "API Key", EN: "API Key"}
-	Msg.Common.FlagHuaweiCloud = Message{ZH: "使用华为云登录", EN: "Use Huawei Cloud login"}
 	Msg.Common.FlagVerbose = Message{ZH: "启用调试日志", EN: "Enable debug logging"}
 	Msg.Common.FlagEchoPort = Message{ZH: "本地服务器端口号 (未指定则自动分配随机端口)", EN: "Local server port number (auto-assign random port if not specified)"}
 	Msg.Common.FlagInterface = Message{ZH: "本地接口地址", EN: "Local interface address"}
@@ -24,7 +23,6 @@ func init() {
 	Msg.Auth.NoBrowserHint = Message{ZH: "无可用浏览器，请手动登录。API Key 管理页面: %s\n例如: ./devbridge auth login --api-key=YOUR_API_KEY", EN: "No browser available, please login manually. API Key management page: %s\nFor example: ./devbridge auth login --api-key=YOUR_API_KEY"}
 	Msg.Auth.LoginShort = Message{ZH: "登录华为云", EN: "Login to Huawei Cloud"}
 	Msg.Auth.LoggedInHuaweiCloud = Message{ZH: "已登录 (华为云 IAM)", EN: "Logged in (Huawei Cloud IAM)"}
-	Msg.Auth.LoggedInUnknown = Message{ZH: "已登录 (未知)", EN: "Logged in (Unknown)"}
 
 	Msg.Tunnel.TunnelID = Message{ZH: "隧道ID", EN: "Tunnel ID"}
 	Msg.Tunnel.TunnelName = Message{ZH: "隧道名称", EN: "Tunnel Name"}

@@ -26,7 +26,6 @@ func ReadValidAPIKey() *Credential {
 	if cred != nil && logging.LogLevel() <= slog.LevelDebug {
 		slog.Debug("read valid API key",
 			"apiKey", maskSecret(cred.APIKey),
-			"loginType", cred.LoginType,
 		)
 	}
 	return cred
@@ -34,7 +33,7 @@ func ReadValidAPIKey() *Credential {
 
 func readValidAPIKey() *Credential {
 	if overrideAPIKey != "" {
-		return &Credential{APIKey: overrideAPIKey, LoginType: "apikey"}
+		return &Credential{APIKey: overrideAPIKey}
 	}
 	if cred := loadFromEnv(); cred != nil && isValidAPIKey(cred) {
 		return cred

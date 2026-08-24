@@ -332,7 +332,6 @@ devbridge [-v|--verbose]                      # 全局调试日志标志
 | `huaweicloud-credentials.secret-key` | Secret Key |
 | `huaweicloud-credentials.security-token` | 临时安全令牌 |
 | `huaweicloud-credentials.expires-at` | 过期时间 |
-| `huaweicloud-credentials.login-type` | 登录类型 |
 | `huaweicloud-user-info` | 用户信息（user-name, user-id） |
 | `default-tunnel-id` | 默认隧道 ID |
 

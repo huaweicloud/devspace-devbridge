@@ -10,10 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	hcLoginAPIKey      string
-	hcLoginHuaweiCloud bool
-)
+var hcLoginAPIKey string
 
 var authCmd = &cobra.Command{
 	Use:   "auth",
@@ -34,7 +31,7 @@ var loginCmd = &cobra.Command{
 				}
 			}
 		}
-		cred, userInfo, err := auth.HCAuth(hcLoginAPIKey, hcLoginHuaweiCloud)
+		cred, userInfo, err := auth.HCAuth(hcLoginAPIKey)
 		if err != nil {
 			return err
 		}
@@ -81,11 +78,7 @@ var statusCmd = &cobra.Command{
 			fmt.Printf("%s: %v\n", i18n.T(i18n.Msg.Auth.NotLoggedIn), err)
 			return nil
 		}
-		if cred.LoginType == "huaweicloud" {
-			fmt.Println(i18n.T(i18n.Msg.Auth.LoggedInHuaweiCloud))
-		} else {
-			fmt.Println(i18n.T(i18n.Msg.Auth.LoggedInUnknown))
-		}
+		fmt.Println(i18n.T(i18n.Msg.Auth.LoggedInHuaweiCloud))
 		_, userInfo, err := auth.LoadCredential(auth.CredentialName)
 		if err == nil && userInfo != nil && userInfo.UserName != "" {
 			fmt.Printf("%s:  %s\n", i18n.T(i18n.Msg.Auth.UserName), userInfo.UserName)
@@ -96,7 +89,6 @@ var statusCmd = &cobra.Command{
 
 func init() {
 	loginCmd.Flags().StringVar(&hcLoginAPIKey, "api-key", "", i18n.T(i18n.Msg.Common.FlagAPIKey))
-	loginCmd.Flags().BoolVar(&hcLoginHuaweiCloud, "huaweicloud", true, i18n.T(i18n.Msg.Common.FlagHuaweiCloud))
 
 	authCmd.AddCommand(loginCmd, logoutCmd, statusCmd)
 	RootCmd.AddCommand(authCmd)

@@ -18,8 +18,7 @@ import (
 )
 
 type Credential struct {
-	APIKey    string `json:"api_key"    yaml:"api_key"`
-	LoginType string `json:"login_type" yaml:"login_type"`
+	APIKey string `json:"api_key" yaml:"api_key"`
 }
 
 type UserInfo struct {
@@ -56,9 +55,8 @@ type callbackResponse struct {
 }
 
 var (
-	errMissingAPIKey   = errors.New("missing api key")
-	errLoginTimeout    = errors.New("login timeout")
-	errHuaweiCloudOnly = errors.New("only huaweicloud login is allowed")
+	errMissingAPIKey = errors.New("missing api key")
+	errLoginTimeout  = errors.New("login timeout")
 )
 
 const (
@@ -114,8 +112,7 @@ func hcBrowserLogin() (Credential, *UserInfo, error) {
 	select {
 	case resp := <-resultCh:
 		cred := Credential{
-			APIKey:    resp.APIKey,
-			LoginType: "huaweicloud",
+			APIKey: resp.APIKey,
 		}
 		var userInfo *UserInfo
 		if resp.UserName != "" || resp.UserID != "" {
@@ -164,14 +161,10 @@ func handleLoginCallback(w http.ResponseWriter, r *http.Request, origin string, 
 	resultCh <- resp
 }
 
-func HCAuth(apiKey string, huaweiCloud bool) (Credential, *UserInfo, error) {
-	if !huaweiCloud {
-		return Credential{}, nil, errHuaweiCloudOnly
-	}
+func HCAuth(apiKey string) (Credential, *UserInfo, error) {
 	if apiKey != "" {
 		return Credential{
-			APIKey:    apiKey,
-			LoginType: "huaweicloud",
+			APIKey: apiKey,
 		}, nil, nil
 	}
 	return hcBrowserLogin()

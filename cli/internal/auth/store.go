@@ -15,46 +15,22 @@ const CredentialName = "HWCLOUD"
 
 const (
 	defaultTunnelKey = "default-tunnel-id"
-	credPartsNum     = 2 // apikey:login_type
 	credentialsKey   = "credentials"
 	userInfoKey      = "user-info"
 )
 
 func encodeCredential(cred *Credential) string {
-	parts := make([]string, credPartsNum)
-	parts[0] = base64.StdEncoding.EncodeToString([]byte(cred.APIKey))
-	parts[1] = base64.StdEncoding.EncodeToString([]byte(cred.LoginType))
-	return strings.Join(parts, ":")
+	return base64.StdEncoding.EncodeToString([]byte(cred.APIKey))
 }
 
 func decodeCredential(blob string) (*Credential, bool) {
 	parts := strings.Split(blob, ":")
-	// 兼容旧格式：4 段（apikey:login_type:account_namespace:namespace）
-	// 5 段（apikey:expires_at:login_type:account_namespace:namespace）
-	// 3 段（apikey:expires_at:login_type）或 2 段（apikey:login_type）
-	if len(parts) != credPartsNum && len(parts) != 5 && len(parts) != 4 && len(parts) != 3 && len(parts) != 2 {
-		return nil, false
-	}
-	cred := &Credential{}
-	var err error
-	cred.APIKey, err = decodeBase64(parts[0])
+	// 兼容旧格式：多段（apikey:login_type:...），取第一段作为 API Key
+	apiKey, err := decodeBase64(parts[0])
 	if err != nil {
 		return nil, false
 	}
-	if len(parts) == credPartsNum {
-		// 新格式：apikey:login_type
-		cred.LoginType, err = decodeBase64(parts[1])
-		if err != nil {
-			return nil, false
-		}
-	} else if len(parts) >= 3 {
-		// 旧格式：parts[1] 为已废弃的 expires_at，login_type 位于 parts[2]
-		cred.LoginType, err = decodeBase64(parts[2])
-		if err != nil {
-			return nil, false
-		}
-	}
-	return cred, true
+	return &Credential{APIKey: apiKey}, true
 }
 
 func decodeBase64(s string) (string, error) {
@@ -146,8 +122,7 @@ func DeleteDefaultTunnel() error {
 
 func credToMap(cred *Credential) map[string]any {
 	return map[string]any{
-		"api_key":    cred.APIKey,
-		"login_type": cred.LoginType,
+		"api_key": cred.APIKey,
 	}
 }
 
@@ -163,8 +138,7 @@ func parseCredAndUserFromMap(cfg map[string]any) (*Credential, *UserInfo) {
 	if v, ok := cfg[credentialsKey]; ok {
 		if m, ok := v.(map[string]any); ok {
 			cred = &Credential{
-				APIKey:    getString(m, "api_key"),
-				LoginType: getString(m, "login_type"),
+				APIKey: getString(m, "api_key"),
 			}
 		}
 	}

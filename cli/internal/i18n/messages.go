@@ -23,7 +23,6 @@ type AuthMessages struct {
 	NoBrowserHint        Message
 	LoginShort           Message
 	LoggedInHuaweiCloud  Message
-	LoggedInUnknown      Message
 }
 
 type TunnelMessages struct {
@@ -105,7 +104,6 @@ type CommonMessages struct {
 	Expired      Message
 	AuthCommands Message
 	FlagAPIKey        Message
-	FlagHuaweiCloud   Message
 	FlagVerbose       Message
 	FlagEchoPort      Message
 	FlagInterface     Message
