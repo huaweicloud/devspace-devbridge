@@ -123,9 +123,6 @@ devbridge create my-tunnel -d "开发环境隧道" -e 24
 # 列出所有隧道
 devbridge list
 
-# 以 JSON 格式输出
-devbridge list -j
-
 # 查看隧道详情（未指定 ID 时使用默认隧道）
 devbridge show <tunnel-id>
 
@@ -161,9 +158,6 @@ devbridge port create <tunnel-id> -p 3000 --protocol https --deny-anonymous
 
 # 列出端口
 devbridge port list <tunnel-id>
-
-# 以 JSON 格式输出端口列表
-devbridge port list <tunnel-id> -j
 
 # 查看端口详情
 devbridge port show <tunnel-id> -p 8080
@@ -328,11 +322,8 @@ devbridge [-v|--verbose]                      # 全局调试日志标志
 
 | 配置项 | 说明 |
 |--------|------|
-| `huaweicloud-credentials.access-key` | Access Key |
-| `huaweicloud-credentials.secret-key` | Secret Key |
-| `huaweicloud-credentials.security-token` | 临时安全令牌 |
-| `huaweicloud-credentials.expires-at` | 过期时间 |
-| `huaweicloud-user-info` | 用户信息（user-name, user-id） |
+| `credentials` | 凭证信息（api_key） |
+| `user-info` | 用户信息（user_name, user_id） |
 | `default-tunnel-id` | 默认隧道 ID |
 
 ## 架构
@@ -357,19 +348,17 @@ devbridge [-v|--verbose]                      # 全局调试日志标志
 ```
 ├── cmd/                    # CLI 命令层
 │   ├── cli/main.go         # 程序入口
-│   ├── root.go             # 根命令（含 --verbose 全局标志）
+│   ├── root.go             # 根命令 + 版本命令（含 --verbose 全局标志）
 │   ├── auth.go             # 认证命令
 │   ├── connect.go          # Host/Connect 命令
 │   ├── tunnel.go           # 隧道管理命令
 │   ├── port.go             # 端口管理命令
 │   ├── limits.go           # 配额查询命令
-│   ├── echo.go             # HTTP echo 调试命令
-│   ├── ping.go             # URI ping 探测命令
-│   ├── print.go            # 表格/JSON 输出辅助
-│   └── version.go          # 版本命令
+│   ├── echo.go             # HTTP echo + URI ping 调试命令
+│   └── print.go            # 表格输出辅助
 ├── internal/               # 内部业务逻辑
-│   ├── api/                # REST API 客户端（隧道/端口/配额 CRUD + API Key 认证）
-│   ├── auth/               # 认证模块（SSO 登录/API Key 校验/凭证持久化）
+│   ├── api/                # REST API 客户端（隧道/端口/配额 CRUD + API Key 认证 + 请求签名）
+│   ├── auth/               # 认证模块（SSO 登录/API Key 读取校验/凭证持久化）
 │   ├── config/             # 配置管理（YAML 读写）
 │   ├── connect/            # 隧道连接核心（WebSocket + SSH 隧道 + 端口转发）
 │   ├── i18n/               # 国际化（中/英双语 + 显示宽度对齐）
