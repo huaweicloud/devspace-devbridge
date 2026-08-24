@@ -135,7 +135,7 @@ func doRequest(req *http.Request) (*http.Response, error) {
 		}
 		// 尝试解析 {"error":{"code","message","target"}} 错误结构
 		if apiErr := parseErrorBody(body); apiErr != nil {
-			return nil, apiErr
+			return nil, fmt.Errorf("%w: %v", errors.New(i18n.T(i18n.Msg.API.Unauthorized)), apiErr)
 		}
 		return nil, fmt.Errorf("%w: %s", errors.New(i18n.T(i18n.Msg.API.Unauthorized)), string(body))
 	}
