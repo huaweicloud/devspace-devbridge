@@ -67,89 +67,96 @@ func validatePorts(ports []uint) error {
 	return nil
 }
 
+// resolveHostConfig 解析 host 模式下的隧道配置（tunnelId、端口、JWT token）
+func resolveHostConfig(cmd *cobra.Command, args []string) (tunnelId string, ports []int, jwtToken string) {
+	if hostAPIKey != "" {
+		auth.SetOverrideAPIKey(hostAPIKey)
+	}
+	if hostToken != "" {
+		// --token 模式：用户直接提供 JWT token，跳过 API 调用
+		// tunnelId 必须指定，端口由 gateway 通过 relay channel 下发
+		if len(args) == 0 || args[0] == "" {
+			log.Fatalf("tunnelId is required when using --token")
+		}
+		tunnelId = args[0]
+		if err := validateTunnelID(tunnelId); err != nil {
+			log.Fatalf("%v", err)
+		}
+		if cmd.Flags().Changed("ports") {
+			fmt.Println("Note: --ports is ignored in --token mode, ports will be fetched from gateway")
+		}
+		jwtToken = hostToken
+		return
+	}
+
+	// 默认模式或 --api-key 模式：正常走 API 调用（API Key 认证）
+	tunnelId, ports = resolveHostTunnelPorts(cmd, args)
+
+	// --api-key 模式跳过 TunnelToken，直接用 API Key 鉴权
+	if hostAPIKey == "" {
+		tokenResult, err := api.TunnelToken(tunnelId, "host")
+		if err != nil {
+			log.Fatalf("Failed to get host token: %v", err)
+		}
+		jwtToken = tokenResult.Token
+	}
+	return
+}
+
+// resolveHostTunnelPorts 在非 --token 模式下解析隧道 ID 和端口列表
+func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelId string, ports []int) {
+	if len(args) > 0 && args[0] != "" {
+		// 指定了 tunnelId：从 API 查询该隧道绑定的所有端口，-p 参数忽略
+		tunnelId = args[0]
+		if err := validateTunnelID(tunnelId); err != nil {
+			log.Fatalf("%v", err)
+		}
+		portsResult, err := api.ListPorts(tunnelId)
+		if err != nil {
+			log.Fatalf("Failed to list ports: %v", err)
+		}
+		ports = portResultsToInt(portsResult)
+		if len(ports) == 0 {
+			log.Fatalf("No ports configured for tunnel %s", tunnelId)
+		}
+		return
+	}
+
+	// 未指定 tunnelId：必须带 -p，自动创建新隧道
+	if err := validatePorts(hostPorts); err != nil {
+		log.Fatalf("%v", err)
+	}
+	ports = portsToInt(hostPorts)
+
+	slog.Debug("Creating new tunnel", "ports", ports)
+	var exp *int
+	if cmd.Flags().Changed("expiration") {
+		exp = &hostExpiration
+	}
+	result, err := api.CreateTunnel(fmt.Sprintf("tunnel-%d-%d", ports[0], time.Now().UnixMilli()%10000), hostDescription, exp)
+	if err != nil {
+		log.Fatalf("Failed to create tunnel: %v", err)
+	}
+	tunnelId = result.TunnelId
+	fmt.Printf("Created tunnel: %s\n", tunnelId)
+
+	// 自动为新建隧道绑定端口
+	allowAnon := true
+	for _, p := range ports {
+		if err := api.CreatePort(tunnelId, p, "auto", &allowAnon); err != nil {
+			log.Fatalf("Failed to create port %d for tunnel %s: %v", p, tunnelId, err)
+		}
+	}
+	return
+}
+
 // hostCmd 以 host 模式启动隧道，将本地端口暴露到远程隧道服务
 var hostCmd = &cobra.Command{
 	Use:   "host [tunnelId]",
 	Short: "Start listener, register to gateway and wait for connections",
 	Args:  cobra.RangeArgs(0, 1),
 	Run: func(cmd *cobra.Command, args []string) {
-		var tunnelId string
-		var ports []int
-		var jwtToken string
-
-		if hostAPIKey != "" {
-			auth.SetOverrideAPIKey(hostAPIKey)
-		}
-		if hostToken != "" {
-			// --token 模式：用户直接提供 JWT token，跳过 API 调用
-			// tunnelId 必须指定，端口由 gateway 通过 relay channel 下发
-			if len(args) == 0 || args[0] == "" {
-				log.Fatalf("tunnelId is required when using --token")
-			}
-			tunnelId = args[0]
-			if err := validateTunnelID(tunnelId); err != nil {
-				log.Fatalf("%v", err)
-			}
-			if cmd.Flags().Changed("ports") {
-				fmt.Println("Note: --ports is ignored in --token mode, ports will be fetched from gateway")
-			}
-			jwtToken = hostToken
-		} else {
-			// 默认模式或 --api-key 模式：正常走 API 调用（API Key 认证）
-			if len(args) > 0 && args[0] != "" {
-				// 指定了 tunnelId：从 API 查询该隧道绑定的所有端口，-p 参数忽略
-				tunnelId = args[0]
-				if err := validateTunnelID(tunnelId); err != nil {
-					log.Fatalf("%v", err)
-				}
-
-				portsResult, err := api.ListPorts(tunnelId)
-				if err != nil {
-					log.Fatalf("Failed to list ports: %v", err)
-				}
-				ports = portResultsToInt(portsResult)
-
-				if len(ports) == 0 {
-					log.Fatalf("No ports configured for tunnel %s", tunnelId)
-				}
-			} else {
-				// 未指定 tunnelId：必须带 -p，自动创建新隧道
-				if err := validatePorts(hostPorts); err != nil {
-					log.Fatalf("%v", err)
-				}
-				ports = portsToInt(hostPorts)
-
-				slog.Debug("Creating new tunnel", "ports", ports)
-				var exp *int
-				if cmd.Flags().Changed("expiration") {
-					exp = &hostExpiration
-				}
-				result, err := api.CreateTunnel(fmt.Sprintf("tunnel-%d-%d", ports[0], time.Now().UnixMilli()%10000), hostDescription, exp)
-				if err != nil {
-					log.Fatalf("Failed to create tunnel: %v", err)
-				}
-				tunnelId = result.TunnelId
-				fmt.Printf("Created tunnel: %s\n", tunnelId)
-
-				// 自动为新建隧道绑定端口
-				allowAnon := true
-				for _, p := range ports {
-					if err := api.CreatePort(tunnelId, p, "auto", &allowAnon); err != nil {
-						log.Fatalf("Failed to create port %d for tunnel %s: %v", p, tunnelId, err)
-					}
-				}
-			}
-
-			// --api-key 模式跳过 TunnelToken，直接用 API Key 鉴权
-			if hostAPIKey == "" {
-				tokenResult, err := api.TunnelToken(tunnelId, "host")
-				if err != nil {
-					log.Fatalf("Failed to get host token: %v", err)
-				}
-				jwtToken = tokenResult.Token
-			}
-		}
-
+		tunnelId, ports, jwtToken := resolveHostConfig(cmd, args)
 		client.Listen(tunnelId, ports, jwtToken, hostAPIKey)
 	},
 }
@@ -196,7 +203,7 @@ var connectCmd = &cobra.Command{
 			}
 		}
 
-		client.Send(tunnelId, jwtToken, ports, connectAPIKey)
+		client.Connect(tunnelId, jwtToken, ports, connectAPIKey)
 	},
 }
 

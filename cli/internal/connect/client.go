@@ -183,16 +183,18 @@ func createTLSConfig(serverHost string) *tls.Config {
 
 // dialWithRetry 带指数退避重试的 WebSocket 拨号，最多重试 maxRetries 次
 func dialWithRetry(ctx context.Context, url string, opts *websocket.DialOptions, maxRetries int) (*websocket.Conn, error) {
-	baseDelay := 1 * time.Second
-	maxDelay := 30 * time.Second
+	const baseDelay = 1 * time.Second
+	const maxDelay = 30 * time.Second
 
-	for attempt := 0; ; attempt++ {
+	var lastErr error
+	for attempt := 0; attempt <= maxRetries; attempt++ {
 		slog.Debug("WebSocket handshake attempt", "attempt", attempt+1, "maxRetries", maxRetries, "url", url)
 		conn, resp, err := websocket.Dial(ctx, url, opts)
 		if err == nil {
 			slog.Debug("WebSocket handshake succeeded", "attempt", attempt+1, "url", url)
 			return conn, nil
 		}
+		lastErr = err
 
 		if resp != nil && resp.StatusCode == http.StatusConflict {
 			return nil, errDuplicateHost
@@ -209,49 +211,24 @@ func dialWithRetry(ctx context.Context, url string, opts *websocket.DialOptions,
 			if attempt == 0 {
 				fmt.Printf("Connection rejected by gateway: %s, retrying...\n", reason)
 			}
-			// 429 是临时限流，等待后重试而不是直接退出
-			delay := baseDelay
-			for i := 0; i < attempt; i++ {
-				delay *= 2
-				if delay >= maxDelay {
-					delay = maxDelay
-					break
-				}
-			}
-			jittered := time.Duration(rand.Int63n(int64(delay)))
-
-			if attempt >= maxRetries {
-				return nil, fmt.Errorf("connection rejected by gateway (429): %s", reason)
-			}
-			slog.Debug("WebSocket dial rejected by 429, retrying", "attempt", attempt+1, "maxRetries", maxRetries, "retryAfter", jittered, "reason", reason)
-
-			select {
-			case <-ctx.Done():
-				return nil, fmt.Errorf("websocket dial cancelled: %w", ctx.Err())
-			case <-time.After(jittered):
-			}
-			continue
+			lastErr = fmt.Errorf("connection rejected by gateway (429): %s", reason)
+		} else if attempt == 0 {
+			fmt.Println("Connection failed, retrying...")
 		}
 
-		if attempt >= maxRetries {
-			return nil, fmt.Errorf("websocket dial failed after %d retries: %w", maxRetries, err)
+		// 最后一次尝试失败，不再退避等待
+		if attempt == maxRetries {
+			break
 		}
 
-		// 指数退避 + 全抖动
-		delay := baseDelay
-		for i := 0; i < attempt; i++ {
-			delay *= 2
-			if delay >= maxDelay {
-				delay = maxDelay
-				break
-			}
+		// 统一指数退避 + 全抖动：用位移替代循环累乘
+		delay := baseDelay * time.Duration(1<<uint(attempt))
+		if delay > maxDelay {
+			delay = maxDelay
 		}
 		jittered := time.Duration(rand.Int63n(int64(delay)))
 
-		if attempt == 0 {
-			fmt.Println("Connection failed, retrying...")
-		}
-		slog.Debug("WebSocket dial retry", "attempt", attempt+1, "maxRetries", maxRetries, "retryAfter", jittered, "err", err)
+		slog.Debug("WebSocket dial retry", "attempt", attempt+1, "maxRetries", maxRetries, "retryAfter", jittered, "err", lastErr)
 
 		select {
 		case <-ctx.Done():
@@ -259,4 +236,5 @@ func dialWithRetry(ctx context.Context, url string, opts *websocket.DialOptions,
 		case <-time.After(jittered):
 		}
 	}
+	return nil, fmt.Errorf("websocket dial failed after %d retries: %w", maxRetries, lastErr)
 }

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"sync/atomic"
 	"time"
@@ -77,13 +78,20 @@ func Listen(tunnelId string, ports []int, jwtToken string, apiKey string) {
 	}
 }
 
-func runListenSession(ctx context.Context, wsURL string, sniHost string, header http.Header, subprotocols []string, tunnelId string, ports []int) (connected bool, err error) {
-	netConn, err := dialWebSocket(ctx, wsURL, sniHost, header, subprotocols, 5)
-	if err != nil {
-		return false, err
-	}
-	defer netConn.Close()
+// portNotifier 封装网关端口通知的同步逻辑
+// accept loop 在收到第一个 relay channel 时写入 ports 并 close ready
+type portNotifier struct {
+	received atomic.Bool
+	ready    chan struct{}
+	ports    []int // 在 ready 关闭前由 accept loop 写入，主流程在 <-ready 后读取
+}
 
+func newPortNotifier() *portNotifier {
+	return &portNotifier{ready: make(chan struct{})}
+}
+
+// setupOuterSession 建立外层 SSH 客户端会话并设置断连/保活回调
+func setupOuterSession(ctx context.Context, netConn net.Conn, tunnelId string) (*ssh.ClientSession, chan struct{}, error) {
 	outerConfig := ssh.NewNoSecurityConfig()
 	outerConfig.KeepAliveIntervalSeconds = 10
 	outerConfig.KeyRotationThreshold = 0 // 禁用密钥轮换（no-security 模式无需轮换，且阈值不重置会导致频繁触发）
@@ -91,23 +99,22 @@ func runListenSession(ctx context.Context, wsURL string, sniHost string, header 
 	outerSession := ssh.NewClientSession(outerConfig)
 	outerSession.Trace = traceFunc()
 
-	if err = outerSession.Connect(ctx, netConn); err != nil {
+	if err := outerSession.Connect(ctx, netConn); err != nil {
 		var ce websocket.CloseError
 		if errors.As(err, &ce) && ce.Code == websocket.StatusPolicyViolation {
 			switch ce.Reason {
 			case "account quota exceeded":
-				return false, errQuotaExceeded
+				return nil, nil, errQuotaExceeded
 			case "tunnel not found":
-				return false, errTunnelNotFound
+				return nil, nil, errTunnelNotFound
 			default:
-				return false, errDuplicateHost
+				return nil, nil, errDuplicateHost
 			}
 		}
 		netConn.Close()
-		return false, fmt.Errorf("outer SSH client connect failed: %w", err)
+		return nil, nil, fmt.Errorf("outer SSH client connect failed: %w", err)
 	}
 	slog.Debug("host: outer SSH session established", "tunnelId", tunnelId)
-	connected = true
 
 	disconnected := make(chan struct{}, 1)
 	outerSession.OnDisconnected = func() {
@@ -127,16 +134,11 @@ func runListenSession(ctx context.Context, wsURL string, sniHost string, header 
 		}
 	}
 
-	// portNotificationReceived 标记是否已收到网关下发的端口列表通知
-	// 网关在 host 连接后通过 sendRelayRequestMessage 主动开一个 relay channel 下发端口列表，
-	// 这是第一个 relay channel；后续 send 端连接时网关再开 relay channel 用于数据转发。
-	var portNotificationReceived atomic.Bool
-	portsReady := make(chan struct{})
-	// gatewayPorts: passive 模式下由 accept loop goroutine 写入（close(portsReady) 之前），
-	// 主流程在 <-portsReady 之后读取，避免 data race
-	var gatewayPorts []int
+	return outerSession, disconnected, nil
+}
 
-	// accept loop: 每个 relay channel 在独立 goroutine 中处理，避免阻塞后续 channel
+// startAcceptLoop 启动 relay channel 接收循环，每个 relay channel 在独立 goroutine 中处理
+func startAcceptLoop(ctx context.Context, outerSession *ssh.ClientSession, tunnelId string, ports []int, pn *portNotifier) {
 	go func() {
 		for {
 			channel, err := outerSession.AcceptChannel(ctx)
@@ -146,40 +148,68 @@ func runListenSession(ctx context.Context, wsURL string, sniHost string, header 
 
 			switch channel.ChannelType {
 			case relayChannelType:
-				if !portNotificationReceived.Load() {
+				if !pn.received.Load() {
 					// 第一个 relay channel 是网关下发的端口列表通知
 					if len(ports) == 0 {
 						// passive 模式（--token）：从网关通知中获取端口列表
-						gatewayPorts = readPortNotification(channel)
+						pn.ports = readPortNotification(channel)
 					} else {
 						// active 模式：已有端口，读取后丢弃
 						readPortNotification(channel)
 					}
-					// 第一个 relay channel 是网关下发的端口列表通知，读取后丢弃
-					portNotificationReceived.Store(true)
-					close(portsReady)
+					pn.received.Store(true)
+					close(pn.ready)
 					continue
 				}
 				// 后续 relay channel 是 send 端连接，创建内层 SSH 会话
 				effectivePorts := ports
 				if len(effectivePorts) == 0 {
-					effectivePorts = gatewayPorts
+					effectivePorts = pn.ports
 				}
 
-				go handleRealRelayChannel(ctx, channel, tunnelId, effectivePorts)
+				go handleRelayChannel(ctx, channel, tunnelId, effectivePorts)
 			default:
 				// drain non-relay channels to prevent acceptQueue overflow
 				slog.Debug("host: draining non-relay channel", "channelType", channel.ChannelType, "channelID", channel.ChannelID)
 			}
 		}
 	}()
+}
+
+// printListenReady 打印监听就绪信息（端口、隧道 URL、提示）
+func printListenReady(ports []int, tunnelId string) {
+	for _, p := range ports {
+		fmt.Printf("Hosting port: %s%d%s\n", colorCyan, p, colorReset)
+	}
+	for _, p := range ports {
+		fmt.Printf("Tunnel URL: https://%s-%d.%s\n", tunnelId, p, ServerHost)
+	}
+	fmt.Println("Ready to accept connections")
+	fmt.Println("Auto reconnect: enabled")
+}
+
+func runListenSession(ctx context.Context, wsURL string, sniHost string, header http.Header, subprotocols []string, tunnelId string, ports []int) (connected bool, err error) {
+	netConn, err := dialWebSocket(ctx, wsURL, sniHost, header, subprotocols, 5)
+	if err != nil {
+		return false, err
+	}
+	defer netConn.Close()
+
+	outerSession, disconnected, err := setupOuterSession(ctx, netConn, tunnelId)
+	if err != nil {
+		return false, err
+	}
+	connected = true
+
+	pn := newPortNotifier()
+	startAcceptLoop(ctx, outerSession, tunnelId, ports, pn)
 
 	// passive 模式（--token）：等待网关下发端口列表后再打印
 	printPorts := ports
 	if len(ports) == 0 {
 		select {
-		case <-portsReady:
-			printPorts = gatewayPorts
+		case <-pn.ready:
+			printPorts = pn.ports
 		case <-time.After(5 * time.Second):
 			slog.Warn("timeout waiting for port notification from gateway")
 		case <-disconnected:
@@ -189,14 +219,7 @@ func runListenSession(ctx context.Context, wsURL string, sniHost string, header 
 		}
 	}
 
-	for _, p := range printPorts {
-		fmt.Printf("Hosting port: %s%d%s\n", colorCyan, p, colorReset)
-	}
-	for _, p := range printPorts {
-		fmt.Printf("Tunnel URL: https://%s-%d.%s\n", tunnelId, p, ServerHost)
-	}
-	fmt.Println("Ready to accept connections")
-	fmt.Println("Auto reconnect: enabled")
+	printListenReady(printPorts, tunnelId)
 
 	for {
 		select {
@@ -229,10 +252,10 @@ func readPortNotification(channel *ssh.Channel) []int {
 	return ports
 }
 
-// handleRealRelayChannel 处理 send 端连接的 relay channel，创建内层 SSH ServerSession
+// handleRelayChannel 处理 send 端连接的 relay channel，创建内层 SSH ServerSession
 // 创建完成后，通过 ForwardFromRemotePort 向 send 端发送 tcpip-forward 请求，
 // 让 send 端自动在本地监听端口并建立转发
-func handleRealRelayChannel(ctx context.Context, channel *ssh.Channel, tunnelId string, ports []int) {
+func handleRelayChannel(ctx context.Context, channel *ssh.Channel, tunnelId string, ports []int) {
 	innerSession := createInnerServerSession(ctx, channel)
 	if innerSession == nil {
 		return
