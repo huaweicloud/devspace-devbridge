@@ -28,7 +28,8 @@ type listenerFactory struct {
 	pendingForwardings []string
 	expectedCount      int
 	allReceived        chan struct{}
-	portOverrides      map[int]int // remotePort -> 实际使用的 localPort，重连时复用
+	portOverrides      map[int]int    // remotePort -> 实际使用的 localPort，重连时复用
+	listeners          []net.Listener // 已创建的监听器，重连前关闭以释放端口
 }
 
 func newListenerFactory(expectedCount int) *listenerFactory {
@@ -57,12 +58,13 @@ func (f *listenerFactory) CreateTCPListener(
 		if err == nil {
 			conn.Close()
 			if canChangeLocalPort {
-				randomListener, randomErr := net.Listen("tcp", net.JoinHostPort(localIPAddress, strconv.Itoa(0)))
-				if randomErr != nil {
-					return nil, randomErr
+				randomListener, listenErr := net.Listen("tcp", net.JoinHostPort(localIPAddress, strconv.Itoa(0)))
+				if listenErr != nil {
+					return nil, listenErr
 				}
 				actualPort := randomListener.Addr().(*net.TCPAddr).Port
 				f.portOverrides[remotePort] = actualPort
+				f.listeners = append(f.listeners, randomListener)
 				f.addForwarding(fmt.Sprintf("Forwarding localhost: %s%d%s -> tunnel port: %s%d%s (port %s%d%s in use)\n",
 					colorCyan, actualPort, colorReset, colorCyan, remotePort, colorReset, colorYellow, localPort, colorReset))
 				return randomListener, nil
@@ -73,12 +75,13 @@ func (f *listenerFactory) CreateTCPListener(
 
 	listener, err := net.Listen("tcp", net.JoinHostPort(localIPAddress, strconv.Itoa(localPort)))
 	if err != nil && canChangeLocalPort {
-		randomListener, randomErr := net.Listen("tcp", net.JoinHostPort(localIPAddress, strconv.Itoa(0)))
-		if randomErr != nil {
-			return nil, randomErr
+		randomListener, listenErr := net.Listen("tcp", net.JoinHostPort(localIPAddress, strconv.Itoa(0)))
+		if listenErr != nil {
+			return nil, listenErr
 		}
 		actualPort := randomListener.Addr().(*net.TCPAddr).Port
 		f.portOverrides[remotePort] = actualPort
+		f.listeners = append(f.listeners, randomListener)
 		f.addForwarding(fmt.Sprintf("Forwarding localhost: %s%d%s -> tunnel port: %s%d%s (port %s%d%s in use)\n",
 			colorCyan, actualPort, colorReset, colorCyan, remotePort, colorReset, colorYellow, localPort, colorReset))
 		return randomListener, nil
@@ -87,6 +90,7 @@ func (f *listenerFactory) CreateTCPListener(
 		return nil, err
 	}
 	f.portOverrides[remotePort] = localPort
+	f.listeners = append(f.listeners, listener)
 	f.addForwarding(fmt.Sprintf("Forwarding localhost: %s%d%s -> tunnel port: %s%d%s\n",
 		colorCyan, localPort, colorReset, colorCyan, remotePort, colorReset))
 	return listener, nil
@@ -115,10 +119,14 @@ func (f *listenerFactory) PrintForwardings() {
 	}
 }
 
-// reset 重连前重置状态，保留 portOverrides（端口复用）
+// reset 重连前重置状态：关闭上一轮的监听器释放端口，保留 portOverrides（端口复用）
 func (f *listenerFactory) reset() {
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	for _, l := range f.listeners {
+		l.Close()
+	}
+	f.listeners = nil
 	f.pendingForwardings = nil
 	f.allReceived = make(chan struct{})
 }
