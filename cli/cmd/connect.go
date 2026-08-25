@@ -187,8 +187,18 @@ var connectCmd = &cobra.Command{
 	Short: "Start sender, connect to gateway and wait for port forwarding requests",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		if connectAPIKey != "" {
+			auth.SetOverrideAPIKey(connectAPIKey)
+		}
+
 		var tunnelId string
-		if len(args) > 0 && args[0] != "" {
+		if connectToken != "" {
+			// --token 模式：必须显式指定 tunnelId，不走默认隧道
+			if len(args) == 0 || args[0] == "" {
+				log.Fatalf("tunnelId is required when using --token")
+			}
+			tunnelId = args[0]
+		} else if len(args) > 0 && args[0] != "" {
 			tunnelId = args[0]
 		} else {
 			id, err := api.ResolveTunnelId("")
@@ -204,9 +214,6 @@ var connectCmd = &cobra.Command{
 		var jwtToken string
 		var ports []int
 
-		if connectAPIKey != "" {
-			auth.SetOverrideAPIKey(connectAPIKey)
-		}
 		if connectToken != "" {
 			// --token 模式：用户直接提供 JWT token，跳过 TunnelToken 和 ListPorts
 			// 端口列表由 host 端通过 SSH ForwardFromRemotePort 协商下发
