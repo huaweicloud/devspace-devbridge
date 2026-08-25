@@ -14,7 +14,7 @@ description: 安装 DevBridge CLI，登录并通过开发隧道托管本地服�
 开始前，请确保：
 
 - 当前设备可以运行 Bash 和 `curl`，或者 PowerShell 5.1 及以上版本；
-- 你拥有可用的 DevBridge 身份或 AK/SK；
+- 你拥有可用的 DevBridge 身份或 API Key；
 - 另一台设备可用于验证 Connect 模式。
 
 ::: info 适用场景
@@ -58,7 +58,7 @@ devbridge auth login
 devbridge auth status
 ```
 
-自动化环境可以使用 AK/SK 或临时 AK/SK。请参阅[登录与凭证](./guide/authentication.md)。
+自动化环境可以使用 API Key。请参阅[登录与凭证](./guide/authentication.md)。
 
 ## 托管本地服务
 

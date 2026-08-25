@@ -34,6 +34,26 @@ http://localhost:8080
 devbridge port list <tunnelId>
 ```
 
+## 使用已有令牌
+
+集成其他客户端或跳过 API 调用时，可以直接提供 JWT 令牌：
+
+```bash
+devbridge connect <tunnelId> --token <jwt>
+```
+
+`--token` 模式跳过令牌签发和端口查询，端口由 Host 端通过中继通道协商下发。必须显式指定隧道 ID。
+
+## 使用 API Key 鉴权
+
+跳过令牌签发，直接使用 API Key 通过 WebSocket 认证：
+
+```bash
+devbridge connect <tunnelId> --api-key <key>
+```
+
+此模式仍会通过 API 查询隧道端口配置，但跳过 TunnelToken 签发步骤。
+
 ## 受保护端口
 
 端口使用 `--deny-anonymous` 配置后，Connect 必须使用有效身份和 Connect 令牌。CLI 会自动申请令牌，通常不需要手动执行 `devbridge token`。

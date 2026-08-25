@@ -2,6 +2,33 @@
 
 本文件记录 DevBridge 文档站点的变更内容。
 
+## 2026-08-25
+
+### 端侧变更
+
+#### 变更
+
+##### 认证
+
+- 登录方式从 AK/SK 迁移到 API Key。
+- `devbridge auth login` 新增 `--api-key` 参数，支持直接传入 API Key。
+- 移除 `--access-key`、`--secret-key` 和 `--security-token` 参数。
+- 新增 `HW_API_KEY` 环境变量支持，CLI 自动读取。
+- 浏览器登录回调适配 `{error_code, error_msg, result}` 包装格式，失败错误格式与 API 客户端一致。
+
+##### Host / Connect
+
+- `host` 和 `connect` 命令新增 `--token` / `-t` 参数，支持直接传入 JWT 令牌，跳过 API 令牌签发和端口查询。
+- `host` 和 `connect` 命令新增 `--api-key` / `-k` 参数，支持使用 API Key 鉴权，跳过 TunnelToken 签发。
+
+##### 隧道详情
+
+- `devbridge show` 输出新增 Host 连接数、Connect 连接数、上传流量和下载流量统计。
+
+#### 移除
+
+- 移除 `list` 和 `port list` 命令的 `-j` / JSON 输出参数。
+
 ## 2026-08-11
 
 ### 端侧变更

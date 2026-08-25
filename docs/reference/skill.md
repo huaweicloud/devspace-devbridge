@@ -69,10 +69,10 @@ Skill 会在首次使用时自动完成以下准备工作：
 2. 加载适配层脚本；
 3. 检查登录状态，未登录时自动引导登录。
 
-自动化环境建议使用 AK/SK 认证，避免交互登录：
+自动化环境建议使用 API Key 认证，避免交互登录：
 
 ```bash
-devbridge auth login --access-key "$AK" --secret-key "$SK"
+devbridge auth login --api-key "$HW_API_KEY"
 ```
 
 ## 使用示例
