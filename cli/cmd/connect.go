@@ -122,8 +122,14 @@ func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelId string,
 		return
 	}
 
-	// 未指定 tunnelId：先尝试使用默认隧道（由 tunnel set 设置）
-	if defaultId, err := api.ResolveTunnelId(""); err == nil && defaultId != "" {
+	// 未指定 tunnelId：
+	//   - 带 -p：创建临时隧道
+	//   - 不带 -p：使用 tunnel set 设置的默认隧道
+	if !cmd.Flags().Changed("ports") {
+		defaultId, err := api.ResolveTunnelId("")
+		if err != nil {
+			log.Fatalf("no tunnelId and no -p specified; either set a default tunnel (tunnel set) or pass -p to create a temporary tunnel: %v", err)
+		}
 		tunnelId = defaultId
 		portsResult, err := api.ListPorts(tunnelId)
 		if err != nil {
@@ -136,7 +142,7 @@ func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelId string,
 		return
 	}
 
-	// 未指定 tunnelId 且无默认隧道：必须带 -p，自动创建新隧道
+	// 带 -p：创建临时隧道
 	if err := validatePorts(hostPorts); err != nil {
 		log.Fatalf("%v", err)
 	}
