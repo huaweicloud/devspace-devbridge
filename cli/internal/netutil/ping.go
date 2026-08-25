@@ -17,7 +17,7 @@ func PingURI(rawURI string, timeout time.Duration) *PingResult {
 	start := time.Now()
 
 	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // 健康探针需跳过 TLS 校验以探测自签证书端点
 		Proxy:           http.ProxyFromEnvironment,
 	}
 	client := &http.Client{

@@ -30,7 +30,7 @@ func Load() (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // path 由 configPath() 内部拼接，不接外部输入
 	if err != nil {
 		if os.IsNotExist(err) {
 			return make(map[string]any), nil
@@ -59,7 +59,7 @@ func Save(cfg map[string]any) error {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return err
 	}
-	if err := os.Chmod(dir, 0o700); err != nil {
+	if err := os.Chmod(dir, 0o700); err != nil { //nolint:gosec // 0700 是目录权限（owner rwx），非文件
 		return err
 	}
 	// 没有数据时写空文件，而不是 "{}"

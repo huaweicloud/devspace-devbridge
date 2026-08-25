@@ -9,7 +9,8 @@ import (
 	"io"
 	"log"
 	"log/slog"
-	"math/rand"
+	"crypto/rand"
+	"math/big"
 	"net"
 	"net/http"
 	"strings"
@@ -195,11 +196,18 @@ func dialWithRetry(ctx context.Context, url string, opts *websocket.DialOptions,
 		}
 
 		// 统一指数退避 + 全抖动：用位移替代循环累乘.
-		delay := baseDelay * time.Duration(1<<uint(attempt))
+		delay := baseDelay * time.Duration(1<<uint(attempt)) //nolint:gosec // attempt 是非负重试计数器，不会溢出
 		if delay > maxDelay {
 			delay = maxDelay
 		}
-		jittered := time.Duration(rand.Int63n(int64(delay)))
+		// 使用 crypto/rand 生成安全随机数用于退避抖动.
+		var jittered time.Duration
+		bigN, err := rand.Int(rand.Reader, big.NewInt(int64(delay)))
+		if err != nil {
+			jittered = delay / 2 // crypto/rand 失败时回退到半延迟.
+		} else {
+			jittered = time.Duration(bigN.Int64())
+		}
 
 		slog.Debug("WebSocket dial retry", "attempt", attempt+1,
 			"maxRetries", maxRetries, "retryAfter", jittered, "err", lastErr)

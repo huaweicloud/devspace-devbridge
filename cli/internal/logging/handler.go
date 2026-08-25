@@ -18,7 +18,7 @@ func LogLevel() slog.Level {
 }
 
 func SetLevel(level slog.Level) {
-	currentLevel.Store(int32(level))
+	currentLevel.Store(int32(level)) //nolint:gosec // slog.Level 实际取值 -8~8，远在 int32 范围内
 }
 
 type PlainHandler struct {

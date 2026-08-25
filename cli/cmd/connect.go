@@ -40,7 +40,7 @@ func validateTunnelID(id string) error {
 func portsToInt(ports []uint) []int {
 	result := make([]int, len(ports))
 	for i, p := range ports {
-		result[i] = int(p)
+		result[i] = int(p) //nolint:gosec // p 是端口号 0~65535，远在 int 范围内
 	}
 	return result
 }
