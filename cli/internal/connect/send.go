@@ -142,7 +142,7 @@ func (f *listenerFactory) waitForForwardings(timeout time.Duration) {
 // Connect 启动发送端连接到网关，等待 host 端的端口转发请求
 // tunnelId: 隧道ID
 // jwtToken: JWT 认证 token
-// ports: 端口列表（仅用于模式提示日志，实际端口转发由 host 端通过 ForwardFromRemotePort 下发）
+// ports: 端口列表，用于设置 listener factory 期望端口数和模式提示日志；实际端口转发由 host 端通过 ForwardFromRemotePort 下发
 func Connect(tunnelId string, jwtToken string, ports []int, apiKey string) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

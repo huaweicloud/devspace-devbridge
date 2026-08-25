@@ -62,7 +62,7 @@ func sshTraceFunc(level ssh.TraceLevel, eventID int, message string) {
 	}
 }
 
-// traceFunc 返回当前日志级别下的 TraceFunc，Debug 级别以上时返回 nil
+// traceFunc 返回当前日志级别下的 TraceFunc，非 Debug 级别时返回 nil
 func traceFunc() ssh.TraceFunc {
 	if isDebugEnabled() {
 		return sshTraceFunc
@@ -78,7 +78,7 @@ var (
 
 // relayChannelType 监听端外层 SSH ClientSession 接收的通道类型
 // 网关在 send端连接时，会在 host 的外层 session 上 OpenChannelWithType("relay") 打开通道
-// 监听端通过 AcceptChannelWithType("relay") 接收，每个 relay 通道承载一个内层 SSH 会话
+// 监听端通过 AcceptChannel 接收后按 ChannelType 匹配，每个 relay 通道承载一个内层 SSH 会话
 const relayChannelType = "relay"
 
 // sessionLookup 监听端内层 ServerSession 映射表

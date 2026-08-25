@@ -181,7 +181,7 @@ var hostCmd = &cobra.Command{
 	},
 }
 
-// connectCmd 以 server 模式连接到远程隧道，等待监听端的端口转发请求
+// connectCmd 以 sender 模式连接到远程隧道，等待 host 端的端口转发请求
 var connectCmd = &cobra.Command{
 	Use:   "connect [tunnelId]",
 	Short: "Start sender, connect to gateway and wait for port forwarding requests",
