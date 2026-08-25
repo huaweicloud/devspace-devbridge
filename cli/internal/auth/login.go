@@ -54,6 +54,29 @@ type callbackResponse struct {
 	UserID   string `json:"userId"`
 }
 
+// loginCallbackEnvelope 适配浏览器登录回调返回的包装格式：
+//
+//	{"error_code":"0000","error_msg":"","result":{"apiKey":"...","userName":"...","userId":"..."}}
+//
+// error_code 为 loginSuccessCode 表示成功，其他值为失败。
+type loginCallbackEnvelope struct {
+	ErrorCode string           `json:"error_code"`
+	ErrorMsg  string           `json:"error_msg"`
+	Result    callbackResponse `json:"result"`
+}
+
+// loginError 登录回调返回的错误，格式与 API 客户端 (api.apiError) 保持一致：
+//
+//	error code: %s, error message: %s
+type loginError struct {
+	Code    string
+	Message string
+}
+
+func (e *loginError) Error() string {
+	return fmt.Sprintf("error code: %s, error message: %s", e.Code, e.Message)
+}
+
 var (
 	errMissingAPIKey = errors.New("missing api key")
 	errLoginTimeout  = errors.New("login timeout")
@@ -63,6 +86,9 @@ const (
 	loginOriginParam = "devbridge"
 	loginPageURL     = "%s/space/devbridge/redirect?%s"
 	envHWAPIKey      = "HW_API_KEY"
+
+	// loginSuccessCode 浏览器登录回调中 error_code 的成功值。
+	loginSuccessCode = "0000"
 )
 
 var LoginURL = "https://devstation.ulanqab.huawei.com"
@@ -147,8 +173,8 @@ func handleLoginCallback(w http.ResponseWriter, r *http.Request, origin string, 
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-	var resp callbackResponse
-	if err := json.Unmarshal(body, &resp); err != nil {
+	resp, err := parseLoginCallbackBody(body)
+	if err != nil {
 		errCh <- err
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
@@ -161,6 +187,36 @@ func handleLoginCallback(w http.ResponseWriter, r *http.Request, origin string, 
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte("OK"))
 	resultCh <- resp
+}
+
+// parseLoginCallbackBody 解析浏览器登录回调的响应体。
+//
+// 优先按包装格式 {"error_code","error_msg","result"} 解析：
+//   - error_code 为 "0000" 表示成功，返回 result 中的数据；
+//   - error_code 为其他非空值表示失败，返回 *loginError（格式与 API 客户端一致）。
+//
+// 若响应体不含 error_code 字段（旧版本裸数据格式），回退到直接解析为 callbackResponse。
+func parseLoginCallbackBody(body []byte) (callbackResponse, error) {
+	var envelope loginCallbackEnvelope
+	if err := json.Unmarshal(body, &envelope); err != nil {
+		return callbackResponse{}, err
+	}
+	// 包装格式：error_code 非空
+	if envelope.ErrorCode != "" {
+		if envelope.ErrorCode != loginSuccessCode {
+			return callbackResponse{}, &loginError{
+				Code:    envelope.ErrorCode,
+				Message: envelope.ErrorMsg,
+			}
+		}
+		return envelope.Result, nil
+	}
+	// 回退：裸数据格式（无 error_code 字段），直接解析为 callbackResponse
+	var resp callbackResponse
+	if err := json.Unmarshal(body, &resp); err != nil {
+		return callbackResponse{}, err
+	}
+	return resp, nil
 }
 
 func HCAuth(apiKey string) (Credential, *UserInfo, error) {
