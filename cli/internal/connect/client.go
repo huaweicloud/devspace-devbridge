@@ -2,6 +2,7 @@ package connect
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
@@ -9,7 +10,6 @@ import (
 	"io"
 	"log"
 	"log/slog"
-	"crypto/rand"
 	"math/big"
 	"net"
 	"net/http"

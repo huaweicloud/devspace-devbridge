@@ -171,7 +171,7 @@ func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelID string,
 		}
 	}
 	return
-} //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+}
 
 // hostCmd 以 host 模式启动隧道，将本地端口暴露到远程隧道服务.
 var hostCmd = &cobra.Command{
@@ -243,7 +243,7 @@ var connectCmd = &cobra.Command{
 		}
 
 		client.Connect(tunnelID, jwtToken, ports, connectAPIKey)
-	}, //nolint:gochecknoinits // cobra CLI 惯用 init 函数
+	}, //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 }
 
 func init() {

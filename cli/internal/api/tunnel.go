@@ -28,7 +28,7 @@ const (
 type createTunnelRequest struct {
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
-	ClusterID   string `json:"ClusterID"`
+	ClusterID   string `json:"ClusterId"`
 	Expiration  int    `json:"expiration,omitempty"`
 }
 
