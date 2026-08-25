@@ -14,7 +14,7 @@ description: 了解 DevBridge CLI 的安装目录、配置目录、凭证和默�
 | `~/.huawei/bin`       | DevBridge CLI 可执行文件。               |
 | `~/.huawei/devbridge` | 登录状态、CLI 配置、默认隧道和运行状态。 |
 
-安装脚本不提供自定义安装目录参数。
+安装脚本支持 `-p/--prefix` 参数自定义安装目录，默认为 `~/.huawei/bin`。
 
 ## PATH
 
