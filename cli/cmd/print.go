@@ -89,26 +89,17 @@ func formatRemaining(v float64, unit string) string {
 	return strconv.FormatFloat(rounded, 'f', -1, 64) + " " + unit
 }
 
+var byteUnits = []string{"B", "KB", "MB", "GB", "TB", "PB", "EB"}
+
 func formatBytes(b int64) string {
-	const unit = 1024
-	if b < unit {
-		return fmt.Sprintf("%d B", b)
-	}
-
-	// 声明单位后缀
-	suffix := []string{"KB", "MB", "GB", "TB", "PB", "EB"}
-
-	// 将 b 转换为浮点数进行除法计算
-	f := float64(b) / unit
+	const unit = 1024.0
+	f := float64(b)
 	i := 0
-
-	// 每次除以 1024，直到小于 1024
-	for f >= unit && i < len(suffix)-1 {
+	for f >= unit && i < len(byteUnits)-1 {
 		f /= unit
 		i++
 	}
-
-	return fmt.Sprintf("%.1f %s", f, suffix[i])
+	return strconv.FormatFloat(f, 'f', -1, 64) + " " + byteUnits[i]
 }
 
 func formatTime(ts int64) string {
