@@ -116,67 +116,11 @@ api_url() {
 }
 
 # ---------------------------------------------------------------------------
-# resolve_release_id - 多策略获取 Release ID
+# find_or_create_release - 查找或创建 Release，返回 tag（GitCode 用 tag 标识 Release）
 #
-# GitCode API 与标准 Gitea 有两处差异:
-#   1. 创建 Release 返回 HTTP 200 而非 201
-#   2. 响应体可能没有顶层 id 字段
-#
-# 本函数按以下顺序尝试获取 release_id:
-#   策略 1: 直接从传入的 JSON 文件中读取 .id
-#   策略 2: GET /releases/tags/{tag} 回查，读取 .id
-#   策略 3: GET /releases 列出所有 release，按 tag_name 匹配后读取 .id
-# ---------------------------------------------------------------------------
-resolve_release_id() {
-  local tag="$1" json_file="$2"
-  local rid=""
-
-  # 策略 1: 直接从已有响应中读取
-  rid=$(jq -r '.id // empty' "$json_file" 2>/dev/null)
-  if [[ -n "$rid" && "$rid" != "null" ]]; then
-    echo "$rid"
-    return 0
-  fi
-
-  log_warn "  响应无顶层 id，回查获取..."
-
-  # 策略 2: GET by tag
-  local code
-  code=$(curl -s -o /tmp/gc_rid_tag.json -w "%{http_code}" \
-    -H "Authorization: Bearer ${TOKEN}" \
-    "$(api_url "/releases/tags/${tag}")")
-
-  if [[ "$code" == "200" ]]; then
-    rid=$(jq -r '.id // empty' /tmp/gc_rid_tag.json 2>/dev/null)
-    if [[ -n "$rid" && "$rid" != "null" ]]; then
-      log_info "  策略 2 (GET by tag) 成功: id=${rid}"
-      echo "$rid"
-      return 0
-    fi
-  fi
-
-  # 策略 3: 列出所有 release，按 tag_name 匹配
-  log_warn "  GET by tag 也无 id，列出所有 release 匹配..."
-  code=$(curl -s -o /tmp/gc_rid_list.json -w "%{http_code}" \
-    -H "Authorization: Bearer ${TOKEN}" \
-    "$(api_url "/releases?per_page=100")")
-
-  if [[ "$code" == "200" ]]; then
-    rid=$(jq -r --arg tag "$tag" \
-      '.[] | select(.tag_name == $tag) | .id // empty' \
-      /tmp/gc_rid_list.json 2>/dev/null)
-    if [[ -n "$rid" && "$rid" != "null" ]]; then
-      log_info "  策略 3 (list + match) 成功: id=${rid}"
-      echo "$rid"
-      return 0
-    fi
-  fi
-
-  log_error "  所有策略均未能获取 release_id for tag=${tag}"
-}
-
-# ---------------------------------------------------------------------------
-# find_or_create_release - 查找或创建 Release，返回 release_id
+# GitCode API 与标准 Gitea 有差异：
+#   - Release 响应体没有顶层 id 字段，所有 API 用 tag name 标识 Release
+#   - 创建 Release 返回 HTTP 200 而非 201
 # ---------------------------------------------------------------------------
 find_or_create_release() {
   local tag="$1" name="$2" body="${3:-}"
@@ -188,10 +132,8 @@ find_or_create_release() {
     "$(api_url "/releases/tags/${tag}")")
 
   if [[ "$code" == "200" ]]; then
-    local rid
-    rid=$(resolve_release_id "$tag" /tmp/gc_rel_find.json)
-    log_info "Release 已存在（tag=${tag}），release_id=${rid}"
-    echo "$rid"
+    log_info "Release 已存在（tag=${tag}）" >&2
+    echo "$tag"
     return 0
   fi
 
@@ -200,7 +142,7 @@ find_or_create_release() {
   fi
 
   # 404 → 创建
-  log_info "Release 不存在（tag=${tag}），创建..."
+  log_info "Release 不存在（tag=${tag}），创建..." >&2
 
   code=$(curl -s -o /tmp/gc_rel_create.json -w "%{http_code}" \
     -X POST \
@@ -218,31 +160,33 @@ find_or_create_release() {
     log_error "创建 Release 失败 (HTTP ${code}): $(cat /tmp/gc_rel_create.json)"
   fi
 
-  local rid
-  rid=$(resolve_release_id "$tag" /tmp/gc_rel_create.json)
-  log_info "Release 创建成功，release_id=${rid}"
-  echo "$rid"
+  log_info "Release 创建成功（tag=${tag}）" >&2
+  echo "$tag"
 }
 
 # ---------------------------------------------------------------------------
-# delete_all_assets - 删除 Release 的所有现有附件
+# delete_all_assets - 删除 Release 的所有现有附件（attach 类型）
+#
+# GitCode API：DELETE /repos/:owner/:repo/releases/:tag/attach_files/:attach_file_id
+# 只有 type=="attach" 的附件有 id 字段，type=="source" 的是自动生成的源码包，不可删除。
 # ---------------------------------------------------------------------------
 delete_all_assets() {
-  local release_id="$1"
+  local tag="$1"
 
   # 获取 Release 详情（含 assets 列表）
   local code
   code=$(curl -s -o /tmp/gc_rel_assets.json -w "%{http_code}" \
     -H "Authorization: Bearer ${TOKEN}" \
-    "$(api_url "/releases/${release_id}")")
+    "$(api_url "/releases/tags/${tag}")")
 
   if [[ "$code" != "200" ]]; then
     log_warn "无法获取 Release 附件列表 (HTTP ${code})，跳过清理"
     return 0
   fi
 
+  # 只删除 type=="attach" 的附件（上传的文件），保留 type=="source"（自动生成的源码包）
   local asset_ids
-  mapfile -t asset_ids < <(jq -r '.assets[].id // empty' /tmp/gc_rel_assets.json)
+  mapfile -t asset_ids < <(jq -r '.assets[] | select(.type == "attach") | .id // empty' /tmp/gc_rel_assets.json)
 
   if [[ ${#asset_ids[@]} -eq 0 ]]; then
     log_info "  无现有附件，无需清理"
@@ -254,16 +198,23 @@ delete_all_assets() {
     curl -s -o /dev/null \
       -X DELETE \
       -H "Authorization: Bearer ${TOKEN}" \
-      "$(api_url "/releases/${release_id}/assets/${aid}")"
+      "$(api_url "/releases/${tag}/attach_files/${aid}")"
   done
   log_info "  旧附件已清理"
 }
 
 # ---------------------------------------------------------------------------
-# upload_asset - 上传单个文件到 Release
+# upload_asset - 上传单个文件到 Release（GitCode 两步式上传）
+#
+# GitCode 的附件上传与 Gitea/GitHub 不同，不是 POST /releases/{id}/assets，
+# 而是两步式：
+#   1. GET /repos/:owner/:repo/releases/:tag/upload_url?file_name=<filename>
+#      → 返回 OBS 预签名 URL 和所需 headers
+#   2. PUT 文件内容到预签名 URL，带上指定的 headers
+#      → 返回 "success" (HTTP 200)
 # ---------------------------------------------------------------------------
 upload_asset() {
-  local release_id="$1" file="$2"
+  local tag="$1" file="$2"
   local filename
   filename=$(basename "$file")
   local filesize
@@ -271,18 +222,45 @@ upload_asset() {
 
   log_info "  上传: ${filename} (${filesize} bytes)"
 
-  local code
-  code=$(curl -s -o /tmp/gc_upload_resp.json -w "%{http_code}" \
-    -X POST \
+  # Step 1: 获取 OBS 预签名上传地址
+  local resp code
+  resp=$(curl -s -w "\n%{http_code}" \
     -H "Authorization: Bearer ${TOKEN}" \
-    -F "attachment=@${file}" \
-    "$(api_url "/releases/${release_id}/assets")")
+    "$(api_url "/releases/${tag}/upload_url")?file_name=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${filename}'))")")
 
-  if [[ "$code" == "201" || "$code" == "200" ]]; then
+  code=$(echo "$resp" | tail -1)
+  local body
+  body=$(echo "$resp" | sed '$d')
+
+  if [[ "$code" != "200" ]]; then
+    log_warn "    ❌ ${filename} 获取上传地址失败 (HTTP ${code}): ${body}"
+    return 1
+  fi
+
+  # 解析预签名 URL 和 headers
+  local upload_url content_type obs_meta obs_acl obs_callback
+  upload_url=$(echo "$body" | jq -r '.url')
+  content_type=$(echo "$body" | jq -r '.headers["Content-Type"] // "application/octet-stream"')
+  obs_meta=$(echo "$body" | jq -r '.headers["x-obs-meta-project-id"] // empty')
+  obs_acl=$(echo "$body" | jq -r '.headers["x-obs-acl"] // empty')
+  obs_callback=$(echo "$body" | jq -r '.headers["x-obs-callback"] // empty')
+
+  # Step 2: PUT 文件到预签名 URL
+  local put_code
+  put_code=$(curl -s -o /tmp/gc_upload_resp.txt -w "%{http_code}" \
+    -X PUT \
+    -H "Content-Type: ${content_type}" \
+    ${obs_meta:+-H "x-obs-meta-project-id: ${obs_meta}"} \
+    ${obs_acl:+-H "x-obs-acl: ${obs_acl}"} \
+    ${obs_callback:+-H "x-obs-callback: ${obs_callback}"} \
+    --data-binary @"${file}" \
+    "$upload_url")
+
+  if [[ "$put_code" == "200" || "$put_code" == "201" ]]; then
     log_info "    ✅ ${filename} 上传成功"
     return 0
   else
-    log_warn "    ❌ ${filename} 上传失败 (HTTP ${code}): $(cat /tmp/gc_upload_resp.json)"
+    log_warn "    ❌ ${filename} 上传失败 (HTTP ${put_code}): $(cat /tmp/gc_upload_resp.txt 2>/dev/null)"
     return 1
   fi
 }
@@ -296,8 +274,8 @@ upload_asset() {
 # ---------------------------------------------------------------------------
 log_info "===== 1/4 准备版本 Release: ${OWNER}/${REPO}, tag=${VERSION} ====="
 
-RELEASE_ID=$(find_or_create_release "$VERSION" "$RELEASE_NAME" "$RELEASE_BODY")
-[[ -n "$RELEASE_ID" ]] || log_error "未能获取 release_id"
+RELEASE_TAG=$(find_or_create_release "$VERSION" "$RELEASE_NAME" "$RELEASE_BODY")
+[[ -n "$RELEASE_TAG" ]] || log_error "未能获取 release tag"
 
 # ---------------------------------------------------------------------------
 # 2. 重新烤制 install 脚本，将下载源指向 GitCode Release
@@ -345,10 +323,10 @@ SUCCESS=0
 FAILED=0
 
 for FILE in "${FILES[@]}"; do
-  if upload_asset "$RELEASE_ID" "$FILE"; then
-    ((SUCCESS++))
+  if upload_asset "$RELEASE_TAG" "$FILE"; then
+    SUCCESS=$((SUCCESS + 1))
   else
-    ((FAILED++))
+    FAILED=$((FAILED + 1))
   fi
 done
 
@@ -372,30 +350,30 @@ LATEST_NAME="Latest (${VERSION})"
 LATEST_BODY="自动维护的滚动 Release，始终指向最新版本 ${VERSION}。
 实际下载地址: ${GITCODE_RELEASE_URL}"
 
-LATEST_ID=$(find_or_create_release "$LATEST_TAG" "$LATEST_NAME" "$LATEST_BODY")
-[[ -n "$LATEST_ID" ]] || log_error "未能获取 latest release_id"
+LATEST_TAG_VALUE=$(find_or_create_release "$LATEST_TAG" "$LATEST_NAME" "$LATEST_BODY")
+[[ -n "$LATEST_TAG_VALUE" ]] || log_error "未能获取 latest release tag"
 
 # 清理旧附件
 log_info "清理 latest Release 旧附件..."
-delete_all_assets "$LATEST_ID"
+delete_all_assets "$LATEST_TAG_VALUE"
 
 # 上传 install 脚本到 latest Release
 LATEST_SUCCESS=0
 LATEST_FAILED=0
 
 if [[ -f "${INSTALL_SH}" ]]; then
-  if upload_asset "$LATEST_ID" "${INSTALL_SH}"; then
-    ((LATEST_SUCCESS++))
+  if upload_asset "$LATEST_TAG_VALUE" "${INSTALL_SH}"; then
+    LATEST_SUCCESS=$((LATEST_SUCCESS + 1))
   else
-    ((LATEST_FAILED++))
+    LATEST_FAILED=$((LATEST_FAILED + 1))
   fi
 fi
 
 if [[ -f "${INSTALL_PS1}" ]]; then
-  if upload_asset "$LATEST_ID" "${INSTALL_PS1}"; then
-    ((LATEST_SUCCESS++))
+  if upload_asset "$LATEST_TAG_VALUE" "${INSTALL_PS1}"; then
+    LATEST_SUCCESS=$((LATEST_SUCCESS + 1))
   else
-    ((LATEST_FAILED++))
+    LATEST_FAILED=$((LATEST_FAILED + 1))
   fi
 fi
 
