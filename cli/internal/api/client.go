@@ -19,7 +19,6 @@ import (
 )
 
 const (
-	successCode        = "0000"
 	TunnelNotFoundCode = "10002"
 
 	headerXAPIKey         = "X-API-Key"
@@ -56,12 +55,6 @@ func GetApiErrorCode(err error) string {
 		return apiErr.Code
 	}
 	return ""
-}
-
-type apiResponse struct {
-	Result    json.RawMessage `json:"result"`
-	ErrorCode string          `json:"error_code"`
-	ErrorMsg  string          `json:"error_msg"`
 }
 
 // errorBody 适配接口错误返回结构：{"error":{"code":"10007","message":"...","target":"name"}}
@@ -157,7 +150,7 @@ func doRequest(req *http.Request) (*http.Response, error) {
 		}
 		return nil, fmt.Errorf("%w: %s", errors.New(i18n.T(i18n.Msg.API.Unauthorized)), string(body))
 	}
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
 		resp.Body.Close()
 		logHTTPResponse(resp, body, time.Since(start))
@@ -187,13 +180,12 @@ func request(method, path string, body interface{}, result interface{}) error {
 	client := getClient()
 	url := client.BaseURL + path
 
-	var bodyBytes []byte
-	if body != nil {
-		var err error
-		bodyBytes, err = json.Marshal(body)
-		if err != nil {
-			return err
-		}
+	bodyBytes, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+	if body == nil {
+		bodyBytes = nil // GET/DELETE 无 body，避免发送 "null"
 	}
 
 	req, err := http.NewRequest(method, url, bytes.NewReader(bodyBytes))
@@ -217,44 +209,13 @@ func request(method, path string, body interface{}, result interface{}) error {
 	}
 	logHTTPResponse(resp, respBody, time.Since(start))
 
-	// 兼容两种响应格式：
-	// 1. 封装体：{"result": ..., "error_code": "0000", "error_msg": ""}
-	// 2. 裸数据：直接返回 result（数组或对象），无 error_code/error_msg 外层封装
-	if isWrappedResponse(respBody) {
-		var apiResp apiResponse
-		if err := json.Unmarshal(respBody, &apiResp); err != nil {
-			return fmt.Errorf("%w: %v", errors.New(i18n.T(i18n.Msg.API.InvalidResponse)), err)
-		}
-		if apiResp.ErrorCode != "" && apiResp.ErrorCode != successCode {
-			return &apiError{Code: apiResp.ErrorCode, Message: apiResp.ErrorMsg}
-		}
-		if result != nil && len(apiResp.Result) > 0 {
-			if err := json.Unmarshal(apiResp.Result, result); err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-	// 裸响应体：直接反序列化给调用方
+	// 后端统一返回裸数据，直接反序列化给调用方
 	if result != nil && len(respBody) > 0 {
 		if err := json.Unmarshal(respBody, result); err != nil {
 			return fmt.Errorf("%w: %v", errors.New(i18n.T(i18n.Msg.API.InvalidResponse)), err)
 		}
 	}
 	return nil
-}
-
-// isWrappedResponse 判断响应体是否为 {result, error_code, error_msg} 封装格式。
-// 通过检测 JSON 顶层对象是否包含 "error_code" 或 "result" 字段来区分封装体与裸数据。
-func isWrappedResponse(body []byte) bool {
-	var probe struct {
-		ErrorCode *string          `json:"error_code"`
-		Result    *json.RawMessage `json:"result"`
-	}
-	if err := json.Unmarshal(body, &probe); err != nil {
-		return false // 非 JSON 对象（如数组）→ 裸数据
-	}
-	return probe.ErrorCode != nil || probe.Result != nil
 }
 
 func get(path string, result interface{}) error {
