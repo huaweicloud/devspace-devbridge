@@ -10,19 +10,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var hcLoginAPIKey string
+var hcLoginAPIKey string //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 
-var authCmd = &cobra.Command{
+var authCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 	Use:   "auth",
 	Short: i18n.T(i18n.Msg.Common.AuthCommands),
 }
 
-var loginCmd = &cobra.Command{
+var loginCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 	Use:   "login",
 	Short: i18n.T(i18n.Msg.Auth.LoginShort),
 	Args:  cobra.NoArgs,
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
-		// 命令行未传 --api-key 时，先复用本地已有凭证：远程校验通过则直接登录成功
+		// 命令行未传 --api-key 时，先复用本地已有凭证：远程校验通过则直接登录成功.
 		if hcLoginAPIKey == "" {
 			if cred := auth.ReadValidAPIKey(); cred != nil {
 				if _, err := auth.VerifyAPIKey(cred.APIKey); err == nil {
@@ -35,7 +35,7 @@ var loginCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		// 校验 API Key 有效性，无效则登录失败
+		// 校验 API Key 有效性，无效则登录失败.
 		if _, err := auth.VerifyAPIKey(cred.APIKey); err != nil {
 			return fmt.Errorf("login failed: %w", err)
 		}
@@ -47,7 +47,7 @@ var loginCmd = &cobra.Command{
 	}),
 }
 
-var logoutCmd = &cobra.Command{
+var logoutCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 	Use:   "logout",
 	Short: i18n.T(i18n.Msg.Auth.LogoutShort),
 	Args:  cobra.NoArgs,
@@ -63,7 +63,7 @@ var logoutCmd = &cobra.Command{
 	}),
 }
 
-var statusCmd = &cobra.Command{
+var statusCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 	Use:   "status",
 	Short: i18n.T(i18n.Msg.Auth.StatusShort),
 	Args:  cobra.NoArgs,
@@ -73,7 +73,7 @@ var statusCmd = &cobra.Command{
 			fmt.Println(i18n.T(i18n.Msg.Auth.NotLoggedIn))
 			return nil
 		}
-		// 远程校验 API Key 有效性
+		// 远程校验 API Key 有效性.
 		if _, err := auth.VerifyAPIKey(cred.APIKey); err != nil {
 			fmt.Printf("%s: %v\n", i18n.T(i18n.Msg.Auth.NotLoggedIn), err)
 			return nil
@@ -87,7 +87,7 @@ var statusCmd = &cobra.Command{
 	}),
 }
 
-func init() {
+func init() { //nolint:gochecknoinits // cobra CLI 惯用 init 函数
 	loginCmd.Flags().StringVar(&hcLoginAPIKey, "api-key", "", i18n.T(i18n.Msg.Common.FlagAPIKey))
 
 	authCmd.AddCommand(loginCmd, logoutCmd, statusCmd)

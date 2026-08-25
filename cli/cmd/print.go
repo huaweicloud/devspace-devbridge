@@ -85,11 +85,11 @@ func FormatTunnelRemaining(expireAt int64) string {
 // If the decimal part is 0, only the integer part is shown.
 func formatRemaining(v float64, unit string) string {
 	rounded := math.Ceil(v*10) / 10
-	// 'f' 表示常规格式，-1 表示自动去掉末尾无效的 0
+	// 'f' 表示常规格式，-1 表示自动去掉末尾无效的 0.
 	return strconv.FormatFloat(rounded, 'f', -1, 64) + " " + unit
 }
 
-var byteUnits = []string{"B", "KB", "MB", "GB", "TB", "PB", "EB"}
+var byteUnits = []string{"B", "KB", "MB", "GB", "TB", "PB", "EB"} //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 
 func formatBytes(b int64) string {
 	const unit = 1024.0
@@ -99,7 +99,7 @@ func formatBytes(b int64) string {
 		f /= unit
 		i++
 	}
-	// 先四舍五入到 1 位小数，再用 -1 精度去尾零
+	// 先四舍五入到 1 位小数，再用 -1 精度去尾零.
 	f = math.Round(f*10) / 10
 	return strconv.FormatFloat(f, 'f', -1, 64) + " " + byteUnits[i]
 }

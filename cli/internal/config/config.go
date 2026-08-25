@@ -14,7 +14,7 @@ var DefaultServerDomain = "http://relay-dev-local.tailb4159e.ts.net:8443"
 var ErrKeyNotFound = errors.New("key not found")
 
 var (
-	configMu sync.Mutex
+	configMu sync.Mutex //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 )
 
 func configPath() (string, error) {

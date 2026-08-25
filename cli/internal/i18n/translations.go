@@ -8,7 +8,7 @@ func init() {
 	Msg.Common.AuthCommands = Message{ZH: "认证命令", EN: "Authentication commands"}
 	Msg.Common.FlagAPIKey = Message{ZH: "API Key", EN: "API Key"}
 	Msg.Common.FlagVerbose = Message{ZH: "启用调试日志", EN: "Enable debug logging"}
-	Msg.Common.FlagEchoPort = Message{ZH: "本地服务器端口号 (未指定则自动分配随机端口)", EN: "Local server port number (auto-assign random port if not specified)"}
+	Msg.Common.FlagEchoPort = Message{ZH: "本地服务器端口号 (未指定则自动分配随机端口)", EN: "Local server port number (auto-assign random port if not specified)"} //nolint:lll // 翻译字符串不可拆行
 	Msg.Common.FlagInterface = Message{ZH: "本地接口地址", EN: "Local interface address"}
 	Msg.Common.FlagPingInterval = Message{ZH: "消息间隔(毫秒)", EN: "Interval between messages in ms"}
 
@@ -20,7 +20,7 @@ func init() {
 	Msg.Auth.UserName = Message{ZH: "用户名", EN: "User Name"}
 	Msg.Auth.OpenBrowser = Message{ZH: "正在打开浏览器...", EN: "Opening browser..."}
 	Msg.Auth.BrowserOpened = Message{ZH: "浏览器已打开，请在浏览器中完成登录", EN: "Browser opened, please complete login in browser"}
-	Msg.Auth.NoBrowserHint = Message{ZH: "无可用浏览器，请手动登录。API Key 管理页面: %s\n例如: ./devbridge auth login --api-key=YOUR_API_KEY", EN: "No browser available, please login manually. API Key management page: %s\nFor example: ./devbridge auth login --api-key=YOUR_API_KEY"}
+	Msg.Auth.NoBrowserHint = Message{ZH: "无可用浏览器，请手动登录。API Key 管理页面: %s\n例如: ./devbridge auth login --api-key=YOUR_API_KEY", EN: "No browser available, please login manually. API Key management page: %s\nFor example: ./devbridge auth login --api-key=YOUR_API_KEY"} //nolint:lll // 翻译字符串不可拆行
 	Msg.Auth.LoginShort = Message{ZH: "登录华为云", EN: "Login to Huawei Cloud"}
 	Msg.Auth.LoggedInHuaweiCloud = Message{ZH: "已登录 (华为云 IAM)", EN: "Logged in (Huawei Cloud IAM)"}
 
@@ -32,8 +32,8 @@ func init() {
 	Msg.Tunnel.TunnelDeleted = Message{ZH: "隧道删除成功", EN: "Tunnel deleted successfully"}
 	Msg.Tunnel.TunnelDeletedAll = Message{ZH: "所有隧道已删除", EN: "All tunnels deleted"}
 	Msg.Tunnel.TunnelNotFound = Message{ZH: "隧道不存在", EN: "Tunnel not found"}
-	Msg.Tunnel.TunnelNameInvalid = Message{ZH: "隧道名称格式无效: 仅中文、字母、数字、连字符(连字符不能在首尾)，长度1-64", EN: "Invalid tunnel name: only Chinese characters, digits, letters, hyphens allowed (hyphens cannot be at the beginning or end), length 1-64"}
-	Msg.Tunnel.TunnelDescInvalid = Message{ZH: "隧道描述无效: 仅中文、字母、数字，长度0-64", EN: "Invalid tunnel description: only Chinese characters, digits, letters, length 0-64"}
+	Msg.Tunnel.TunnelNameInvalid = Message{ZH: "隧道名称格式无效: 仅中文、字母、数字、连字符(连字符不能在首尾)，长度1-64", EN: "Invalid tunnel name: only Chinese characters, digits, letters, hyphens allowed (hyphens cannot be at the beginning or end), length 1-64"} //nolint:lll // 翻译字符串不可拆行
+	Msg.Tunnel.TunnelDescInvalid = Message{ZH: "隧道描述无效: 仅中文、字母、数字，长度0-64", EN: "Invalid tunnel description: only Chinese characters, digits, letters, length 0-64"}                                                                       //nolint:lll // 翻译字符串不可拆行
 	Msg.Tunnel.TunnelExpInvalid = Message{ZH: "过期时间无效 (1-720小时)", EN: "Invalid expiration (1-720 hours)"}
 	Msg.Tunnel.TunnelListEmpty = Message{ZH: "没有隧道", EN: "No tunnels found."}
 	Msg.Tunnel.ListShort = Message{ZH: "列出所有隧道", EN: "List all tunnels"}
@@ -61,7 +61,7 @@ func init() {
 	Msg.Tunnel.FlagDescription = Message{ZH: "隧道描述", EN: "Tunnel description"}
 	Msg.Tunnel.FlagExpiration = Message{ZH: "过期时间(小时, 1-720)", EN: "Expiration hours (1-720)"}
 	Msg.Tunnel.FlagName = Message{ZH: "隧道名称", EN: "Tunnel name"}
-	Msg.Tunnel.FlagScope = Message{ZH: "令牌范围, 选项: host, connect (必填)", EN: "Token scope, options: host, connect (required)"}
+	Msg.Tunnel.FlagScope = Message{ZH: "令牌范围, 选项: host, connect (必填)", EN: "Token scope, options: host, connect (required)"} //nolint:lll // 翻译字符串不可拆行
 
 	Msg.Port.Protocol = Message{ZH: "协议", EN: "Protocol"}
 	Msg.Port.AllowAnonymous = Message{ZH: "允许匿名", EN: "Allow Anonymous"}
@@ -94,7 +94,7 @@ func init() {
 	Msg.Limits.MaxTunnels = Message{ZH: "隧道数上限", EN: "Max Tunnels"}
 	Msg.Limits.MaxPortsPerTunnel = Message{ZH: "单隧道端口数上限", EN: "Max Ports Per Tunnel"}
 	Msg.Limits.MaxHostsPerTunnel = Message{ZH: "单隧道 Host 数上限", EN: "Max Hosts Per Tunnel"}
-	Msg.Limits.MaxHttpRequestsPerMinutePerPort = Message{ZH: "单端口 HTTP 请求频率上限", EN: "Max HTTP Requests Per Minute Per Port"}
+	Msg.Limits.MaxHTTPRequestsPerMinutePerPort = Message{ZH: "单端口 HTTP 请求频率上限", EN: "Max HTTP Requests Per Minute Per Port"} //nolint:lll // 翻译字符串不可拆行
 	Msg.Limits.MaxConnectionsPerPort = Message{ZH: "单端口连接数上限", EN: "Max Connections Per Port"}
 	Msg.Limits.QuotaResetAt = Message{ZH: "配额重置时间", EN: "Quota Reset At"}
 	Msg.Limits.QuotaBytes = Message{ZH: "流量配额", EN: "Quota Bytes"}

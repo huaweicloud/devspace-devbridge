@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	tunnelIdRegexp   = regexp.MustCompile(`^[a-z2-7]{8}$`)
-	tunnelNameRegexp = regexp.MustCompile(`^[\x{4e00}-\x{9fa5}A-Za-z0-9]([\x{4e00}-\x{9fa5}A-Za-z0-9-]{0,62}[\x{4e00}-\x{9fa5}A-Za-z0-9])?$`)
+	tunnelIDRegexp   = regexp.MustCompile(`^[a-z2-7]{8}$`)
+	tunnelNameRegexp = regexp.MustCompile(`^[\x{4e00}-\x{9fa5}A-Za-z0-9]([\x{4e00}-\x{9fa5}A-Za-z0-9-]{0,62}[\x{4e00}-\x{9fa5}A-Za-z0-9])?$`) //nolint:lll // 正则不可拆行
 	tunnelDescRegexp = regexp.MustCompile(`^[\x{4e00}-\x{9fa5}A-Za-z0-9]{0,64}$`)
 )
 
@@ -28,12 +28,12 @@ const (
 type createTunnelRequest struct {
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
+	ClusterID   string `json:"ClusterID"`
 	Expiration  int    `json:"expiration,omitempty"`
-	ClusterId   string `json:"ClusterId"`
 }
 
 type CreateTunnelResult struct {
-	TunnelId        string `json:"tunnelId"`
+	TunnelID        string `json:"tunnelId"`
 	Name            string `json:"name"`
 	Description     string `json:"description"`
 	ExpirationHours int    `json:"expirationHours"`
@@ -41,7 +41,7 @@ type CreateTunnelResult struct {
 
 type ListTunnelResult struct {
 	Name             string `json:"name"`
-	TunnelId         string `json:"tunnelId"`
+	TunnelID         string `json:"tunnelId"`
 	TunnelExpiration uint32 `json:"tunnelExpiration"`
 	Description      string `json:"description"`
 	PortCount        int    `json:"portCount"`
@@ -56,7 +56,7 @@ type TunnelStatus struct {
 
 type ShowTunnelResult struct {
 	Name             string        `json:"name"`
-	TunnelId         string        `json:"tunnelId"`
+	TunnelID         string        `json:"tunnelId"`
 	TunnelExpiration uint32        `json:"tunnelExpiration"`
 	Description      string        `json:"description"`
 	Status           *TunnelStatus `json:"status,omitempty"`
@@ -69,27 +69,27 @@ type updateTunnelRequest struct {
 }
 
 type TunnelTokenResult struct {
-	TunnelId string `json:"tunnelId"`
+	TunnelID string `json:"tunnelId"`
 	Scope    string `json:"scope"`
 	Token    string `json:"token"`
 }
 
-func ValidateTunnelId(tunnelId string) error {
-	if !tunnelIdRegexp.MatchString(tunnelId) {
-		return fmt.Errorf("invalid tunnel id: %q (only lowercase letters and digits 2-7 allowed, length must be 8)", tunnelId)
+func ValidateTunnelID(tunnelID string) error {
+	if !tunnelIDRegexp.MatchString(tunnelID) {
+		return fmt.Errorf("invalid tunnel id: %q (only lowercase letters and digits 2-7 allowed, length must be 8)", tunnelID)
 	}
 	return nil
 }
 
-func ResolveTunnelId(tunnelId string) (string, error) {
-	if tunnelId == "" {
+func ResolveTunnelID(tunnelID string) (string, error) {
+	if tunnelID == "" {
 		id, err := auth.LoadDefaultTunnel()
 		if err != nil {
 			return "", err
 		}
 		return id, nil
 	}
-	return tunnelId, nil
+	return tunnelID, nil
 }
 
 func ListTunnels() ([]ListTunnelResult, error) {
@@ -107,7 +107,7 @@ func CreateTunnel(name, description string, expiration *int) (*CreateTunnelResul
 	if !tunnelDescRegexp.MatchString(description) {
 		return nil, errors.New(i18n.T(i18n.Msg.Tunnel.TunnelDescInvalid))
 	}
-	req := createTunnelRequest{Name: name, Description: description, ClusterId: "cn-north-4-bridge"}
+	req := createTunnelRequest{Name: name, Description: description, ClusterID: "cn-north-4-bridge"}
 	if expiration != nil {
 		if *expiration < 1 || *expiration > 720 {
 			return nil, errors.New(i18n.T(i18n.Msg.Tunnel.TunnelExpInvalid))
@@ -121,19 +121,19 @@ func CreateTunnel(name, description string, expiration *int) (*CreateTunnelResul
 	return &result, nil
 }
 
-func ShowTunnel(tunnelId string) (*ShowTunnelResult, error) {
-	if err := ValidateTunnelId(tunnelId); err != nil {
+func ShowTunnel(tunnelID string) (*ShowTunnelResult, error) {
+	if err := ValidateTunnelID(tunnelID); err != nil {
 		return nil, err
 	}
 	var result ShowTunnelResult
-	if err := get(fmt.Sprintf(showTunnelPath, tunnelId), &result); err != nil {
+	if err := get(fmt.Sprintf(showTunnelPath, tunnelID), &result); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
-func UpdateTunnel(tunnelId string, name, description *string, expiration *int) error {
-	if err := ValidateTunnelId(tunnelId); err != nil {
+func UpdateTunnel(tunnelID string, name, description *string, expiration *int) error {
+	if err := ValidateTunnelID(tunnelID); err != nil {
 		return err
 	}
 	req := updateTunnelRequest{}
@@ -155,29 +155,29 @@ func UpdateTunnel(tunnelId string, name, description *string, expiration *int) e
 		}
 		req.Expiration = expiration
 	}
-	return put(fmt.Sprintf(updateTunnelPath, tunnelId), req, nil)
+	return put(fmt.Sprintf(updateTunnelPath, tunnelID), req, nil)
 }
 
-func DeleteTunnel(tunnelId string) error {
-	if err := ValidateTunnelId(tunnelId); err != nil {
+func DeleteTunnel(tunnelID string) error {
+	if err := ValidateTunnelID(tunnelID); err != nil {
 		return err
 	}
-	return deleteReq(fmt.Sprintf(deleteTunnelPath, tunnelId), nil)
+	return deleteReq(fmt.Sprintf(deleteTunnelPath, tunnelID), nil)
 }
 
 func DeleteAllTunnels() error {
 	return deleteReq(deleteAllTunnelsPath, nil)
 }
 
-func TunnelToken(tunnelId, scope string) (*TunnelTokenResult, error) {
-	if err := ValidateTunnelId(tunnelId); err != nil {
+func TunnelToken(tunnelID, scope string) (*TunnelTokenResult, error) {
+	if err := ValidateTunnelID(tunnelID); err != nil {
 		return nil, err
 	}
 	if scope != "host" && scope != "connect" {
 		return nil, fmt.Errorf("invalid token scope: %q (scope must be one of host, connect)", scope)
 	}
 	var result TunnelTokenResult
-	if err := post(fmt.Sprintf(tunnelTokenPath, tunnelId)+"?scope="+scope, nil, &result); err != nil {
+	if err := post(fmt.Sprintf(tunnelTokenPath, tunnelID)+"?scope="+scope, nil, &result); err != nil {
 		return nil, err
 	}
 	return &result, nil

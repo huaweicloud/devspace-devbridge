@@ -11,7 +11,7 @@ type LimitsResult struct {
 	MaxPortsPerTunnel                int32 `json:"maxPortsPerTunnel"`
 	MaxHostsPerTunnel                int32 `json:"maxHostsPerTunnel"`
 	MaxTunnelBandwidthBytesPerSecond int64 `json:"maxTunnelBandwidthBytesPerSecond"`
-	MaxHttpRequestsPerMinutePerPort  int32 `json:"maxHttpRequestsPerMinutePerPort"`
+	MaxHTTPRequestsPerMinutePerPort  int32 `json:"maxHttpRequestsPerMinutePerPort"`
 	MaxConnectionsPerPort            int32 `json:"maxConnectionsPerPort"`
 }
 

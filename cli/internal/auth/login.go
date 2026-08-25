@@ -87,7 +87,7 @@ const (
 	loginPageURL     = "%s/space/devbridge/redirect?%s"
 	envHWAPIKey      = "HW_API_KEY"
 
-	// loginSuccessCode 浏览器登录回调中 error_code 的成功值。
+	// LoginSuccessCode 浏览器登录回调中 error_code 的成功值。
 	loginSuccessCode = "0000"
 )
 
@@ -98,8 +98,8 @@ func hcBrowserLogin() (Credential, *UserInfo, error) {
 	if err != nil {
 		return Credential{}, nil, err
 	}
-	defer listener.Close()
-	port := listener.Addr().(*net.TCPAddr).Port
+	defer func() { _ = listener.Close() }()     //nolint:errcheck // 监听器关闭失败不可操作
+	port := listener.Addr().(*net.TCPAddr).Port //nolint:errcheck // TCP 监听器类型断言始终安全
 
 	lang := "en-us"
 	if i18n.DetectSystemLang() == i18n.ZH {
@@ -131,7 +131,8 @@ func hcBrowserLogin() (Credential, *UserInfo, error) {
 		}),
 	}
 	go func() {
-		if err := server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) && !errors.Is(err, net.ErrClosed) {
+		if err := server.Serve(listener); err != nil &&
+			!errors.Is(err, http.ErrServerClosed) && !errors.Is(err, net.ErrClosed) {
 			slog.Debug("login callback server error", "err", err)
 		}
 	}()
@@ -154,7 +155,10 @@ func hcBrowserLogin() (Credential, *UserInfo, error) {
 	}
 }
 
-func handleLoginCallback(w http.ResponseWriter, r *http.Request, origin string, resultCh chan<- callbackResponse, errCh chan<- error) {
+func handleLoginCallback(
+	w http.ResponseWriter, r *http.Request, origin string,
+	resultCh chan<- callbackResponse, errCh chan<- error,
+) {
 	w.Header().Set("Access-Control-Allow-Origin", origin)
 	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
@@ -185,7 +189,7 @@ func handleLoginCallback(w http.ResponseWriter, r *http.Request, origin string, 
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte("OK"))
+	_, _ = w.Write([]byte("OK")) //nolint:errcheck // HTTP 回调响应写入失败不可操作
 	resultCh <- resp
 }
 

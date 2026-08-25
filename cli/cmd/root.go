@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var verbose bool
+var verbose bool //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 
 var version = "dev"
 
@@ -29,7 +29,7 @@ var RootCmd = &cobra.Command{
 	},
 }
 
-var versionCmd = &cobra.Command{
+var versionCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 	Use:   "version",
 	Short: i18n.T(i18n.Msg.Common.VersionInfo),
 	Args:  cobra.NoArgs,
@@ -51,7 +51,7 @@ func runError(fn func(cmd *cobra.Command, args []string) error) func(cmd *cobra.
 	}
 }
 
-func init() {
+func init() { //nolint:gochecknoinits // cobra CLI 惯用 init 函数
 	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, i18n.T(i18n.Msg.Common.FlagVerbose))
 	RootCmd.AddCommand(versionCmd)
 }

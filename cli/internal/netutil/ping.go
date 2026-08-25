@@ -8,8 +8,8 @@ import (
 
 type PingResult struct {
 	StatusText string
-	Latency   time.Duration
-	Err       error
+	Latency    time.Duration
+	Err        error
 }
 
 func PingURI(rawURI string, timeout time.Duration) *PingResult {
@@ -43,7 +43,7 @@ func PingURI(rawURI string, timeout time.Duration) *PingResult {
 		}
 		return result
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }() //nolint:errcheck // 响应体关闭失败不可操作
 
 	result.StatusText = resp.Status
 	return result

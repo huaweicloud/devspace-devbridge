@@ -11,13 +11,13 @@ import (
 )
 
 var (
-	portNumber    int
-	portProtocol  string
-	portAllowAnon bool
-	portDenyAnon  bool
+	portNumber    int    //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+	portProtocol  string //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+	portAllowAnon bool   //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+	portDenyAnon  bool   //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 )
 
-var validProtocols = map[string]bool{
+var validProtocols = map[string]bool{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 	"http":  true,
 	"https": true,
 	"auto":  true,
@@ -45,24 +45,24 @@ func resolveAllowAnon(cmd *cobra.Command) *bool {
 	return &v
 }
 
-var portCmd = &cobra.Command{
+var portCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 	Use:   "port",
 	Short: i18n.T(i18n.Msg.Port.PortShort),
 }
 
-var portCreateCmd = &cobra.Command{
+var portCreateCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 	Use:   "create [tunnel-id]",
 	Short: i18n.T(i18n.Msg.Port.PortCreateShort),
 	Args:  cobra.MaximumNArgs(1),
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
-		tunnelId, err := getTunnelIdArg(args)
+		tunnelID, err := getTunnelIDArg(args)
 		if err != nil {
 			return err
 		}
 		if err := validateProtocolLocal(portProtocol); err != nil {
 			return err
 		}
-		if err := api.CreatePort(tunnelId, portNumber, portProtocol, resolveAllowAnon(cmd)); err != nil {
+		if err := api.CreatePort(tunnelID, portNumber, portProtocol, resolveAllowAnon(cmd)); err != nil {
 			return fmt.Errorf("Failed to add port %d: %w", portNumber, err)
 		}
 		fmt.Println(i18n.T(i18n.Msg.Port.PortCreated))
@@ -70,16 +70,16 @@ var portCreateCmd = &cobra.Command{
 	}),
 }
 
-var portListCmd = &cobra.Command{
+var portListCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 	Use:   "list [tunnel-id]",
 	Short: i18n.T(i18n.Msg.Port.PortListShort),
 	Args:  cobra.MaximumNArgs(1),
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
-		tunnelId, err := getTunnelIdArg(args)
+		tunnelID, err := getTunnelIDArg(args)
 		if err != nil {
 			return err
 		}
-		ports, err := api.ListPorts(tunnelId)
+		ports, err := api.ListPorts(tunnelID)
 		if err != nil {
 			return err
 		}
@@ -99,7 +99,7 @@ var portListCmd = &cobra.Command{
 				strconv.Itoa(int(p.Port)),
 				p.Protocol,
 				strconv.FormatBool(p.AllowAnonymous),
-				p.TunnelId,
+				p.TunnelID,
 			})
 		}
 		printTable(headers, rows)
@@ -107,21 +107,21 @@ var portListCmd = &cobra.Command{
 	}),
 }
 
-var portShowCmd = &cobra.Command{
+var portShowCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 	Use:   "show [tunnel-id]",
 	Short: i18n.T(i18n.Msg.Port.PortShowShort),
 	Args:  cobra.MaximumNArgs(1),
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
-		tunnelId, err := getTunnelIdArg(args)
+		tunnelID, err := getTunnelIDArg(args)
 		if err != nil {
 			return err
 		}
-		result, err := api.ShowPort(tunnelId, portNumber)
+		result, err := api.ShowPort(tunnelID, portNumber)
 		if err != nil {
 			return err
 		}
 		printKV([][2]string{
-			{i18n.T(i18n.Msg.Tunnel.TunnelID), result.TunnelId},
+			{i18n.T(i18n.Msg.Tunnel.TunnelID), result.TunnelID},
 			{i18n.T(i18n.Msg.Port.Port), strconv.Itoa(int(result.Port))},
 			{i18n.T(i18n.Msg.Port.Protocol), result.Protocol},
 			{i18n.T(i18n.Msg.Port.AllowAnonymous), strconv.FormatBool(result.AllowAnonymous)},
@@ -130,16 +130,16 @@ var portShowCmd = &cobra.Command{
 	}),
 }
 
-var portUpdateCmd = &cobra.Command{
+var portUpdateCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 	Use:   "update [tunnel-id]",
 	Short: i18n.T(i18n.Msg.Port.PortUpdateShort),
 	Args:  cobra.MaximumNArgs(1),
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
-		tunnelId, err := getTunnelIdArg(args)
+		tunnelID, err := getTunnelIDArg(args)
 		if err != nil {
 			return err
 		}
-		if err := api.UpdatePort(tunnelId, portNumber, resolveAllowAnon(cmd)); err != nil {
+		if err := api.UpdatePort(tunnelID, portNumber, resolveAllowAnon(cmd)); err != nil {
 			return err
 		}
 		fmt.Println(i18n.T(i18n.Msg.Port.PortUpdated))
@@ -147,41 +147,40 @@ var portUpdateCmd = &cobra.Command{
 	}),
 }
 
-var portDeleteCmd = &cobra.Command{
+var portDeleteCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 	Use:   "delete [tunnel-id]",
 	Short: i18n.T(i18n.Msg.Port.PortDeleteShort),
 	Args:  cobra.MaximumNArgs(1),
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
-		tunnelId, err := getTunnelIdArg(args)
+		tunnelID, err := getTunnelIDArg(args)
 		if err != nil {
 			return err
 		}
-		if err := api.DeletePort(tunnelId, portNumber); err != nil {
+		if err := api.DeletePort(tunnelID, portNumber); err != nil {
 			return fmt.Errorf("Failed to delete port %d: %w", portNumber, err)
 		}
-		fmt.Printf("Port %d removed from tunnel %s.\n", portNumber, tunnelId)
+		fmt.Printf("Port %d removed from tunnel %s.\n", portNumber, tunnelID)
 		return nil
 	}),
 }
 
-func init() {
+func init() { //nolint:gochecknoinits // cobra CLI 惯用 init 函数
 	portCreateCmd.Flags().IntVarP(&portNumber, "port-number", "p", 0, i18n.T(i18n.Msg.Port.FlagPortRequired))
 	portCreateCmd.Flags().StringVar(&portProtocol, "protocol", "auto", i18n.T(i18n.Msg.Port.FlagProtocol))
 	portCreateCmd.Flags().BoolVarP(&portAllowAnon, "allow-anonymous", "a", false, i18n.T(i18n.Msg.Port.FlagAllowAnon))
 	portCreateCmd.Flags().BoolVar(&portDenyAnon, "deny-anonymous", false, i18n.T(i18n.Msg.Port.FlagDenyAnon))
-	_ = portCreateCmd.MarkFlagRequired("port-number")
-
+	_ = portCreateCmd.MarkFlagRequired("port-number") //nolint:errcheck // flag 名固定，不会失败
 
 	portShowCmd.Flags().IntVarP(&portNumber, "port-number", "p", 0, i18n.T(i18n.Msg.Port.FlagPortNumber))
-	_ = portShowCmd.MarkFlagRequired("port-number")
+	_ = portShowCmd.MarkFlagRequired("port-number") //nolint:errcheck // flag 名固定，不会失败
 
 	portUpdateCmd.Flags().IntVarP(&portNumber, "port-number", "p", 0, i18n.T(i18n.Msg.Port.FlagPortNumber))
 	portUpdateCmd.Flags().BoolVarP(&portAllowAnon, "allow-anonymous", "a", false, i18n.T(i18n.Msg.Port.FlagAllowAnon))
 	portUpdateCmd.Flags().BoolVar(&portDenyAnon, "deny-anonymous", false, i18n.T(i18n.Msg.Port.FlagDenyAnon))
-	_ = portUpdateCmd.MarkFlagRequired("port-number")
+	_ = portUpdateCmd.MarkFlagRequired("port-number") //nolint:errcheck // flag 名固定，不会失败
 
 	portDeleteCmd.Flags().IntVarP(&portNumber, "port-number", "p", 0, i18n.T(i18n.Msg.Port.FlagPortNumber))
-	_ = portDeleteCmd.MarkFlagRequired("port-number")
+	_ = portDeleteCmd.MarkFlagRequired("port-number") //nolint:errcheck // flag 名固定，不会失败
 
 	portCmd.AddCommand(portCreateCmd, portListCmd, portShowCmd, portUpdateCmd, portDeleteCmd)
 	RootCmd.AddCommand(portCmd)

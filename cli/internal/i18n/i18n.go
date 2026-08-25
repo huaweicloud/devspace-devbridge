@@ -17,7 +17,7 @@ type Message struct {
 	EN string
 }
 
-var currentLang = detectLang()
+var currentLang = detectLang() //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 
 func detectLang() Lang {
 	if env := os.Getenv("DEVBRIDGE_LANG"); env != "" {

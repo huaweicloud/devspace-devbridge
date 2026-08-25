@@ -1,25 +1,23 @@
 package i18n
 
+// wideRanges 定义全角字符的 Unicode 范围表。
+var wideRanges = []struct{ lo, hi rune }{
+	{0x4E00, 0x9FFF}, // CJK Unified Ideographs.
+	{0x3400, 0x4DBF}, // CJK Extension A.
+	{0xF900, 0xFAFF}, // CJK Compatibility Ideographs.
+	{0x3000, 0x303F}, // CJK Symbols and Punctuation.
+	{0x3040, 0x309F}, // Hiragana.
+	{0x30A0, 0x30FF}, // Katakana.
+	{0xAC00, 0xD7AF}, // Hangul Syllables.
+	{0xFF01, 0xFF60}, // Fullwidth ASCII.
+	{0xFE30, 0xFE4F}, // CJK Compatibility Forms.
+}
+
 func isWide(r rune) bool {
-	switch {
-	case r >= 0x4E00 && r <= 0x9FFF:
-		return true
-	case r >= 0x3400 && r <= 0x4DBF:
-		return true
-	case r >= 0xF900 && r <= 0xFAFF:
-		return true
-	case r >= 0x3000 && r <= 0x303F:
-		return true
-	case r >= 0x3040 && r <= 0x309F:
-		return true
-	case r >= 0x30A0 && r <= 0x30FF:
-		return true
-	case r >= 0xAC00 && r <= 0xD7AF:
-		return true
-	case r >= 0xFF01 && r <= 0xFF60:
-		return true
-	case r >= 0xFE30 && r <= 0xFE4F:
-		return true
+	for _, rng := range wideRanges {
+		if r >= rng.lo && r <= rng.hi {
+			return true
+		}
 	}
 	return false
 }

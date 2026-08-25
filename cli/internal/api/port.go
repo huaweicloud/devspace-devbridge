@@ -15,9 +15,9 @@ const (
 )
 
 type portRequest struct {
-	Port           int    `json:"port"`
-	AllowAnonymous *bool  `json:"allowAnonymous,omitempty"`
 	Protocol       string `json:"protocol,omitempty"`
+	AllowAnonymous *bool  `json:"allowAnonymous,omitempty"`
+	Port           int    `json:"port"`
 }
 
 // updatePortRequest 仅含 allowAnonymous，更新端口时不需要 port 入参。
@@ -29,11 +29,11 @@ type ListPortsResult struct {
 	Port           uint16 `json:"port"`
 	Protocol       string `json:"protocol"`
 	AllowAnonymous bool   `json:"allowAnonymous"`
-	TunnelId       string `json:"tunnelId"`
+	TunnelID       string `json:"tunnelId"`
 }
 
 type ShowPortResult struct {
-	TunnelId       string `json:"tunnelId"`
+	TunnelID       string `json:"tunnelId"`
 	Port           uint16 `json:"port"`
 	Protocol       string `json:"protocol"`
 	AllowAnonymous bool   `json:"allowAnonymous"`
@@ -55,8 +55,8 @@ func validateProtocol(protocol string) error {
 	}
 }
 
-func CreatePort(tunnelId string, port int, protocol string, allowAnonymous *bool) error {
-	if err := ValidateTunnelId(tunnelId); err != nil {
+func CreatePort(tunnelID string, port int, protocol string, allowAnonymous *bool) error {
+	if err := ValidateTunnelID(tunnelID); err != nil {
 		return err
 	}
 	if err := validatePortNumber(port); err != nil {
@@ -66,50 +66,50 @@ func CreatePort(tunnelId string, port int, protocol string, allowAnonymous *bool
 		return err
 	}
 	req := portRequest{Port: port, Protocol: protocol, AllowAnonymous: allowAnonymous}
-	return post(fmt.Sprintf(createPortPath, tunnelId), req, nil)
+	return post(fmt.Sprintf(createPortPath, tunnelID), req, nil)
 }
 
-func ListPorts(tunnelId string) ([]ListPortsResult, error) {
-	if err := ValidateTunnelId(tunnelId); err != nil {
+func ListPorts(tunnelID string) ([]ListPortsResult, error) {
+	if err := ValidateTunnelID(tunnelID); err != nil {
 		return nil, err
 	}
 	var result []ListPortsResult
-	if err := get(fmt.Sprintf(listPortsPath, tunnelId), &result); err != nil {
+	if err := get(fmt.Sprintf(listPortsPath, tunnelID), &result); err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func UpdatePort(tunnelId string, port int, allowAnonymous *bool) error {
-	if err := ValidateTunnelId(tunnelId); err != nil {
+func UpdatePort(tunnelID string, port int, allowAnonymous *bool) error {
+	if err := ValidateTunnelID(tunnelID); err != nil {
 		return err
 	}
 	if err := validatePortNumber(port); err != nil {
 		return err
 	}
 	req := updatePortRequest{AllowAnonymous: allowAnonymous}
-	return put(fmt.Sprintf(updatePortPath, tunnelId, port), req, nil)
+	return put(fmt.Sprintf(updatePortPath, tunnelID, port), req, nil)
 }
 
-func DeletePort(tunnelId string, port int) error {
-	if err := ValidateTunnelId(tunnelId); err != nil {
+func DeletePort(tunnelID string, port int) error {
+	if err := ValidateTunnelID(tunnelID); err != nil {
 		return err
 	}
 	if err := validatePortNumber(port); err != nil {
 		return err
 	}
-	return deleteReq(fmt.Sprintf(deletePortPath, tunnelId, port), nil)
+	return deleteReq(fmt.Sprintf(deletePortPath, tunnelID, port), nil)
 }
 
-func ShowPort(tunnelId string, port int) (*ShowPortResult, error) {
-	if err := ValidateTunnelId(tunnelId); err != nil {
+func ShowPort(tunnelID string, port int) (*ShowPortResult, error) {
+	if err := ValidateTunnelID(tunnelID); err != nil {
 		return nil, err
 	}
 	if err := validatePortNumber(port); err != nil {
 		return nil, err
 	}
 	var result ShowPortResult
-	if err := get(fmt.Sprintf(showPortPath, tunnelId, port), &result); err != nil {
+	if err := get(fmt.Sprintf(showPortPath, tunnelID, port), &result); err != nil {
 		return nil, err
 	}
 	return &result, nil

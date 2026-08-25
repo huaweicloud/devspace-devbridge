@@ -12,17 +12,17 @@ type Messages struct {
 }
 
 type AuthMessages struct {
-	LoginSuccess         Message
-	LogoutSuccess        Message
-	LogoutShort          Message
-	NotLoggedIn          Message
-	StatusShort          Message
-	UserName             Message
-	OpenBrowser          Message
-	BrowserOpened        Message
-	NoBrowserHint        Message
-	LoginShort           Message
-	LoggedInHuaweiCloud  Message
+	LoginSuccess        Message
+	LogoutSuccess       Message
+	LogoutShort         Message
+	NotLoggedIn         Message
+	StatusShort         Message
+	UserName            Message
+	OpenBrowser         Message
+	BrowserOpened       Message
+	NoBrowserHint       Message
+	LoginShort          Message
+	LoggedInHuaweiCloud Message
 }
 
 type TunnelMessages struct {
@@ -67,26 +67,26 @@ type TunnelMessages struct {
 }
 
 type PortMessages struct {
-	Protocol        Message
-	AllowAnonymous  Message
-	PortCreated     Message
-	PortUpdated     Message
-	PortInvalid     Message
-	ProtocolInvalid Message
-	PortListEmpty   Message
-	Port            Message
-	TunnelID        Message
-	PortCreateShort Message
-	PortListShort   Message
-	PortShowShort   Message
-	PortUpdateShort Message
-	PortDeleteShort Message
-	PortShort       Message
-	FlagPortNumber  Message
+	Protocol         Message
+	AllowAnonymous   Message
+	PortCreated      Message
+	PortUpdated      Message
+	PortInvalid      Message
+	ProtocolInvalid  Message
+	PortListEmpty    Message
+	Port             Message
+	TunnelID         Message
+	PortCreateShort  Message
+	PortListShort    Message
+	PortShowShort    Message
+	PortUpdateShort  Message
+	PortDeleteShort  Message
+	PortShort        Message
+	FlagPortNumber   Message
 	FlagPortRequired Message
-	FlagProtocol    Message
-	FlagAllowAnon   Message
-	FlagDenyAnon    Message
+	FlagProtocol     Message
+	FlagAllowAnon    Message
+	FlagDenyAnon     Message
 }
 
 type APIMessages struct {
@@ -97,30 +97,30 @@ type APIMessages struct {
 }
 
 type CommonMessages struct {
-	VersionInfo  Message
-	Days         Message
-	Hours        Message
-	Expired      Message
-	AuthCommands Message
-	FlagAPIKey        Message
-	FlagVerbose       Message
-	FlagEchoPort      Message
-	FlagInterface     Message
-	FlagPingInterval  Message
+	VersionInfo      Message
+	Days             Message
+	Hours            Message
+	Expired          Message
+	AuthCommands     Message
+	FlagAPIKey       Message
+	FlagVerbose      Message
+	FlagEchoPort     Message
+	FlagInterface    Message
+	FlagPingInterval Message
 }
 
 type LimitsMessages struct {
-	LimitsShort                      Message
-	ActiveTunnels                    Message
-	MaxTunnels                       Message
-	MaxPortsPerTunnel                Message
-	MaxHostsPerTunnel                Message
-	MaxHttpRequestsPerMinutePerPort  Message
-	MaxConnectionsPerPort            Message
-	QuotaResetAt                     Message
-	QuotaBytes                       Message
-	Current                          Message
-	MaxTunnelBandwidth               Message
+	LimitsShort                     Message
+	ActiveTunnels                   Message
+	MaxTunnels                      Message
+	MaxPortsPerTunnel               Message
+	MaxHostsPerTunnel               Message
+	MaxHTTPRequestsPerMinutePerPort Message
+	MaxConnectionsPerPort           Message
+	QuotaResetAt                    Message
+	QuotaBytes                      Message
+	Current                         Message
+	MaxTunnelBandwidth              Message
 }
 
 type EchoMessages struct {
@@ -135,8 +135,8 @@ type EchoMessages struct {
 }
 
 type PingMessages struct {
-	PingShort   Message
-	URIInvalid  Message
+	PingShort  Message
+	URIInvalid Message
 }
 
 var Msg Messages

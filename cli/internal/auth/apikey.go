@@ -13,10 +13,10 @@ func maskSecret(s string) string {
 	return s[:4] + "****" + s[len(s)-4:]
 }
 
-// overrideAPIKey 命令行 --api-key 传入的 key，优先级最高
-var overrideAPIKey string
+// overrideAPIKey 命令行 --api-key 传入的 key，优先级最高.
+var overrideAPIKey string //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 
-// SetOverrideAPIKey 设置命令行传入的 API Key，使后续 API 调用直接使用该 key
+// SetOverrideAPIKey 设置命令行传入的 API Key，使后续 API 调用直接使用该 key.
 func SetOverrideAPIKey(key string) {
 	overrideAPIKey = key
 }

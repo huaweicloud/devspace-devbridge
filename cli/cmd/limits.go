@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var limitsCmd = &cobra.Command{
+var limitsCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 	Use:   "limits",
 	Short: i18n.T(i18n.Msg.Limits.LimitsShort),
 	Args:  cobra.NoArgs,
@@ -39,11 +39,11 @@ func printLimitsDetail(l *api.LimitsResult) {
 		{i18n.T(i18n.Msg.Limits.MaxPortsPerTunnel), fmt.Sprintf("%d", l.MaxPortsPerTunnel)},
 		{i18n.T(i18n.Msg.Limits.MaxHostsPerTunnel), fmt.Sprintf("%d", l.MaxHostsPerTunnel)},
 		{i18n.T(i18n.Msg.Limits.MaxTunnelBandwidth), formatBytes(l.MaxTunnelBandwidthBytesPerSecond) + "/s"},
-		{i18n.T(i18n.Msg.Limits.MaxHttpRequestsPerMinutePerPort), fmt.Sprintf("%d", l.MaxHttpRequestsPerMinutePerPort)},
+		{i18n.T(i18n.Msg.Limits.MaxHTTPRequestsPerMinutePerPort), fmt.Sprintf("%d", l.MaxHTTPRequestsPerMinutePerPort)},
 		{i18n.T(i18n.Msg.Limits.MaxConnectionsPerPort), fmt.Sprintf("%d", l.MaxConnectionsPerPort)},
 	})
 }
 
-func init() {
+func init() { //nolint:gochecknoinits // cobra CLI 惯用 init 函数
 	RootCmd.AddCommand(limitsCmd)
 }

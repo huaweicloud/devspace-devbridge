@@ -7,9 +7,9 @@ import (
 	"sync/atomic"
 )
 
-var currentLevel atomic.Int32
+var currentLevel atomic.Int32 //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 
-func init() {
+func init() { //nolint:gochecknoinits // cobra CLI 惯用 init 函数
 	currentLevel.Store(int32(slog.LevelError + 1))
 }
 

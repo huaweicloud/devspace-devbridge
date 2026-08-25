@@ -13,19 +13,19 @@ import (
 	client "huawei.com/devbridge/internal/connect"
 )
 
-// hostCmd 和 connectCmd 相关的命令行参数
-var hostPorts []uint       // host 模式下需要转发的本地端口列表
-var hostDescription string // host 模式下新隧道的描述
-var hostExpiration int     // host 模式下隧道过期时间（小时）
-var connectToken string    // connect 模式下用户直接提供的 JWT token
-var hostToken string       // host 模式下用户直接提供的 JWT token
-var hostAPIKey string      // host 模式下用户提供的 API Key
-var connectAPIKey string   // connect 模式下用户提供的 API Key
+// hostCmd 和 connectCmd 相关的命令行参数.
+var hostPorts []uint       // host 模式下需要转发的本地端口列表 //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var hostDescription string // host 模式下新隧道的描述 //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var hostExpiration int     // host 模式下隧道过期时间（小时） //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var connectToken string    // connect 模式下用户直接提供的 JWT token //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var hostToken string       // host 模式下用户直接提供的 JWT token //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var hostAPIKey string      // host 模式下用户提供的 API Key //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var connectAPIKey string   // connect 模式下用户提供的 API Key //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 
-// tunnelIDPattern 隧道ID格式：仅允许字母、数字、连字符、下划线，长度 1-64
+// tunnelIDPattern 隧道ID格式：仅允许字母、数字、连字符、下划线，长度 1-64.
 var tunnelIDPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)
 
-// validateTunnelID 校验隧道ID格式
+// validateTunnelID 校验隧道ID格式.
 func validateTunnelID(id string) error {
 	if id == "" {
 		return fmt.Errorf("tunnel ID cannot be empty")
@@ -36,7 +36,7 @@ func validateTunnelID(id string) error {
 	return nil
 }
 
-// portsToInt 将 uint 列表转换为 int 列表
+// portsToInt 将 uint 列表转换为 int 列表.
 func portsToInt(ports []uint) []int {
 	result := make([]int, len(ports))
 	for i, p := range ports {
@@ -45,7 +45,7 @@ func portsToInt(ports []uint) []int {
 	return result
 }
 
-// portResultsToInt 将 API 返回的端口列表转换为 int 列表
+// portResultsToInt 将 API 返回的端口列表转换为 int 列表.
 func portResultsToInt(results []api.ListPortsResult) []int {
 	ports := make([]int, len(results))
 	for i, p := range results {
@@ -54,7 +54,7 @@ func portResultsToInt(results []api.ListPortsResult) []int {
 	return ports
 }
 
-// validatePorts 校验端口列表
+// validatePorts 校验端口列表.
 func validatePorts(ports []uint) error {
 	if len(ports) == 0 {
 		return fmt.Errorf("at least one port must be specified via -p/--ports")
@@ -67,19 +67,19 @@ func validatePorts(ports []uint) error {
 	return nil
 }
 
-// resolveHostConfig 解析 host 模式下的隧道配置（tunnelId、端口、JWT token）
-func resolveHostConfig(cmd *cobra.Command, args []string) (tunnelId string, ports []int, jwtToken string) {
+// resolveHostConfig 解析 host 模式下的隧道配置（tunnelID、端口、JWT token）.
+func resolveHostConfig(cmd *cobra.Command, args []string) (tunnelID string, ports []int, jwtToken string) {
 	if hostAPIKey != "" {
 		auth.SetOverrideAPIKey(hostAPIKey)
 	}
 	if hostToken != "" {
-		// --token 模式：用户直接提供 JWT token，跳过 API 调用
-		// tunnelId 必须指定，端口由 gateway 通过 relay channel 下发
+		// --token 模式：用户直接提供 JWT token，跳过 API 调用.
+		// tunnelID 必须指定，端口由 gateway 通过 relay channel 下发
 		if len(args) == 0 || args[0] == "" {
-			log.Fatalf("tunnelId is required when using --token")
+			log.Fatalf("tunnelID is required when using --token")
 		}
-		tunnelId = args[0]
-		if err := validateTunnelID(tunnelId); err != nil {
+		tunnelID = args[0]
+		if err := validateTunnelID(tunnelID); err != nil {
 			log.Fatalf("%v", err)
 		}
 		if cmd.Flags().Changed("ports") {
@@ -89,12 +89,12 @@ func resolveHostConfig(cmd *cobra.Command, args []string) (tunnelId string, port
 		return
 	}
 
-	// 默认模式或 --api-key 模式：正常走 API 调用（API Key 认证）
-	tunnelId, ports = resolveHostTunnelPorts(cmd, args)
+	// 默认模式或 --api-key 模式：正常走 API 调用（API Key 认证）.
+	tunnelID, ports = resolveHostTunnelPorts(cmd, args)
 
-	// --api-key 模式跳过 TunnelToken，直接用 API Key 鉴权
+	// --api-key 模式跳过 TunnelToken，直接用 API Key 鉴权.
 	if hostAPIKey == "" {
-		tokenResult, err := api.TunnelToken(tunnelId, "host")
+		tokenResult, err := api.TunnelToken(tunnelID, "host")
 		if err != nil {
 			log.Fatalf("Failed to get host token: %v", err)
 		}
@@ -103,46 +103,47 @@ func resolveHostConfig(cmd *cobra.Command, args []string) (tunnelId string, port
 	return
 }
 
-// resolveHostTunnelPorts 在非 --token 模式下解析隧道 ID 和端口列表
-func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelId string, ports []int) {
+// resolveHostTunnelPorts 在非 --token 模式下解析隧道 ID 和端口列表.
+func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelID string, ports []int) {
 	if len(args) > 0 && args[0] != "" {
-		// 指定了 tunnelId：从 API 查询该隧道绑定的所有端口，-p 参数忽略
-		tunnelId = args[0]
-		if err := validateTunnelID(tunnelId); err != nil {
+		// 指定了 tunnelID：从 API 查询该隧道绑定的所有端口，-p 参数忽略.
+		tunnelID = args[0]
+		if err := validateTunnelID(tunnelID); err != nil {
 			log.Fatalf("%v", err)
 		}
-		portsResult, err := api.ListPorts(tunnelId)
+		portsResult, err := api.ListPorts(tunnelID)
 		if err != nil {
 			log.Fatalf("Failed to list ports: %v", err)
 		}
 		ports = portResultsToInt(portsResult)
 		if len(ports) == 0 {
-			log.Fatalf("No ports configured for tunnel %s", tunnelId)
+			log.Fatalf("No ports configured for tunnel %s", tunnelID)
 		}
 		return
 	}
 
-	// 未指定 tunnelId：
+	// 未指定 tunnelID：
 	//   - 带 -p：创建临时隧道
 	//   - 不带 -p：使用 tunnel set 设置的默认隧道
 	if !cmd.Flags().Changed("ports") {
-		defaultId, err := api.ResolveTunnelId("")
+		defaultID, err := api.ResolveTunnelID("")
 		if err != nil {
-			log.Fatalf("no tunnelId and no -p specified; either set a default tunnel (tunnel set) or pass -p to create a temporary tunnel: %v", err)
+			log.Fatalf("no tunnelID and no -p specified; either set a default tunnel "+
+				"(tunnel set) or pass -p to create a temporary tunnel: %v", err)
 		}
-		tunnelId = defaultId
-		portsResult, err := api.ListPorts(tunnelId)
+		tunnelID = defaultID
+		portsResult, err := api.ListPorts(tunnelID)
 		if err != nil {
 			log.Fatalf("Failed to list ports: %v", err)
 		}
 		ports = portResultsToInt(portsResult)
 		if len(ports) == 0 {
-			log.Fatalf("No ports configured for tunnel %s", tunnelId)
+			log.Fatalf("No ports configured for tunnel %s", tunnelID)
 		}
 		return
 	}
 
-	// 带 -p：创建临时隧道
+	// 带 -p：创建临时隧道.
 	if err := validatePorts(hostPorts); err != nil {
 		log.Fatalf("%v", err)
 	}
@@ -153,37 +154,39 @@ func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelId string,
 	if cmd.Flags().Changed("expiration") {
 		exp = &hostExpiration
 	}
-	result, err := api.CreateTunnel(fmt.Sprintf("tunnel-%d-%d", ports[0], time.Now().UnixMilli()%10000), hostDescription, exp)
+	result, err := api.CreateTunnel(
+		fmt.Sprintf("tunnel-%d-%d", ports[0], time.Now().UnixMilli()%10000),
+		hostDescription, exp)
 	if err != nil {
 		log.Fatalf("Failed to create tunnel: %v", err)
 	}
-	tunnelId = result.TunnelId
-	fmt.Printf("Created tunnel: %s\n", tunnelId)
+	tunnelID = result.TunnelID
+	fmt.Printf("Created tunnel: %s\n", tunnelID)
 
-	// 自动为新建隧道绑定端口
+	// 自动为新建隧道绑定端口.
 	allowAnon := true
 	for _, p := range ports {
-		if err := api.CreatePort(tunnelId, p, "auto", &allowAnon); err != nil {
-			log.Fatalf("Failed to create port %d for tunnel %s: %v", p, tunnelId, err)
+		if err := api.CreatePort(tunnelID, p, "auto", &allowAnon); err != nil {
+			log.Fatalf("Failed to create port %d for tunnel %s: %v", p, tunnelID, err)
 		}
 	}
 	return
-}
+} //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 
-// hostCmd 以 host 模式启动隧道，将本地端口暴露到远程隧道服务
+// hostCmd 以 host 模式启动隧道，将本地端口暴露到远程隧道服务.
 var hostCmd = &cobra.Command{
-	Use:   "host [tunnelId]",
+	Use:   "host [tunnelID]",
 	Short: "Start listener, register to gateway and wait for connections",
 	Args:  cobra.RangeArgs(0, 1),
 	Run: func(cmd *cobra.Command, args []string) {
-		tunnelId, ports, jwtToken := resolveHostConfig(cmd, args)
-		client.Listen(tunnelId, ports, jwtToken, hostAPIKey)
+		tunnelID, ports, jwtToken := resolveHostConfig(cmd, args)
+		client.Listen(tunnelID, ports, jwtToken, hostAPIKey)
 	},
-}
+} //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 
-// connectCmd 以 sender 模式连接到远程隧道，等待 host 端的端口转发请求
+// connectCmd 以 sender 模式连接到远程隧道，等待 host 端的端口转发请求.
 var connectCmd = &cobra.Command{
-	Use:   "connect [tunnelId]",
+	Use:   "connect [tunnelID]",
 	Short: "Start sender, connect to gateway and wait for port forwarding requests",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -191,23 +194,23 @@ var connectCmd = &cobra.Command{
 			auth.SetOverrideAPIKey(connectAPIKey)
 		}
 
-		var tunnelId string
+		var tunnelID string
 		if connectToken != "" {
-			// --token 模式：必须显式指定 tunnelId，不走默认隧道
+			// --token 模式：必须显式指定 tunnelID，不走默认隧道.
 			if len(args) == 0 || args[0] == "" {
-				log.Fatalf("tunnelId is required when using --token")
+				log.Fatalf("tunnelID is required when using --token")
 			}
-			tunnelId = args[0]
+			tunnelID = args[0]
 		} else if len(args) > 0 && args[0] != "" {
-			tunnelId = args[0]
+			tunnelID = args[0]
 		} else {
-			id, err := api.ResolveTunnelId("")
+			id, err := api.ResolveTunnelID("")
 			if err != nil {
-				log.Fatalf("tunnelId is required (no default tunnel set): %v", err)
+				log.Fatalf("tunnelID is required (no default tunnel set): %v", err)
 			}
-			tunnelId = id
+			tunnelID = id
 		}
-		if err := validateTunnelID(tunnelId); err != nil {
+		if err := validateTunnelID(tunnelID); err != nil {
 			log.Fatalf("%v", err)
 		}
 
@@ -215,23 +218,23 @@ var connectCmd = &cobra.Command{
 		var ports []int
 
 		if connectToken != "" {
-			// --token 模式：用户直接提供 JWT token，跳过 TunnelToken 和 ListPorts
+			// --token 模式：用户直接提供 JWT token，跳过 TunnelToken 和 ListPorts.
 			// 端口列表由 host 端通过 SSH ForwardFromRemotePort 协商下发
 			jwtToken = connectToken
 		} else {
-			// 默认模式或 --api-key 模式：通过 API 获取端口列表
-			portsResult, err := api.ListPorts(tunnelId)
+			// 默认模式或 --api-key 模式：通过 API 获取端口列表.
+			portsResult, err := api.ListPorts(tunnelID)
 			if err != nil {
 				log.Fatalf("Failed to list ports: %v", err)
 			}
 			if len(portsResult) == 0 {
-				log.Fatalf("No ports configured for tunnel %s", tunnelId)
+				log.Fatalf("No ports configured for tunnel %s", tunnelID)
 			}
 			ports = portResultsToInt(portsResult)
 
-			// --api-key 模式跳过 TunnelToken，直接用 API Key 鉴权
+			// --api-key 模式跳过 TunnelToken，直接用 API Key 鉴权.
 			if connectAPIKey == "" {
-				tokenResult, err := api.TunnelToken(tunnelId, "connect")
+				tokenResult, err := api.TunnelToken(tunnelID, "connect")
 				if err != nil {
 					log.Fatalf("Failed to get connect token: %v", err)
 				}
@@ -239,8 +242,8 @@ var connectCmd = &cobra.Command{
 			}
 		}
 
-		client.Connect(tunnelId, jwtToken, ports, connectAPIKey)
-	},
+		client.Connect(tunnelID, jwtToken, ports, connectAPIKey)
+	}, //nolint:gochecknoinits // cobra CLI 惯用 init 函数
 }
 
 func init() {
@@ -248,9 +251,14 @@ func init() {
 	RootCmd.AddCommand(connectCmd)
 	hostCmd.Flags().UintSliceVarP(&hostPorts, "ports", "p", nil, "Local server port numbers")
 	hostCmd.Flags().StringVarP(&hostDescription, "description", "d", "", "Description for new tunnel")
-	hostCmd.Flags().IntVarP(&hostExpiration, "expiration", "e", 0, "Tunnel expiration (hours, 1-720)")
-	hostCmd.Flags().StringVarP(&hostToken, "token", "t", "", "JWT token for host (skip API token and port lookup)")
-	hostCmd.Flags().StringVarP(&hostAPIKey, "api-key", "k", "", "API key for host (skip TunnelToken, use X-API-Key for WebSocket auth)")
-	connectCmd.Flags().StringVarP(&connectToken, "token", "t", "", "JWT token for connect (skip API token and port lookup)")
-	connectCmd.Flags().StringVarP(&connectAPIKey, "api-key", "k", "", "API key for connect (skip TunnelToken, use X-API-Key for WebSocket auth)")
+	hostCmd.Flags().IntVarP(&hostExpiration, "expiration", "e", 0,
+		"Tunnel expiration (hours, 1-720)")
+	hostCmd.Flags().StringVarP(&hostToken, "token", "t", "",
+		"JWT token for host (skip API token and port lookup)")
+	hostCmd.Flags().StringVarP(&hostAPIKey, "api-key", "k", "",
+		"API key for host (skip TunnelToken, use X-API-Key for WebSocket auth)") //nolint:lll // flag 描述不可拆行
+	connectCmd.Flags().StringVarP(&connectToken, "token", "t", "",
+		"JWT token for connect (skip API token and port lookup)")
+	connectCmd.Flags().StringVarP(&connectAPIKey, "api-key", "k", "",
+		"API key for connect (skip TunnelToken, use X-API-Key for WebSocket auth)") //nolint:lll // flag 描述不可拆行
 }
