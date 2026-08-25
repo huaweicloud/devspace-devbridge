@@ -122,7 +122,21 @@ func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelId string,
 		return
 	}
 
-	// 未指定 tunnelId：必须带 -p，自动创建新隧道
+	// 未指定 tunnelId：先尝试使用默认隧道（由 tunnel set 设置）
+	if defaultId, err := api.ResolveTunnelId(""); err == nil && defaultId != "" {
+		tunnelId = defaultId
+		portsResult, err := api.ListPorts(tunnelId)
+		if err != nil {
+			log.Fatalf("Failed to list ports: %v", err)
+		}
+		ports = portResultsToInt(portsResult)
+		if len(ports) == 0 {
+			log.Fatalf("No ports configured for tunnel %s", tunnelId)
+		}
+		return
+	}
+
+	// 未指定 tunnelId 且无默认隧道：必须带 -p，自动创建新隧道
 	if err := validatePorts(hostPorts); err != nil {
 		log.Fatalf("%v", err)
 	}
@@ -165,9 +179,18 @@ var hostCmd = &cobra.Command{
 var connectCmd = &cobra.Command{
 	Use:   "connect [tunnelId]",
 	Short: "Start sender, connect to gateway and wait for port forwarding requests",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		tunnelId := args[0]
+		var tunnelId string
+		if len(args) > 0 && args[0] != "" {
+			tunnelId = args[0]
+		} else {
+			id, err := api.ResolveTunnelId("")
+			if err != nil {
+				log.Fatalf("tunnelId is required (no default tunnel set): %v", err)
+			}
+			tunnelId = id
+		}
 		if err := validateTunnelID(tunnelId); err != nil {
 			log.Fatalf("%v", err)
 		}
