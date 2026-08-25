@@ -22,6 +22,7 @@ func init() {
 	Msg.Auth.BrowserOpened = Message{ZH: "浏览器已打开，请在浏览器中完成登录", EN: "Browser opened, please complete login in browser"}
 	Msg.Auth.NoBrowserHint = Message{ZH: "无可用浏览器，请手动登录。API Key 管理页面: %s\n例如: ./devbridge auth login --api-key=YOUR_API_KEY", EN: "No browser available, please login manually. API Key management page: %s\nFor example: ./devbridge auth login --api-key=YOUR_API_KEY"} //nolint:lll // 翻译字符串不可拆行
 	Msg.Auth.LoginShort = Message{ZH: "登录华为云", EN: "Login to Huawei Cloud"}
+	Msg.Auth.LoginErrorHint = Message{ZH: "请前往管理页面删除 API Key 后重试。API Key 管理页面: %s", EN: "Please go to the management page to delete API Keys and try again. API Key management page: %s"} //nolint:lll // 翻译字符串不可拆行
 	Msg.Auth.LoggedInHuaweiCloud = Message{ZH: "已登录 (华为云 IAM)", EN: "Logged in (Huawei Cloud IAM)"}
 
 	Msg.Tunnel.TunnelID = Message{ZH: "隧道ID", EN: "Tunnel ID"}

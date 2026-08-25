@@ -204,10 +204,11 @@ func parseLoginCallbackBody(body []byte) (callbackResponse, error) {
 		return callbackResponse{}, err
 	}
 	if envelope.ErrorCode != loginSuccessCode {
-		return callbackResponse{}, fmt.Errorf("Failed to login: %w", &loginError{
+		apikeyPageURL := LoginURL + "/space/devbridge/apikey"
+		return callbackResponse{}, fmt.Errorf("Failed to login: %w\n%s", &loginError{
 			Code:    envelope.ErrorCode,
 			Message: envelope.ErrorMsg,
-		})
+		}, fmt.Sprintf(i18n.T(i18n.Msg.Auth.LoginErrorHint), apikeyPageURL))
 	}
 	return envelope.Result, nil
 }

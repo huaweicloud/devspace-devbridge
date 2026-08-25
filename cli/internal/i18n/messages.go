@@ -23,6 +23,7 @@ type AuthMessages struct {
 	NoBrowserHint       Message
 	LoginShort          Message
 	LoggedInHuaweiCloud Message
+	LoginErrorHint      Message
 }
 
 type TunnelMessages struct {
