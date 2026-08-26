@@ -256,6 +256,8 @@ upload_asset() {
     obs_callback=$(echo "$body" | jq -r '.headers["x-obs-callback"] // empty')
 
     # Step 2: PUT 文件到预签名 URL
+    # 先清空响应文件，防止上次上传残留的 "success" body 导致误判
+    : > /tmp/gc_upload_resp.txt
     local put_code
     put_code=$(curl -s --connect-timeout 15 --max-time 300 -o /tmp/gc_upload_resp.txt -w "%{http_code}" \
       -X PUT \
@@ -283,7 +285,7 @@ upload_asset() {
     else
       log_warn "    ❌ ${filename} 上传失败 (HTTP ${put_code}): ${put_body}"
       # 重试条件：5xx 服务端错误，或 203 回调错误（GitCode obs_callback 间歇性 400）
-      if [[ "${put_code:0:1}" == "5" || "$put_code" == "203" ]] && [[ "$attempt" -lt "$max_retries" ]]; then
+      if [[ "${put_code:0:1}" == "5" || "$put_code" == "203" || "$put_code" == "000" ]] && [[ "$attempt" -lt "$max_retries" ]]; then
         log_warn "    第 ${attempt}/${max_retries} 次重试（等待 5 秒）..."
         sleep 5
         continue
