@@ -24,7 +24,7 @@ var RootCmd = &cobra.Command{
 		api.InitClient("")
 		if verbose {
 			logging.SetLevel(slog.LevelDebug)
-			slog.SetDefault(slog.New(logging.NewPlainHandler(os.Stderr)))
+			slog.SetDefault(slog.New(logging.NewHandler(os.Stderr)))
 		}
 	},
 }

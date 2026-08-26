@@ -49,7 +49,7 @@ func (e *apiError) Error() string {
 	return fmt.Sprintf("error code: %s, error message: %s", e.Code, e.Message)
 }
 
-func GetApiErrorCode(err error) string {
+func GetAPIErrorCode(err error) string {
 	var apiErr *apiError
 	if errors.As(err, &apiErr) {
 		return apiErr.Code

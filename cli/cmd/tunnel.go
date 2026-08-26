@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"huawei.com/devbridge/internal/api"
-	"huawei.com/devbridge/internal/auth"
+	"huawei.com/devbridge/internal/config"
 	"huawei.com/devbridge/internal/i18n"
 
 	"github.com/spf13/cobra"
@@ -148,8 +148,8 @@ var deleteCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全
 		if err := api.DeleteTunnel(tunnelID); err != nil {
 			return err
 		}
-		if def, e := auth.LoadDefaultTunnel(); e == nil && def == tunnelID {
-			_ = auth.DeleteDefaultTunnel() //nolint:errcheck // keyring 中不存在时删除失败属正常
+		if def, e := config.LoadDefaultTunnel(); e == nil && def == tunnelID {
+			_ = config.DeleteDefaultTunnel() //nolint:errcheck // keyring 中不存在时删除失败属正常
 			fmt.Println(i18n.T(i18n.Msg.Tunnel.DefaultTunnelCleared))
 		}
 		fmt.Println(i18n.T(i18n.Msg.Tunnel.TunnelDeleted))
@@ -201,12 +201,12 @@ var setCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局
 			return err
 		}
 		if _, err := api.ShowTunnel(args[0]); err != nil {
-			if api.GetApiErrorCode(err) == api.TunnelNotFoundCode {
+			if api.GetAPIErrorCode(err) == api.TunnelNotFoundCode {
 				return fmt.Errorf("%s: %s", i18n.T(i18n.Msg.Tunnel.TunnelNotFound), args[0])
 			}
 			return err
 		}
-		if err := auth.StoreDefaultTunnel(args[0]); err != nil {
+		if err := config.StoreDefaultTunnel(args[0]); err != nil {
 			return err
 		}
 		fmt.Printf("%s: %s\n", i18n.T(i18n.Msg.Tunnel.DefaultTunnelSet), args[0])
@@ -219,7 +219,7 @@ var unsetCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全�
 	Short: i18n.T(i18n.Msg.Tunnel.UnsetShort),
 	Args:  cobra.NoArgs,
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
-		_ = auth.DeleteDefaultTunnel() //nolint:errcheck // keyring 中不存在时删除失败属正常
+		_ = config.DeleteDefaultTunnel() //nolint:errcheck // keyring 中不存在时删除失败属正常
 		fmt.Println(i18n.T(i18n.Msg.Tunnel.DefaultTunnelUnset))
 		return nil
 	}),

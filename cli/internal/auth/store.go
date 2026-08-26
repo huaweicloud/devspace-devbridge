@@ -2,7 +2,6 @@ package auth
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -14,9 +13,8 @@ import (
 const CredentialName = "HWCLOUD"
 
 const (
-	defaultTunnelKey = "default-tunnel-id"
-	credentialsKey   = "credentials"
-	userInfoKey      = "user-info"
+	credentialsKey = "credentials"
+	userInfoKey    = "user-info"
 )
 
 func encodeCredential(cred *Credential) string {
@@ -94,31 +92,6 @@ func DeleteCredential(name string) error {
 	delete(cfg, credentialsKey)
 	delete(cfg, userInfoKey)
 	return config.Save(cfg)
-}
-
-// StoreDefaultTunnel 将默认隧道 ID 直接写入配置文件（不走 keyring/保险箱）。
-func StoreDefaultTunnel(tunnelID string) error {
-	return config.Set(defaultTunnelKey, tunnelID)
-}
-
-// LoadDefaultTunnel 从配置文件读取默认隧道 ID。
-func LoadDefaultTunnel() (string, error) {
-	if v, ok := config.Get(defaultTunnelKey); ok {
-		if s, ok := v.(string); ok {
-			return s, nil
-		}
-	}
-	return "", fmt.Errorf("tunnel ID not specified and no default tunnel set, " +
-		"please specify via argument or use 'devbridge set' to set default") //nolint:lll // 错误信息拆行后可读性更差
-}
-
-// DeleteDefaultTunnel 从配置文件删除默认隧道 ID。
-// 没设过默认隧道（key 不存在）视为已删除，不返回错误。
-func DeleteDefaultTunnel() error {
-	if err := config.Delete(defaultTunnelKey); err != nil && !errors.Is(err, config.ErrKeyNotFound) {
-		return err
-	}
-	return nil
 }
 
 func credToMap(cred *Credential) map[string]any {

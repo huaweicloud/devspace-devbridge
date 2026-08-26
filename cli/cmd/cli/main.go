@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 
@@ -10,6 +11,6 @@ import (
 func main() {
 	cmd.RootCmd.Use = filepath.Base(os.Args[0])
 	if err := cmd.RootCmd.Execute(); err != nil {
-		os.Exit(1)
+		log.Fatal(err)
 	}
 }

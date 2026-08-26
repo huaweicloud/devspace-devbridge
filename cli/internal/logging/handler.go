@@ -21,37 +21,31 @@ func SetLevel(level slog.Level) {
 	currentLevel.Store(int32(level)) //nolint:gosec // slog.Level 实际取值 -8~8，远在 int32 范围内
 }
 
-type PlainHandler struct {
-	w io.Writer
+// NewHandler 创建一个基于 slog.TextHandler 的日志 handler，
+// 日志级别由 logging 包动态控制.
+func NewHandler(w io.Writer) slog.Handler {
+	return &levelHandler{
+		inner: slog.NewTextHandler(w, &slog.HandlerOptions{Level: slog.LevelDebug}),
+	}
 }
 
-func NewPlainHandler(w io.Writer) *PlainHandler {
-	return &PlainHandler{w: w}
+// levelHandler 包装 slog.TextHandler，动态检查日志级别.
+type levelHandler struct {
+	inner slog.Handler
 }
 
-func (h *PlainHandler) Enabled(_ context.Context, level slog.Level) bool {
+func (h *levelHandler) Enabled(ctx context.Context, level slog.Level) bool {
 	return level >= LogLevel()
 }
 
-func (h *PlainHandler) Handle(_ context.Context, r slog.Record) error {
-	var buf []byte
-	buf = append(buf, r.Message...)
-	r.Attrs(func(a slog.Attr) bool {
-		buf = append(buf, ' ')
-		buf = append(buf, a.Key...)
-		buf = append(buf, '=')
-		buf = append(buf, a.Value.String()...)
-		return true
-	})
-	buf = append(buf, '\n')
-	_, err := h.w.Write(buf)
-	return err
+func (h *levelHandler) Handle(ctx context.Context, r slog.Record) error {
+	return h.inner.Handle(ctx, r)
 }
 
-func (h *PlainHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return h
+func (h *levelHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return &levelHandler{inner: h.inner.WithAttrs(attrs)}
 }
 
-func (h *PlainHandler) WithGroup(name string) slog.Handler {
-	return h
+func (h *levelHandler) WithGroup(name string) slog.Handler {
+	return &levelHandler{inner: h.inner.WithGroup(name)}
 }

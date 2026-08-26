@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	"huawei.com/devbridge/internal/auth"
+	"huawei.com/devbridge/internal/config"
 	"huawei.com/devbridge/internal/i18n"
 
 	"github.com/spf13/cobra"
@@ -55,7 +56,7 @@ var logoutCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全
 		if err := auth.DeleteCredential(auth.CredentialName); err != nil {
 			slog.Warn("failed to delete credential", "err", err)
 		}
-		if err := auth.DeleteDefaultTunnel(); err != nil {
+		if err := config.DeleteDefaultTunnel(); err != nil {
 			slog.Warn("failed to delete default tunnel", "err", err)
 		}
 		fmt.Println(i18n.T(i18n.Msg.Auth.LogoutSuccess))

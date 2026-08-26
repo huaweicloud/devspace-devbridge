@@ -61,13 +61,14 @@ func Listen(tunnelID string, ports []int, jwtToken string, apiKey string) {
 			slog.Error("reconnect exhausted", "maxAttempts", maxReconnectAttempts, "err", err)
 			return
 		}
-		delay := baseReconnectDelay
-		for i := 0; i < consecutiveFailures-1; i++ {
-			delay *= 2
-			if delay >= maxReconnectDelay {
-				delay = maxReconnectDelay
-				break
-			}
+		// 指数退避：用位移替代循环累乘.
+		shift := consecutiveFailures - 1
+		if shift > 4 { //nolint:gomnd // baseReconnectDelay=3s, maxReconnectDelay=30s, 最多移 4 位
+			shift = 4
+		}
+		delay := baseReconnectDelay << uint(shift) //nolint:gosec // shift 已截断到 0-4，不会溢出
+		if delay > maxReconnectDelay {
+			delay = maxReconnectDelay
 		}
 		fmt.Println("Connection lost, reconnecting...")
 		select {

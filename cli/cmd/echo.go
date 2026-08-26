@@ -25,13 +25,10 @@ var (
 var pingInterval int //nolint:gochecknoglobals // cobra CLI 惯用全局变量
 
 var echoCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
-	Use:   "echo [http]",
+	Use:   "echo",
 	Short: i18n.T(i18n.Msg.Echo.EchoShort),
-	Args:  cobra.MaximumNArgs(1),
+	Args:  cobra.NoArgs,
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
-		if len(args) > 0 && args[0] != "http" {
-			return fmt.Errorf("%s: %s", i18n.T(i18n.Msg.Port.ProtocolInvalid), args[0])
-		}
 		// Only validate port when -p is explicitly provided.
 		// When -p is omitted, echoPort stays 0 and net.Listen picks a random free port.
 		if cmd.Flags().Changed("port") && (echoPort < 1 || echoPort > 65535) {
