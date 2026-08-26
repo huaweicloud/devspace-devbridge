@@ -257,22 +257,33 @@ upload_asset() {
 
     # Step 2: PUT 文件到预签名 URL
     local put_code
-    put_code=$(curl -s --connect-timeout 10 --max-time 120 -o /tmp/gc_upload_resp.txt -w "%{http_code}" \
+    put_code=$(curl -s --connect-timeout 15 --max-time 300 -o /tmp/gc_upload_resp.txt -w "%{http_code}" \
       -X PUT \
       -H "Content-Type: ${content_type}" \
       ${obs_meta:+-H "x-obs-meta-project-id: ${obs_meta}"} \
       ${obs_acl:+-H "x-obs-acl: ${obs_acl}"} \
       ${obs_callback:+-H "x-obs-callback: ${obs_callback}"} \
+      -H "Expect:" \
       --data-binary @"${file}" \
       "$upload_url")
 
+    local put_body
+    put_body=$(cat /tmp/gc_upload_resp.txt 2>/dev/null)
+
+    # 成功判定：
+    #   - HTTP 200/201：正常成功
+    #   - HTTP 100 + body "success"：curl 误把 100 Continue 当最终码（慢连接下
+    #     Expect:100-continue 协议问题），但 OBS 实际已上传成功
     if [[ "$put_code" == "200" || "$put_code" == "201" ]]; then
       log_info "    ✅ ${filename} 上传成功"
       return 0
+    elif [[ "$put_code" == "100" && "$put_body" == "success" ]]; then
+      log_warn "    ⚠️ ${filename} 收到 HTTP 100（curl 100-continue 误判），但 body=success，视为成功"
+      return 0
     else
-      log_warn "    ❌ ${filename} 上传失败 (HTTP ${put_code}): $(cat /tmp/gc_upload_resp.txt 2>/dev/null)"
-      # 5xx 错误重试，4xx 不重试
-      if [[ "${put_code:0:1}" == "5" && "$attempt" -lt "$max_retries" ]]; then
+      log_warn "    ❌ ${filename} 上传失败 (HTTP ${put_code}): ${put_body}"
+      # 重试条件：5xx 服务端错误，或 203 回调错误（GitCode obs_callback 间歇性 400）
+      if [[ "${put_code:0:1}" == "5" || "$put_code" == "203" ]] && [[ "$attempt" -lt "$max_retries" ]]; then
         log_warn "    第 ${attempt}/${max_retries} 次重试（等待 5 秒）..."
         sleep 5
         continue
