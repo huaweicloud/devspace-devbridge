@@ -311,17 +311,9 @@ Environment Variables:
 
 
     # ---------------------------------------------------------------------------
-    # Get-MirrorUrls - 返回下载源 base URL
-    #
-    # 各渠道只从自己的 DEFAULT_ARTIFACT_URL 下载，不做跨源 fallback。
-    # ---------------------------------------------------------------------------
-    function Get-MirrorUrls {
-        return @($Script:DEFAULT_ARTIFACT_URL)
-    }
-
-    # ---------------------------------------------------------------------------
     # Download-Binary - 从远程下载 tar.gz 包并解压
     #
+    # 下载源：显式 -Url 优先，否则用 DEFAULT_ARTIFACT_URL（各渠道烤制时写入自己的地址）
     # 返回解压后的二进制文件路径（.sha256 也在同目录下，供 Verify-Checksum 使用）
     # ---------------------------------------------------------------------------
     function Download-Binary {
@@ -330,30 +322,11 @@ Environment Variables:
         $tarballName = Get-BinaryName
         $localTarball = Join-Path $OutputDir $tarballName
 
-        # 确定下载源列表：显式 -Url 优先（不探测），否则用全部镜像
-        if ($Url) {
-            $mirrors = @($Url)
-        } else {
-            $mirrors = Get-MirrorUrls
-        }
+        $mirror = if ($Url) { $Url } else { $Script:DEFAULT_ARTIFACT_URL }
+        $remoteUrl = "${mirror}/${tarballName}"
 
-        $downloaded = $false
-        foreach ($mirror in $mirrors) {
-            $remoteUrl = "${mirror}/${tarballName}"
-            Write-Step "Downloading from ${remoteUrl} ..."
-            try {
-                Invoke-WebRequest -Uri $remoteUrl -OutFile $localTarball -UseBasicParsing -TimeoutSec 30 -ErrorAction Stop
-                $downloaded = $true
-                break
-            } catch {
-                Write-Warn "Failed: ${mirror} — $($_.Exception.Message)"
-                continue
-            }
-        }
-
-        if (-not $downloaded) {
-            Write-ErrorAndExit "Failed to download from all mirrors: $($mirrors -join ', ')"
-        }
+        Write-Step "Downloading from ${remoteUrl} ..."
+        Invoke-HttpGet -Url $remoteUrl -Output $localTarball
 
         # 解压 tar.gz（Windows 10+ 内置 tar）
         Write-Step "Extracting ${tarballName} ..."

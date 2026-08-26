@@ -331,20 +331,9 @@ prompt_clean_old_data() {
 }
 
 # ---------------------------------------------------------------------------
-# get_mirror_urls - 返回下载源 base URL
-#
-# 各渠道只从自己的 DEFAULT_ARTIFACT_URL 下载，不做跨源 fallback：
-#   GitHub Release 的脚本 → 只从 GitHub 下载
-#   GitCode Release 的脚本 → 只从 GitCode 下载（upload-gitcode-release.sh 重新烤制）
-#   OBS 桶的脚本 → 只从 OBS 下载（手动上传时重新烤制）
-# ---------------------------------------------------------------------------
-get_mirror_urls() {
-    echo "${DEFAULT_ARTIFACT_URL}"
-}
-
-# ---------------------------------------------------------------------------
 # download_binary - 从远程下载 tar.gz 包并解压
 #
+# 下载源：显式 -u 优先，否则用 DEFAULT_ARTIFACT_URL（各渠道烤制时写入自己的地址）
 # 返回解压后的二进制文件路径（.sha256 也在同目录下，供 verify_checksum 使用）
 # ---------------------------------------------------------------------------
 download_binary() {
@@ -353,37 +342,15 @@ download_binary() {
     tarball_name=$(get_binary_name)
     local local_tarball="${output_dir}/${tarball_name}"
 
-    # 确定下载源列表：显式 -u 优先（不探测），否则用全部镜像
-    local mirrors=()
-    if [[ -n "${url}" ]]; then
-        mirrors=("${url}")
-    else
-        while IFS= read -r line; do
-            [[ -n "${line}" ]] && mirrors+=("${line}")
-        done < <(get_mirror_urls)
-    fi
+    local mirror="${url:-${DEFAULT_ARTIFACT_URL}}"
+    local remote_url="${mirror}/${tarball_name}"
 
-    local downloaded=false
-    for mirror in "${mirrors[@]}"; do
-        local remote_url="${mirror}/${tarball_name}"
-        verbose "Downloading ${remote_url} ..."
-        if http_get "${remote_url}" "${local_tarball}" "besteffort" && [[ -s "${local_tarball}" ]]; then
-            downloaded=true
-            break
-        fi
-        warn "Failed: ${mirror}"
-        rm -f "${local_tarball}"
-    done
+    verbose "Downloading ${remote_url} ..."
+    http_get "${remote_url}" "${local_tarball}"
 
-    if [[ "${downloaded}" != true ]]; then
-        error "Failed to download from all mirrors: ${mirrors[*]}"
-    fi
-
-    # 解压 tar.gz 到 output_dir
     verbose "Extracting ${tarball_name} ..."
     tar xzf "${local_tarball}" -C "${output_dir}"
 
-    # 返回解压后的二进制路径
     local binary_name_inside
     binary_name_inside=$(get_binary_name_inside)
     echo "${output_dir}/${binary_name_inside}"
