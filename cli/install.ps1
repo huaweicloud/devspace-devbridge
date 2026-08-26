@@ -20,7 +20,7 @@ function Install-DevBridge {
     $Script:APP_DISPLAY_NAME = "DevBridge"
     $Script:INSTALL_DIR = if ($Prefix) { $Prefix } else { Join-Path $HOME ".huawei\bin" }
     $Script:CONFIG_DIR = Join-Path $HOME ".huawei\devbridge"
-    $Script:DEFAULT_ARTIFACT_URL = "https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge"
+    $Script:DEFAULT_ARTIFACT_URL = "https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge"
     if ($Script:DEFAULT_ARTIFACT_URL -match '^__.*__$') {
         $Script:DEFAULT_ARTIFACT_URL = "https://obs-test-hd-space-cdn-sharedata-north7.obs.cn-north-7.ulanqab.huawei.com/space/devbridge"
     }
@@ -107,7 +107,7 @@ Examples:
     # GitCode one-click:
     irm https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/latest/install.ps1 | iex
     # OBS/CDN one-click:
-    irm https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge/install.ps1 | iex
+    irm https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install.ps1 | iex
     # Explicit version / mirror:
     .\install.ps1 -Version 1.0.0
     .\install.ps1 -Url https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/<version> -Version 1.0.0
@@ -326,7 +326,7 @@ Environment Variables:
             # 2. GitCode Release（含版本号路径）
             "https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/${v}"
             # 3. OBS/CDN 扁平结构（版本号在文件名里，base URL 不含版本路径）
-            "https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge"
+            "https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge"
         )
     }
 
