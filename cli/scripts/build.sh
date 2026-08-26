@@ -240,9 +240,10 @@ package_tarballs() {
             continue
         fi
 
-        # 打包二进制 + .sha256（使用相对路径，tar 内只含文件名）
-        tar czf "${tar_path}" -C "${OUTPUT_DIR}" "${binary_name}"
-        [[ -f "${sha_path}" ]] && tar rzf "${tar_path}" -C "${OUTPUT_DIR}" "${binary_name}.sha256"
+        # 打包二进制 + .sha256（一次性打包，tar 不支持往压缩归档追加文件）
+        local tar_files="${binary_name}"
+        [[ -f "${sha_path}" ]] && tar_files="${tar_files} ${binary_name}.sha256"
+        tar czf "${tar_path}" -C "${OUTPUT_DIR}" ${tar_files}
 
         # 删除单个文件
         rm -f "${binary_path}" "${sha_path}"
