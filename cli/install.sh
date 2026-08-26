@@ -56,7 +56,7 @@ APP_NAME=devbridge
 APP_DISPLAY_NAME="DevBridge"
 INSTALL_DIR="$HOME/.huawei/bin"
 CONFIG_DIR="$HOME/.huawei/devbridge"
-DEFAULT_ARTIFACT_URL="https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge"
+DEFAULT_ARTIFACT_URL="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge"
 if [[ "${DEFAULT_ARTIFACT_URL}" == __*__ ]]; then
     DEFAULT_ARTIFACT_URL="https://obs-test-hd-space-cdn-sharedata-north7.obs.cn-north-7.ulanqab.huawei.com/space/devbridge"
 fi
@@ -131,12 +131,22 @@ Options:
     -h, --help                  Show this help message
 
 Examples:
-    curl -fsSL https://github.com/<repo>/releases/latest/download/install.sh | bash
+    # GitHub one-click:
+    curl -fsSL https://github.com/huaweicloud/devspace-devbridge/releases/latest/download/install.sh | bash
+    # GitCode one-click:
+    curl -fsSL https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/latest/install.sh | bash
+    # OBS one-click:
+    curl -fsSL https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install.sh | bash
+    # Explicit version / mirror:
     bash install.sh -v 1.0.0
-    bash install.sh -u https://gitcode.com/<owner>/<repo>/releases/download/<version> -v 1.0.0
+    bash install.sh -u https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/<version> -v 1.0.0
+
+Note:
+    Without -u, the script auto-probes GitHub / GitCode / OBS mirrors
+    and downloads binaries from the first reachable one.
 
 Environment Variables:
-    ARTIFACT_URL_FROM_ENV  Same as --url
+    ARTIFACT_URL_FROM_ENV  Same as --url (skips mirror probing)
     APP_VERSION            Same as --version
 EOF
     exit 0
@@ -159,7 +169,7 @@ parse_args() {
         esac
     done
 
-    ARTIFACT_URL="${ARTIFACT_URL:-${ARTIFACT_URL_FROM_ENV:-${DEFAULT_ARTIFACT_URL}}}"
+    ARTIFACT_URL="${ARTIFACT_URL:-${ARTIFACT_URL_FROM_ENV:-}}"
     VERSION="${VERSION:-${APP_VERSION:-${DEFAULT_VERSION}}}"
 }
 
@@ -321,6 +331,21 @@ prompt_clean_old_data() {
 }
 
 # ---------------------------------------------------------------------------
+# get_mirror_urls - 返回所有镜像 base URL（用于二进制下载的多源探测）
+#
+# 三个渠道同一份脚本通用：
+#   GitHub Release / GitCode Release / OBS
+# CI 烤制时会把 DEFAULT_ARTIFACT_URL 替换为 GitHub Release 地址，
+# 但无论烤成什么，这里都会给出完整镜像列表供 download_binary 逐个探测。
+# ---------------------------------------------------------------------------
+get_mirror_urls() {
+    local v="${VERSION}"
+    echo "${DEFAULT_ARTIFACT_URL}"
+    echo "https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/${v}"
+    echo "https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge"
+}
+
+# ---------------------------------------------------------------------------
 # download_binary - 从远程下载 tar.gz 包并解压
 #
 # 返回解压后的二进制文件路径（.sha256 也在同目录下，供 verify_checksum 使用）
@@ -329,11 +354,33 @@ download_binary() {
     local url="$1" output_dir="$2"
     local tarball_name
     tarball_name=$(get_binary_name)
-    local remote_url="${url}/${tarball_name}"
     local local_tarball="${output_dir}/${tarball_name}"
 
-    verbose "Downloading ${remote_url} ..."
-    http_get "${remote_url}" "${local_tarball}"
+    # 确定下载源列表：显式 -u 优先（不探测），否则用全部镜像
+    local mirrors=()
+    if [[ -n "${url}" ]]; then
+        mirrors=("${url}")
+    else
+        while IFS= read -r line; do
+            [[ -n "${line}" ]] && mirrors+=("${line}")
+        done < <(get_mirror_urls)
+    fi
+
+    local downloaded=false
+    for mirror in "${mirrors[@]}"; do
+        local remote_url="${mirror}/${tarball_name}"
+        verbose "Downloading ${remote_url} ..."
+        if http_get "${remote_url}" "${local_tarball}" "besteffort" && [[ -s "${local_tarball}" ]]; then
+            downloaded=true
+            break
+        fi
+        warn "Failed: ${mirror}"
+        rm -f "${local_tarball}"
+    done
+
+    if [[ "${downloaded}" != true ]]; then
+        error "Failed to download from all mirrors: ${mirrors[*]}"
+    fi
 
     # 解压 tar.gz 到 output_dir
     verbose "Extracting ${tarball_name} ..."
