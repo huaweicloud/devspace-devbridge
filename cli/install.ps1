@@ -28,7 +28,7 @@ function Install-DevBridge {
     if ($Script:DEFAULT_VERSION -match '^__.*__$') {
         $Script:DEFAULT_VERSION = ""
     }
-    $Script:ARTIFACT_URL = if ($Url) { $Url } elseif ($env:ARTIFACT_URL_FROM_ENV) { $env:ARTIFACT_URL_FROM_ENV } else { $Script:DEFAULT_ARTIFACT_URL }
+    $Script:ARTIFACT_URL = if ($Url) { $Url } elseif ($env:ARTIFACT_URL_FROM_ENV) { $env:ARTIFACT_URL_FROM_ENV } else { "" }
     $Script:VERSION = if ($Version) { $Version } elseif ($env:APP_VERSION) { $env:APP_VERSION } else { $Script:DEFAULT_VERSION }
     $Script:SKIP_CHECKSUM = $SkipChecksum
     $Script:SILENT_MODE = $Silent
@@ -102,12 +102,22 @@ Options:
     -Help                Show this help message
 
 Examples:
-    irm https://github.com/<repo>/releases/latest/download/install.ps1 | iex
+    # GitHub one-click:
+    irm https://github.com/huaweicloud/devspace-devbridge/releases/latest/download/install.ps1 | iex
+    # GitCode one-click:
+    irm https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/latest/install.ps1 | iex
+    # OBS/CDN one-click:
+    irm https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge/install.ps1 | iex
+    # Explicit version / mirror:
     .\install.ps1 -Version 1.0.0
-    .\install.ps1 -Url https://gitcode.com/<owner>/<repo>/releases/download/<version> -Version 1.0.0
+    .\install.ps1 -Url https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/<version> -Version 1.0.0
+
+Note:
+    Without -Url, the script auto-probes GitHub / GitCode / OBS-CDN mirrors
+    and downloads binaries from the first reachable one.
 
 Environment Variables:
-    ARTIFACT_URL_FROM_ENV  Same as -Url
+    ARTIFACT_URL_FROM_ENV  Same as -Url (skips mirror probing)
     APP_VERSION            Same as -Version
 "@
         return
@@ -299,6 +309,27 @@ Environment Variables:
         return $null
     }
 
+
+    # ---------------------------------------------------------------------------
+    # Get-MirrorUrls - 返回所有镜像 base URL（用于二进制下载的多源探测）
+    #
+    # 三个渠道同一份脚本通用：
+    #   GitHub Release / GitCode Release / OBS-CDN
+    # CI 烤制时会把 DEFAULT_ARTIFACT_URL 替换为 GitHub Release 地址，
+    # 但无论烤成什么，这里都会给出完整镜像列表供 Download-Binary 逐个探测。
+    # ---------------------------------------------------------------------------
+    function Get-MirrorUrls {
+        $v = $Script:VERSION
+        return @(
+            # 1. CI 烤制的地址（通常是 GitHub Release URL，含版本号路径）
+            $Script:DEFAULT_ARTIFACT_URL
+            # 2. GitCode Release（含版本号路径）
+            "https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/${v}"
+            # 3. OBS/CDN 扁平结构（版本号在文件名里，base URL 不含版本路径）
+            "https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge"
+        )
+    }
+
     # ---------------------------------------------------------------------------
     # Download-Binary - 从远程下载 tar.gz 包并解压
     #
@@ -308,11 +339,32 @@ Environment Variables:
         param([string]$Url, [string]$OutputDir)
 
         $tarballName = Get-BinaryName
-        $remoteUrl = "${Url}/${tarballName}"
         $localTarball = Join-Path $OutputDir $tarballName
 
-        Write-Step "Downloading ${remoteUrl} ..."
-        Invoke-HttpGet -Url $remoteUrl -Output $localTarball
+        # 确定下载源列表：显式 -Url 优先（不探测），否则用全部镜像
+        if ($Url) {
+            $mirrors = @($Url)
+        } else {
+            $mirrors = Get-MirrorUrls
+        }
+
+        $downloaded = $false
+        foreach ($mirror in $mirrors) {
+            $remoteUrl = "${mirror}/${tarballName}"
+            Write-Step "Downloading from ${remoteUrl} ..."
+            try {
+                Invoke-WebRequest -Uri $remoteUrl -OutFile $localTarball -UseBasicParsing -TimeoutSec 30 -ErrorAction Stop
+                $downloaded = $true
+                break
+            } catch {
+                Write-Warn "Failed: ${mirror} — $($_.Exception.Message)"
+                continue
+            }
+        }
+
+        if (-not $downloaded) {
+            Write-ErrorAndExit "Failed to download from all mirrors: $($mirrors -join ', ')"
+        }
 
         # 解压 tar.gz（Windows 10+ 内置 tar）
         Write-Step "Extracting ${tarballName} ..."
