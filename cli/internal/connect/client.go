@@ -179,9 +179,6 @@ func dialWithRetry(ctx context.Context, url string, opts *websocket.DialOptions,
 			body, _ := io.ReadAll(resp.Body) //nolint:errcheck // 错误路径中读取 body 失败不影响错误返回
 			_ = resp.Body.Close()            //nolint:errcheck // 错误路径中关闭 body 失败不可操作
 			reason := strings.TrimSpace(string(body))
-			if reason == "" {
-				reason = "too many requests"
-			}
 			if attempt == 0 {
 				fmt.Printf("Connection rejected by gateway: %s, retrying...\n", reason)
 			}
