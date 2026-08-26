@@ -133,8 +133,8 @@ jobs:
           mkdir -p /tmp/verify
           tar xzf "$TARBALL" -C /tmp/verify
           BIN="/tmp/verify/devbridge_linux_amd64_${VERSION}"
-          echo "实际注入的版本号: $(./"$BIN" version)"
-          [ "$(./"$BIN" version)" = "${VERSION}" ] || \
+          echo "实际注入的版本号: $("$BIN" version)"
+          [ "$("$BIN" version)" = "${VERSION}" ] || \
             { echo "❌ 版本号注入不匹配！"; exit 1; }
           rm -rf /tmp/verify
 
