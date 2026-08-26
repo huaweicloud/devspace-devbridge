@@ -142,8 +142,8 @@ Examples:
     bash install.sh -u https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/<version> -v 1.0.0
 
 Note:
-    Without -u, the script auto-probes GitHub / GitCode / OBS mirrors
-    and downloads binaries from the first reachable one.
+    Without -u, the script downloads from the baked-in DEFAULT_ARTIFACT_URL
+    (GitHub / GitCode / OBS, depending on where the script was obtained).
 
 Environment Variables:
     ARTIFACT_URL_FROM_ENV  Same as --url (skips mirror probing)
@@ -331,18 +331,15 @@ prompt_clean_old_data() {
 }
 
 # ---------------------------------------------------------------------------
-# get_mirror_urls - 返回所有镜像 base URL（用于二进制下载的多源探测）
+# get_mirror_urls - 返回下载源 base URL
 #
-# 三个渠道同一份脚本通用：
-#   GitHub Release / GitCode Release / OBS
-# CI 烤制时会把 DEFAULT_ARTIFACT_URL 替换为 GitHub Release 地址，
-# 但无论烤成什么，这里都会给出完整镜像列表供 download_binary 逐个探测。
+# 各渠道只从自己的 DEFAULT_ARTIFACT_URL 下载，不做跨源 fallback：
+#   GitHub Release 的脚本 → 只从 GitHub 下载
+#   GitCode Release 的脚本 → 只从 GitCode 下载（upload-gitcode-release.sh 重新烤制）
+#   OBS 桶的脚本 → 只从 OBS 下载（手动上传时重新烤制）
 # ---------------------------------------------------------------------------
 get_mirror_urls() {
-    local v="${VERSION}"
     echo "${DEFAULT_ARTIFACT_URL}"
-    echo "https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/${v}"
-    echo "https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge"
 }
 
 # ---------------------------------------------------------------------------

@@ -113,8 +113,8 @@ Examples:
     .\install.ps1 -Url https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/<version> -Version 1.0.0
 
 Note:
-    Without -Url, the script auto-probes GitHub / GitCode / OBS-CDN mirrors
-    and downloads binaries from the first reachable one.
+    Without -Url, the script downloads from the baked-in DEFAULT_ARTIFACT_URL
+    (GitHub / GitCode / OBS, depending on where the script was obtained).
 
 Environment Variables:
     ARTIFACT_URL_FROM_ENV  Same as -Url (skips mirror probing)
@@ -311,23 +311,12 @@ Environment Variables:
 
 
     # ---------------------------------------------------------------------------
-    # Get-MirrorUrls - 返回所有镜像 base URL（用于二进制下载的多源探测）
+    # Get-MirrorUrls - 返回下载源 base URL
     #
-    # 三个渠道同一份脚本通用：
-    #   GitHub Release / GitCode Release / OBS-CDN
-    # CI 烤制时会把 DEFAULT_ARTIFACT_URL 替换为 GitHub Release 地址，
-    # 但无论烤成什么，这里都会给出完整镜像列表供 Download-Binary 逐个探测。
+    # 各渠道只从自己的 DEFAULT_ARTIFACT_URL 下载，不做跨源 fallback。
     # ---------------------------------------------------------------------------
     function Get-MirrorUrls {
-        $v = $Script:VERSION
-        return @(
-            # 1. CI 烤制的地址（通常是 GitHub Release URL，含版本号路径）
-            $Script:DEFAULT_ARTIFACT_URL
-            # 2. GitCode Release（含版本号路径）
-            "https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/${v}"
-            # 3. OBS/CDN 扁平结构（版本号在文件名里，base URL 不含版本路径）
-            "https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge"
-        )
+        return @($Script:DEFAULT_ARTIFACT_URL)
     }
 
     # ---------------------------------------------------------------------------
