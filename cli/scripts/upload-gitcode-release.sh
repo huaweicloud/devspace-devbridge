@@ -222,47 +222,66 @@ upload_asset() {
 
   log_info "  上传: ${filename} (${filesize} bytes)"
 
-  # Step 1: 获取 OBS 预签名上传地址
-  local resp code
-  resp=$(curl -s -w "\n%{http_code}" \
-    -H "Authorization: Bearer ${TOKEN}" \
-    "$(api_url "/releases/${tag}/upload_url")?file_name=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${filename}'))")")
+  local max_retries=3
+  local attempt
 
-  code=$(echo "$resp" | tail -1)
-  local body
-  body=$(echo "$resp" | sed '$d')
+  for attempt in $(seq 1 "$max_retries"); do
+    # Step 1: 获取 OBS 预签名上传地址
+    local resp code
+    resp=$(curl -s -w "\n%{http_code}" \
+      -H "Authorization: Bearer ${TOKEN}" \
+      "$(api_url "/releases/${tag}/upload_url")?file_name=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${filename}'))")")
 
-  if [[ "$code" != "200" ]]; then
-    log_warn "    ❌ ${filename} 获取上传地址失败 (HTTP ${code}): ${body}"
-    return 1
-  fi
+    code=$(echo "$resp" | tail -1)
+    local body
+    body=$(echo "$resp" | sed '$d')
 
-  # 解析预签名 URL 和 headers
-  local upload_url content_type obs_meta obs_acl obs_callback
-  upload_url=$(echo "$body" | jq -r '.url')
-  content_type=$(echo "$body" | jq -r '.headers["Content-Type"] // "application/octet-stream"')
-  obs_meta=$(echo "$body" | jq -r '.headers["x-obs-meta-project-id"] // empty')
-  obs_acl=$(echo "$body" | jq -r '.headers["x-obs-acl"] // empty')
-  obs_callback=$(echo "$body" | jq -r '.headers["x-obs-callback"] // empty')
+    if [[ "$code" != "200" ]]; then
+      log_warn "    ❌ ${filename} 获取上传地址失败 (HTTP ${code}): ${body}"
+      # 5xx 错误重试，4xx 不重试
+      if [[ "${code:0:1}" == "5" && "$attempt" -lt "$max_retries" ]]; then
+        log_warn "    第 ${attempt}/${max_retries} 次重试（等待 5 秒）..."
+        sleep 5
+        continue
+      fi
+      return 1
+    fi
 
-  # Step 2: PUT 文件到预签名 URL
-  local put_code
-  put_code=$(curl -s -o /tmp/gc_upload_resp.txt -w "%{http_code}" \
-    -X PUT \
-    -H "Content-Type: ${content_type}" \
-    ${obs_meta:+-H "x-obs-meta-project-id: ${obs_meta}"} \
-    ${obs_acl:+-H "x-obs-acl: ${obs_acl}"} \
-    ${obs_callback:+-H "x-obs-callback: ${obs_callback}"} \
-    --data-binary @"${file}" \
-    "$upload_url")
+    # 解析预签名 URL 和 headers
+    local upload_url content_type obs_meta obs_acl obs_callback
+    upload_url=$(echo "$body" | jq -r '.url')
+    content_type=$(echo "$body" | jq -r '.headers["Content-Type"] // "application/octet-stream"')
+    obs_meta=$(echo "$body" | jq -r '.headers["x-obs-meta-project-id"] // empty')
+    obs_acl=$(echo "$body" | jq -r '.headers["x-obs-acl"] // empty')
+    obs_callback=$(echo "$body" | jq -r '.headers["x-obs-callback"] // empty')
 
-  if [[ "$put_code" == "200" || "$put_code" == "201" ]]; then
-    log_info "    ✅ ${filename} 上传成功"
-    return 0
-  else
-    log_warn "    ❌ ${filename} 上传失败 (HTTP ${put_code}): $(cat /tmp/gc_upload_resp.txt 2>/dev/null)"
-    return 1
-  fi
+    # Step 2: PUT 文件到预签名 URL
+    local put_code
+    put_code=$(curl -s -o /tmp/gc_upload_resp.txt -w "%{http_code}" \
+      -X PUT \
+      -H "Content-Type: ${content_type}" \
+      ${obs_meta:+-H "x-obs-meta-project-id: ${obs_meta}"} \
+      ${obs_acl:+-H "x-obs-acl: ${obs_acl}"} \
+      ${obs_callback:+-H "x-obs-callback: ${obs_callback}"} \
+      --data-binary @"${file}" \
+      "$upload_url")
+
+    if [[ "$put_code" == "200" || "$put_code" == "201" ]]; then
+      log_info "    ✅ ${filename} 上传成功"
+      return 0
+    else
+      log_warn "    ❌ ${filename} 上传失败 (HTTP ${put_code}): $(cat /tmp/gc_upload_resp.txt 2>/dev/null)"
+      # 5xx 错误重试，4xx 不重试
+      if [[ "${put_code:0:1}" == "5" && "$attempt" -lt "$max_retries" ]]; then
+        log_warn "    第 ${attempt}/${max_retries} 次重试（等待 5 秒）..."
+        sleep 5
+        continue
+      fi
+      return 1
+    fi
+  done
+
+  return 1
 }
 
 # ===========================================================================
