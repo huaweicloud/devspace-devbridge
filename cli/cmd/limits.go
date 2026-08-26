@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var limitsCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var limitsCmd = &cobra.Command{ //nolint:gochecknoglobals
 	Use:   "limits",
 	Short: i18n.T(i18n.Msg.Limits.LimitsShort),
 	Args:  cobra.NoArgs,
@@ -44,6 +44,6 @@ func printLimitsDetail(l *api.LimitsResult) {
 	})
 }
 
-func init() { //nolint:gochecknoinits // cobra CLI 惯用 init 函数
+func init() { //nolint:gochecknoinits
 	RootCmd.AddCommand(limitsCmd)
 }

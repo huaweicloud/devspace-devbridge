@@ -7,9 +7,9 @@ import (
 	"sync/atomic"
 )
 
-var currentLevel atomic.Int32 //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var currentLevel atomic.Int32 //nolint:gochecknoglobals
 
-func init() { //nolint:gochecknoinits // cobra CLI 惯用 init 函数
+func init() { //nolint:gochecknoinits
 	currentLevel.Store(int32(slog.LevelError + 1))
 }
 
@@ -18,7 +18,7 @@ func LogLevel() slog.Level {
 }
 
 func SetLevel(level slog.Level) {
-	currentLevel.Store(int32(level)) //nolint:gosec // slog.Level 实际取值 -8~8，远在 int32 范围内
+	currentLevel.Store(int32(level)) //nolint:gosec
 }
 
 // NewHandler 创建一个基于 slog.TextHandler 的日志 handler，
@@ -29,7 +29,6 @@ func NewHandler(w io.Writer) slog.Handler {
 	}
 }
 
-// levelHandler 包装 slog.TextHandler，动态检查日志级别.
 type levelHandler struct {
 	inner slog.Handler
 }

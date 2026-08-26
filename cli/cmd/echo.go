@@ -18,19 +18,18 @@ import (
 )
 
 var (
-	echoPort      int    //nolint:gochecknoglobals // cobra CLI 惯用全局变量
-	echoInterface string //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+	echoPort      int    //nolint:gochecknoglobals
+	echoInterface string //nolint:gochecknoglobals
 )
 
-var pingInterval int //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var pingInterval int //nolint:gochecknoglobals
 
-var echoCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var echoCmd = &cobra.Command{ //nolint:gochecknoglobals
 	Use:   "echo",
 	Short: i18n.T(i18n.Msg.Echo.EchoShort),
 	Args:  cobra.NoArgs,
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
-		// Only validate port when -p is explicitly provided.
-		// When -p is omitted, echoPort stays 0 and net.Listen picks a random free port.
+
 		if cmd.Flags().Changed("port") && (echoPort < 1 || echoPort > 65535) {
 			return fmt.Errorf("Invalid port number %d (Port must be between 1 and 65535)", echoPort)
 		}
@@ -43,7 +42,7 @@ var echoCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全�
 	}),
 }
 
-var pingCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var pingCmd = &cobra.Command{ //nolint:gochecknoglobals
 	Use:   "ping <uri>",
 	Short: i18n.T(i18n.Msg.Ping.PingShort),
 	Args:  cobra.ExactArgs(1),
@@ -117,10 +116,10 @@ func handleHTTPEcho(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte(sb.String())) //nolint:errcheck // HTTP 响应写入失败不可操作
+	_, _ = w.Write([]byte(sb.String())) //nolint:errcheck
 }
 
-func init() { //nolint:gochecknoinits // cobra CLI 惯用 init 函数
+func init() { //nolint:gochecknoinits
 	echoCmd.Flags().IntVarP(&echoPort, "port", "p", 0, i18n.T(i18n.Msg.Common.FlagEchoPort))
 	echoCmd.Flags().StringVarP(&echoInterface, "interface", "i", "127.0.0.1", i18n.T(i18n.Msg.Common.FlagInterface))
 	RootCmd.AddCommand(echoCmd)

@@ -30,7 +30,6 @@ func isDebugEnabled() bool {
 	return slog.Default().Enabled(context.Background(), slog.LevelDebug)
 }
 
-// sshEventCategory 根据 eventID 返回 SSH 事件类别标签.
 func sshEventCategory(eventID int) string {
 	switch {
 	case eventID >= 1 && eventID <= 10:
@@ -48,7 +47,6 @@ func sshEventCategory(eventID int) string {
 	}
 }
 
-// sshTraceFunc 将 dev-tunnels-ssh 的 Trace 事件桥接到 slog.
 func sshTraceFunc(level ssh.TraceLevel, eventID int, message string) {
 	category := sshEventCategory(eventID)
 	switch level {
@@ -63,7 +61,6 @@ func sshTraceFunc(level ssh.TraceLevel, eventID int, message string) {
 	}
 }
 
-// traceFunc 返回当前日志级别下的 TraceFunc，非 Debug 级别时返回 nil.
 func traceFunc() ssh.TraceFunc {
 	if isDebugEnabled() {
 		return sshTraceFunc
@@ -73,24 +70,17 @@ func traceFunc() ssh.TraceFunc {
 
 // 隧道服务连接地址配置（导出，供 cmd 包引用）.
 var (
-	ServerAddr = "gateway.cn-north-4-bridge.myhuaweicloud.com:443" //nolint:gochecknoglobals // cobra CLI 惯用全局变量
-	ServerHost = "cn-north-4-bridge.myhuaweicloud.com"             // clusterId 域名，用于拼接 {tunnelID}.{ServerHost} //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+	ServerAddr = "gateway.cn-north-4-bridge.myhuaweicloud.com:443" //nolint:gochecknoglobals
+	ServerHost = "cn-north-4-bridge.myhuaweicloud.com"             //nolint:gochecknoglobals
 )
 
-// relayChannelType 监听端外层 SSH ClientSession 接收的通道类型.
-// 网关在 send端连接时，会在 host 的外层 session 上 OpenChannelWithType("relay") 打开通道
-// 监听端通过 AcceptChannel 接收后按 ChannelType 匹配，每个 relay 通道承载一个内层 SSH 会话
 const relayChannelType = "relay"
 
-// sessionLookup 监听端内层 ServerSession 映射表.
-// key = relay 通道的 ChannelID，value = 该通道上的内层 SSH ServerSession
-// 当 send端请求端口转发时，数据通过 relay 通道到达对应的内层 ServerSession
-var sessionLookup = make(map[uint32]*ssh.ServerSession) //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var sessionLookup = make(map[uint32]*ssh.ServerSession) //nolint:gochecknoglobals
 
-// persistentHostKey 隧道生命周期内共用的 host key，确保重连时 host key 不变.
-var persistentHostKey ssh.KeyPair //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var persistentHostKey ssh.KeyPair //nolint:gochecknoglobals
 
-func init() { //nolint:gochecknoinits // cobra CLI 惯用 init 函数
+func init() { //nolint:gochecknoinits
 	var err error
 	persistentHostKey, err = ssh.GenerateKeyPair(ssh.AlgoPKEcdsaSha2P256)
 	if err != nil {
@@ -98,7 +88,6 @@ func init() { //nolint:gochecknoinits // cobra CLI 惯用 init 函数
 	}
 }
 
-// buildWSHeader 构建 WebSocket 连接所需的 header 和 subprotocols.
 func buildWSHeader(jwtToken string, apiKey string) (http.Header, []string) {
 	header := http.Header{}
 	subprotocols := []string{"devbridge-v1"}
@@ -112,7 +101,6 @@ func buildWSHeader(jwtToken string, apiKey string) (http.Header, []string) {
 	return header, subprotocols
 }
 
-// dialWebSocket 建立 WebSocket 连接并包装为 net.Conn，供 SSH 使用.
 func dialWebSocket(ctx context.Context, wsURL, host string, header http.Header, subprotocols []string, maxRetries int) (net.Conn, error) {
 
 	dialCtx, dialCancel := context.WithTimeout(ctx, 30*time.Second)
@@ -135,7 +123,7 @@ func getHTTPClient(serverHost string) *http.Client {
 		Transport: &http.Transport{
 			TLSClientConfig: createTLSConfig(serverHost),
 			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-				// 域名不在公网 DNS，直接连已知 IP.
+
 				return dialer.DialContext(ctx, network, ServerAddr)
 			},
 		},
@@ -155,7 +143,6 @@ func createTLSConfig(serverHost string) *tls.Config {
 	}
 }
 
-// dialWithRetry 带指数退避重试的 WebSocket 拨号，最多重试 maxRetries 次.
 func dialWithRetry(ctx context.Context, url string, opts *websocket.DialOptions, maxRetries int) (*websocket.Conn, error) {
 	const baseDelay = 1 * time.Second
 	const maxDelay = 30 * time.Second
@@ -174,10 +161,9 @@ func dialWithRetry(ctx context.Context, url string, opts *websocket.DialOptions,
 			return nil, errDuplicateHost
 		}
 
-		// 网关返回 429 表示被限流（请求频率或并发连接数），读取 body 显示具体原因.
 		if resp != nil && resp.StatusCode == http.StatusTooManyRequests {
-			body, _ := io.ReadAll(resp.Body) //nolint:errcheck // 错误路径中读取 body 失败不影响错误返回
-			_ = resp.Body.Close()            //nolint:errcheck // 错误路径中关闭 body 失败不可操作
+			body, _ := io.ReadAll(resp.Body) //nolint:errcheck
+			_ = resp.Body.Close()            //nolint:errcheck
 			reason := strings.TrimSpace(string(body))
 			if attempt == 0 {
 				fmt.Printf("Connection rejected by gateway: %s, retrying...\n", reason)
@@ -187,21 +173,19 @@ func dialWithRetry(ctx context.Context, url string, opts *websocket.DialOptions,
 			fmt.Println("Connection failed, retrying...")
 		}
 
-		// 最后一次尝试失败，不再退避等待.
 		if attempt == maxRetries {
 			break
 		}
 
-		// 统一指数退避 + 全抖动：用位移替代循环累乘.
-		delay := baseDelay * time.Duration(1<<uint(attempt)) //nolint:gosec // attempt 是非负重试计数器，不会溢出
+		delay := baseDelay * time.Duration(1<<uint(attempt)) //nolint:gosec
 		if delay > maxDelay {
 			delay = maxDelay
 		}
-		// 使用 crypto/rand 生成安全随机数用于退避抖动.
+
 		var jittered time.Duration
 		bigN, err := rand.Int(rand.Reader, big.NewInt(int64(delay)))
 		if err != nil {
-			jittered = delay / 2 // crypto/rand 失败时回退到半延迟.
+			jittered = delay / 2
 		} else {
 			jittered = time.Duration(bigN.Int64())
 		}

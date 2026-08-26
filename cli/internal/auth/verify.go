@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	// AuthCheckPath 登录后校验 API Key 有效性的接口路径。
 	authCheckPath = "/open-api-inner/v1/relay-controller/auth/check"
 	headerXAPIKey = "X-API-Key"
 )
@@ -22,8 +21,7 @@ const (
 // ErrAPIKeyInvalid 表示 API Key 无效（401）。
 var ErrAPIKeyInvalid = errors.New("api key is invalid or disabled")
 
-// verifyClient 复用 HTTP 连接池，避免每次校验都新建 client。
-var verifyClient = &http.Client{Timeout: 10 * time.Second} //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var verifyClient = &http.Client{Timeout: 10 * time.Second} //nolint:gochecknoglobals
 
 // Identity 是 check 接口返回的身份信息。
 type Identity struct {
@@ -54,7 +52,7 @@ func VerifyAPIKey(apiKey string) (*Identity, error) {
 	if err != nil {
 		return nil, fmt.Errorf("verify api key: %w", err)
 	}
-	defer func() { _ = resp.Body.Close() }() //nolint:errcheck // 响应体关闭失败不可操作
+	defer func() { _ = resp.Body.Close() }() //nolint:errcheck
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 4096))
 	if err != nil {
 		return nil, fmt.Errorf("read verify response: %w", err)
@@ -72,7 +70,6 @@ func VerifyAPIKey(apiKey string) (*Identity, error) {
 	}
 }
 
-// maskAPIKey 对 API Key 做脱敏处理，仅保留前 4 位和后 4 位。
 func maskAPIKey(key string) string {
 	if len(key) <= 8 {
 		return strings.Repeat("*", len(key))

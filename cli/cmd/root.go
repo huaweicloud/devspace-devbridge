@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var verbose bool //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var verbose bool //nolint:gochecknoglobals
 
 var version = "dev"
 
@@ -29,7 +29,7 @@ var RootCmd = &cobra.Command{
 	},
 }
 
-var versionCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var versionCmd = &cobra.Command{ //nolint:gochecknoglobals
 	Use:   "version",
 	Short: i18n.T(i18n.Msg.Common.VersionInfo),
 	Args:  cobra.NoArgs,
@@ -38,7 +38,6 @@ var versionCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用�
 	},
 }
 
-// runError wraps a RunE function to print errors without "Error:" prefix and suppress usage.
 func runError(fn func(cmd *cobra.Command, args []string) error) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		err := fn(cmd, args)
@@ -51,7 +50,7 @@ func runError(fn func(cmd *cobra.Command, args []string) error) func(cmd *cobra.
 	}
 }
 
-func init() { //nolint:gochecknoinits // cobra CLI 惯用 init 函数
+func init() { //nolint:gochecknoinits
 	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, i18n.T(i18n.Msg.Common.FlagVerbose))
 	RootCmd.AddCommand(versionCmd)
 }

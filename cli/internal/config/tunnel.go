@@ -20,7 +20,7 @@ func LoadDefaultTunnel() (string, error) {
 		}
 	}
 	return "", fmt.Errorf("tunnel ID not specified and no default tunnel set, " +
-		"please specify via argument or use 'devbridge set' to set default") //nolint:lll // 错误信息拆行后可读性更差
+		"please specify via argument or use 'devbridge set' to set default") //nolint:lll
 }
 
 // DeleteDefaultTunnel 从配置文件删除默认隧道 ID.

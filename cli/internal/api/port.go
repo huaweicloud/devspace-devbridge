@@ -20,7 +20,6 @@ type portRequest struct {
 	Port           int    `json:"port"`
 }
 
-// updatePortRequest 仅含 allowAnonymous，更新端口时不需要 port 入参。
 type updatePortRequest struct {
 	AllowAnonymous *bool `json:"allowAnonymous,omitempty"`
 }

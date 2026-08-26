@@ -17,7 +17,7 @@ func PingURI(rawURI string, timeout time.Duration) *PingResult {
 	start := time.Now()
 
 	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // 健康探针需跳过 TLS 校验以探测自签证书端点
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
 		Proxy:           http.ProxyFromEnvironment,
 	}
 	client := &http.Client{
@@ -43,7 +43,7 @@ func PingURI(rawURI string, timeout time.Duration) *PingResult {
 		}
 		return result
 	}
-	defer func() { _ = resp.Body.Close() }() //nolint:errcheck // 响应体关闭失败不可操作
+	defer func() { _ = resp.Body.Close() }() //nolint:errcheck
 
 	result.StatusText = resp.Status
 	return result

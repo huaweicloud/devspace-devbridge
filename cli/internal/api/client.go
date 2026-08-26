@@ -57,7 +57,6 @@ func GetAPIErrorCode(err error) string {
 	return ""
 }
 
-// errorBody 适配接口错误返回结构：{"error":{"code":"10007","message":"...","target":"name"}}
 type errorBody struct {
 	Error struct {
 		Code    string `json:"code"`
@@ -71,11 +70,11 @@ type restClientType struct {
 	BaseURL    string
 }
 
-var restClient *restClientType //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var restClient *restClientType //nolint:gochecknoglobals
 
 func InitClient(baseURL string) {
 	if baseURL == "" {
-		// /open-api-inner/v1/relay-controller/tunnels.
+
 		baseURL = config.DefaultServerDomain + "/open-api-inner/v1/relay-controller"
 	}
 	restClient = &restClientType{
@@ -138,23 +137,23 @@ func doRequest(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 	if resp.StatusCode == http.StatusUnauthorized {
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096)) //nolint:errcheck // 错误路径中读取 body 失败不影响错误返回
-		_ = resp.Body.Close()                                  //nolint:errcheck // 错误路径中关闭 body 失败不可操作
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096)) //nolint:errcheck
+		_ = resp.Body.Close()                                  //nolint:errcheck
 		logHTTPResponse(resp, body, time.Since(start))
 		if strings.Contains(string(body), "APIGW.0301") {
 			return nil, fmt.Errorf("%w: %s", errors.New(i18n.T(i18n.Msg.API.APIKeyExpired)), string(body))
 		}
-		// 尝试解析 {"error":{"code","message","target"}} 错误结构.
+
 		if apiErr := parseErrorBody(body); apiErr != nil {
-			return nil, fmt.Errorf("%w: %w", errors.New(i18n.T(i18n.Msg.API.Unauthorized)), apiErr) //nolint:errorlint // 两个 %w 均需包装
+			return nil, fmt.Errorf("%w: %w", errors.New(i18n.T(i18n.Msg.API.Unauthorized)), apiErr) //nolint:errorlint
 		}
 		return nil, fmt.Errorf("%w: %s", errors.New(i18n.T(i18n.Msg.API.Unauthorized)), string(body))
 	}
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096)) //nolint:errcheck // 错误路径中读取 body 失败不影响错误返回
-		_ = resp.Body.Close()                                  //nolint:errcheck // 错误路径中关闭 body 失败不可操作
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096)) //nolint:errcheck
+		_ = resp.Body.Close()                                  //nolint:errcheck
 		logHTTPResponse(resp, body, time.Since(start))
-		// 尝试解析 {"error":{"code","message","target"}} 错误结构.
+
 		if apiErr := parseErrorBody(body); apiErr != nil {
 			return nil, apiErr
 		}
@@ -164,12 +163,10 @@ func doRequest(req *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
-// parseErrorBody 从响应体中解析 {"error":{"code","message","target"}} 错误结构。
-// 解析成功且 code 非空时返回 *apiError，否则返回 nil。
 func parseErrorBody(body []byte) *apiError {
 	var eb errorBody
 	if json.Unmarshal(body, &eb) != nil {
-		return nil // 解析失败，返回 nil 让调用方使用通用错误信息
+		return nil
 	}
 	if eb.Error.Code == "" {
 		return nil
@@ -186,7 +183,7 @@ func request(method, path string, body interface{}, result interface{}) error {
 		return err
 	}
 	if body == nil {
-		bodyBytes = nil // GET/DELETE 无 body，避免发送 "null"
+		bodyBytes = nil
 	}
 
 	req, err := http.NewRequestWithContext(context.Background(), method, url, bytes.NewReader(bodyBytes))
@@ -204,16 +201,15 @@ func request(method, path string, body interface{}, result interface{}) error {
 		return err
 	}
 	respBody, err := io.ReadAll(resp.Body)
-	_ = resp.Body.Close() //nolint:errcheck // 响应已读完，关闭失败不可操作
+	_ = resp.Body.Close() //nolint:errcheck
 	if err != nil {
 		return err
 	}
 	logHTTPResponse(resp, respBody, time.Since(start))
 
-	// 后端统一返回裸数据，直接反序列化给调用方.
 	if result != nil && len(respBody) > 0 {
 		if err := json.Unmarshal(respBody, result); err != nil {
-			return fmt.Errorf("%w: %w", errors.New(i18n.T(i18n.Msg.API.InvalidResponse)), err) //nolint:errorlint // 两个 %w 均需包装
+			return fmt.Errorf("%w: %w", errors.New(i18n.T(i18n.Msg.API.InvalidResponse)), err) //nolint:errorlint
 		}
 	}
 	return nil

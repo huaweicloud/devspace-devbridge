@@ -14,7 +14,7 @@ var DefaultServerDomain = "http://relay-dev-local.tailb4159e.ts.net:8443"
 var ErrKeyNotFound = errors.New("key not found")
 
 var (
-	configMu sync.Mutex //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+	configMu sync.Mutex //nolint:gochecknoglobals
 )
 
 func configPath() (string, error) {
@@ -30,7 +30,7 @@ func Load() (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, err := os.ReadFile(path) //nolint:gosec // path 由 configPath() 内部拼接，不接外部输入
+	data, err := os.ReadFile(path) //nolint:gosec
 	if err != nil {
 		if os.IsNotExist(err) {
 			return make(map[string]any), nil
@@ -59,10 +59,10 @@ func Save(cfg map[string]any) error {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return err
 	}
-	if err := os.Chmod(dir, 0o700); err != nil { //nolint:gosec // 0700 是目录权限（owner rwx），非文件
+	if err := os.Chmod(dir, 0o700); err != nil { //nolint:gosec
 		return err
 	}
-	// 没有数据时写空文件，而不是 "{}"
+
 	if len(cfg) == 0 {
 		return os.WriteFile(path, nil, 0o600)
 	}

@@ -54,20 +54,12 @@ type callbackResponse struct {
 	UserID   string `json:"userId"`
 }
 
-// loginCallbackEnvelope 适配浏览器登录回调返回的包装格式：
-//
-//	{"error_code":"0000","error_msg":"","result":{"apiKey":"...","userName":"...","userId":"..."}}
-//
-// error_code 为 loginSuccessCode 表示成功，其他值为失败。
 type loginCallbackEnvelope struct {
 	ErrorCode string           `json:"error_code"`
 	ErrorMsg  string           `json:"error_msg"`
 	Result    callbackResponse `json:"result"`
 }
 
-// loginError 登录回调返回的错误，格式与 API 客户端 (api.apiError) 保持一致：
-//
-//	error code: %s, error message: %s
 type loginError struct {
 	Code    string
 	Message string
@@ -87,7 +79,6 @@ const (
 	loginPageURL     = "%s/space/devbridge/redirect?%s"
 	envHWAPIKey      = "HW_API_KEY"
 
-	// LoginSuccessCode 浏览器登录回调中 error_code 的成功值。
 	loginSuccessCode = "0000"
 )
 
@@ -98,8 +89,8 @@ func hcBrowserLogin() (Credential, *UserInfo, error) {
 	if err != nil {
 		return Credential{}, nil, err
 	}
-	defer func() { _ = listener.Close() }()     //nolint:errcheck // 监听器关闭失败不可操作
-	port := listener.Addr().(*net.TCPAddr).Port //nolint:errcheck // TCP 监听器类型断言始终安全
+	defer func() { _ = listener.Close() }()     //nolint:errcheck
+	port := listener.Addr().(*net.TCPAddr).Port //nolint:errcheck
 
 	lang := "en-us"
 	if i18n.DetectSystemLang() == i18n.ZH {
@@ -189,15 +180,10 @@ func handleLoginCallback(
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte("OK")) //nolint:errcheck // HTTP 回调响应写入失败不可操作
+	_, _ = w.Write([]byte("OK")) //nolint:errcheck
 	resultCh <- resp
 }
 
-// parseLoginCallbackBody 解析浏览器登录回调的响应体。
-//
-// 按包装格式 {"error_code","error_msg","result"} 解析：
-//   - error_code 为 "0000" 表示成功，返回 result 中的数据；
-//   - error_code 为其他值表示失败，返回错误（格式与 API 客户端一致，前缀 Failed to login:）。
 func parseLoginCallbackBody(body []byte) (callbackResponse, error) {
 	var envelope loginCallbackEnvelope
 	if err := json.Unmarshal(body, &envelope); err != nil {

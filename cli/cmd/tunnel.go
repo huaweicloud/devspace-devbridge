@@ -12,13 +12,13 @@ import (
 )
 
 var (
-	tunnelDescription string //nolint:gochecknoglobals // cobra CLI 惯用全局变量
-	tunnelExpiration  int    //nolint:gochecknoglobals // cobra CLI 惯用全局变量
-	tunnelName        string //nolint:gochecknoglobals // cobra CLI 惯用全局变量
-	tunnelScope       string //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+	tunnelDescription string //nolint:gochecknoglobals
+	tunnelExpiration  int    //nolint:gochecknoglobals
+	tunnelName        string //nolint:gochecknoglobals
+	tunnelScope       string //nolint:gochecknoglobals
 )
 
-var listCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var listCmd = &cobra.Command{ //nolint:gochecknoglobals
 	Use:   "list",
 	Short: i18n.T(i18n.Msg.Tunnel.ListShort),
 	Args:  cobra.NoArgs,
@@ -53,7 +53,7 @@ var listCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全�
 	}),
 }
 
-var createCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var createCmd = &cobra.Command{ //nolint:gochecknoglobals
 	Use:   "create [name]",
 	Short: i18n.T(i18n.Msg.Tunnel.CreateShort),
 	Args:  cobra.ExactArgs(1),
@@ -76,7 +76,7 @@ var createCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全
 	}),
 }
 
-var showCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 	Use:   "show [tunnel-id]",
 	Short: i18n.T(i18n.Msg.Tunnel.ShowShort),
 	Args:  cobra.MaximumNArgs(1),
@@ -107,7 +107,7 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全�
 	}),
 }
 
-var updateCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var updateCmd = &cobra.Command{ //nolint:gochecknoglobals
 	Use:   "update [tunnel-id]",
 	Short: i18n.T(i18n.Msg.Tunnel.UpdateShort),
 	Args:  cobra.MaximumNArgs(1),
@@ -136,7 +136,7 @@ var updateCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全
 	}),
 }
 
-var deleteCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var deleteCmd = &cobra.Command{ //nolint:gochecknoglobals
 	Use:   "delete [tunnel-id]",
 	Short: i18n.T(i18n.Msg.Tunnel.DeleteShort),
 	Args:  cobra.MaximumNArgs(1),
@@ -149,7 +149,7 @@ var deleteCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全
 			return err
 		}
 		if def, e := config.LoadDefaultTunnel(); e == nil && def == tunnelID {
-			_ = config.DeleteDefaultTunnel() //nolint:errcheck // keyring 中不存在时删除失败属正常
+			_ = config.DeleteDefaultTunnel() //nolint:errcheck
 			fmt.Println(i18n.T(i18n.Msg.Tunnel.DefaultTunnelCleared))
 		}
 		fmt.Println(i18n.T(i18n.Msg.Tunnel.TunnelDeleted))
@@ -157,7 +157,7 @@ var deleteCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全
 	}),
 }
 
-var deleteAllCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var deleteAllCmd = &cobra.Command{ //nolint:gochecknoglobals
 	Use:   "delete-all",
 	Short: i18n.T(i18n.Msg.Tunnel.DeleteAllShort),
 	Args:  cobra.NoArgs,
@@ -170,7 +170,7 @@ var deleteAllCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用
 	}),
 }
 
-var tokenCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var tokenCmd = &cobra.Command{ //nolint:gochecknoglobals
 	Use:   "token [tunnel-id]",
 	Short: i18n.T(i18n.Msg.Tunnel.TokenIssueShort),
 	Args:  cobra.MaximumNArgs(1),
@@ -192,7 +192,7 @@ var tokenCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全�
 	}),
 }
 
-var setCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var setCmd = &cobra.Command{ //nolint:gochecknoglobals
 	Use:   "set [tunnel-id]",
 	Short: i18n.T(i18n.Msg.Tunnel.SetShort),
 	Args:  cobra.ExactArgs(1),
@@ -214,12 +214,12 @@ var setCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局
 	}),
 }
 
-var unsetCmd = &cobra.Command{ //nolint:gochecknoglobals // cobra CLI 惯用全局变量
+var unsetCmd = &cobra.Command{ //nolint:gochecknoglobals
 	Use:   "unset",
 	Short: i18n.T(i18n.Msg.Tunnel.UnsetShort),
 	Args:  cobra.NoArgs,
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
-		_ = config.DeleteDefaultTunnel() //nolint:errcheck // keyring 中不存在时删除失败属正常
+		_ = config.DeleteDefaultTunnel() //nolint:errcheck
 		fmt.Println(i18n.T(i18n.Msg.Tunnel.DefaultTunnelUnset))
 		return nil
 	}),
@@ -232,7 +232,7 @@ func getTunnelIDArg(args []string) (string, error) {
 	return api.ResolveTunnelID("")
 }
 
-func init() { //nolint:gochecknoinits // cobra CLI 惯用 init 函数
+func init() { //nolint:gochecknoinits
 	createCmd.Flags().StringVarP(&tunnelDescription, "description", "d", "", i18n.T(i18n.Msg.Tunnel.FlagDescription))
 	createCmd.Flags().IntVarP(&tunnelExpiration, "expiration", "e", 0, i18n.T(i18n.Msg.Tunnel.FlagExpiration))
 
@@ -241,7 +241,7 @@ func init() { //nolint:gochecknoinits // cobra CLI 惯用 init 函数
 	updateCmd.Flags().IntVarP(&tunnelExpiration, "expiration", "e", 0, i18n.T(i18n.Msg.Tunnel.FlagExpiration))
 
 	tokenCmd.Flags().StringVarP(&tunnelScope, "scope", "s", "", i18n.T(i18n.Msg.Tunnel.FlagScope))
-	_ = tokenCmd.MarkFlagRequired("scope") //nolint:errcheck // flag 名固定，不会失败
+	_ = tokenCmd.MarkFlagRequired("scope") //nolint:errcheck
 
 	RootCmd.AddCommand(listCmd, createCmd, showCmd, updateCmd, deleteCmd, deleteAllCmd, tokenCmd, setCmd, unsetCmd)
 }
