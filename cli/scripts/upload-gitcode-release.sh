@@ -329,6 +329,10 @@ fi
 # ---------------------------------------------------------------------------
 log_info "===== 3/4 上传产物到版本 Release ====="
 
+# 清理旧附件（重跑时避免同名文件冲突）
+log_info "清理版本 Release 旧附件..."
+delete_all_assets "$RELEASE_TAG"
+
 # 收集目录下所有文件（按文件名排序，输出可复现）
 mapfile -t FILES < <(find "$DIR" -maxdepth 1 -type f | sort)
 
