@@ -267,6 +267,39 @@ Environment Variables:
     }
 
     # ---------------------------------------------------------------------------
+    # Resolve-TarCommand - 查找可用的 tar 命令
+    #
+    # Windows 10 1803+ 内置 tar.exe 在 C:\Windows\System32，但某些企业管控环境
+    # 会把 System32 从 PATH 中移除，导致裸 tar 调用失败。
+    # 本函数按优先级查找：PATH -> System32 -> Git 安装目录。
+    # ---------------------------------------------------------------------------
+    function Resolve-TarCommand {
+        # 1. tar 已在 PATH 中
+        $cmd = Get-Command tar -ErrorAction SilentlyContinue
+        if ($cmd) { return $cmd.Source }
+
+        # 2. Windows 内置 tar.exe（System32 / SysWOW64）
+        $sysPaths = @(
+            Join-Path $env:SystemRoot "System32\tar.exe"
+            Join-Path $env:SystemRoot "SysWOW64\tar.exe"
+        )
+        foreach ($p in $sysPaths) {
+            if (Test-Path $p) { return $p }
+        }
+
+        # 3. Git for Windows 自带的 tar.exe
+        $gitPaths = @(
+            "C:\Program Files\Git\usr\bin\tar.exe",
+            "C:\Program Files (x86)\Git\usr\bin\tar.exe"
+        )
+        foreach ($p in $gitPaths) {
+            if (Test-Path $p) { return $p }
+        }
+
+        return $null
+    }
+
+    # ---------------------------------------------------------------------------
     # Download-Binary - 从远程下载 tar.gz 包并解压
     #
     # 返回解压后的二进制文件路径（.sha256 也在同目录下，供 Verify-Checksum 使用）
@@ -283,7 +316,18 @@ Environment Variables:
 
         # 解压 tar.gz（Windows 10+ 内置 tar）
         Write-Step "Extracting ${tarballName} ..."
-        tar xzf "$localTarball" -C "$OutputDir"
+        $tarCmd = Resolve-TarCommand
+        if (-not $tarCmd) {
+            Write-ErrorAndExit @"
+tar command not found. Cannot extract ${tarballName}.
+Possible fixes:
+  1. Ensure C:\Windows\System32 is in your PATH (Windows 10 1803+ has built-in tar.exe)
+  2. Install Git for Windows: winget install Git.Git
+  3. Re-run this installer after adding tar to PATH
+"@
+        }
+
+        & $tarCmd xzf "$localTarball" -C "$OutputDir"
 
         # 返回解压后的二进制路径
         $binaryNameInside = Get-BinaryNameInside
