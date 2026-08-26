@@ -206,9 +206,16 @@ check_platform() {
 }
 
 # ---------------------------------------------------------------------------
-# get_binary_name - 获取远程产物二进制文件名
+# get_binary_name - 获取远程产物 tar.gz 包名
 # ---------------------------------------------------------------------------
 get_binary_name() {
+    echo "${APP_NAME}_${GOOS}_${ARCH}_${VERSION}${EXE_SUFFIX}.tar.gz"
+}
+
+# ---------------------------------------------------------------------------
+# get_binary_name_inside - 获取 tar 包内的二进制文件名（不含 .tar.gz 后缀）
+# ---------------------------------------------------------------------------
+get_binary_name_inside() {
     echo "${APP_NAME}_${GOOS}_${ARCH}_${VERSION}${EXE_SUFFIX}"
 }
 
@@ -276,38 +283,21 @@ check_existing_install() {
 }
 
 # ---------------------------------------------------------------------------
-# check_remote_hash - 比较本地与远程 SHA256 哈希
+# check_remote_hash - 比较本地已安装版本与目标版本
+#
+# 打包后 .sha256 在 tar.gz 内，不再单独下载。
+# 改为直接比较已安装二进制的 version 输出与目标版本号。
 # ---------------------------------------------------------------------------
 check_remote_hash() {
     local binary_path="$1"
-    local hash_url="${ARTIFACT_URL}/${APP_NAME}_${GOOS}_${ARCH}_${VERSION}.sha256"
 
-    step "Downloading hash from ${hash_url}"
-    local tmp_file
-    tmp_file=$(mktemp)
-    _cleanup_tmp_dirs+=("$(dirname "${tmp_file}")")
+    local installed_version
+    installed_version=$("${binary_path}" version 2>/dev/null || echo "unknown")
 
-    http_get "${hash_url}" "${tmp_file}" "besteffort"
-    if [[ ! -s "${tmp_file}" ]]; then
-        step "Failed to download remote hash, skipping comparison"
-        return 0
-    fi
+    step "Installed version: ${installed_version}"
+    step "Target version:    ${VERSION}"
 
-    local local_hash
-    local_hash=$(compute_sha256 "${binary_path}")
-    if [[ -z "${local_hash}" ]]; then
-        step "No sha256 tool available, skipping comparison"
-        return 0
-    fi
-
-    local remote_hash
-    remote_hash=$(grep "${APP_NAME}" "${tmp_file}" | head -1 | awk '{print $1}')
-    [[ -z "${remote_hash}" ]] && { step "Remote hash is empty, skipping comparison"; return 0; }
-
-    step "Hash Local:  ${local_hash}"
-    step "Hash Remote: ${remote_hash}"
-
-    [[ "${local_hash}" == "${remote_hash}" ]]
+    [[ "${installed_version}" == "${VERSION}" ]]
 }
 
 # ---------------------------------------------------------------------------
@@ -331,23 +321,28 @@ prompt_clean_old_data() {
 }
 
 # ---------------------------------------------------------------------------
-# download_binary - 从远程下载二进制文件及 SHA256 校验文件
+# download_binary - 从远程下载 tar.gz 包并解压
+#
+# 返回解压后的二进制文件路径（.sha256 也在同目录下，供 verify_checksum 使用）
 # ---------------------------------------------------------------------------
 download_binary() {
     local url="$1" output_dir="$2"
-    local filename
-    filename=$(get_binary_name)
-    local remote_url="${url}/${filename}"
-    local local_file="${output_dir}/${filename}"
+    local tarball_name
+    tarball_name=$(get_binary_name)
+    local remote_url="${url}/${tarball_name}"
+    local local_tarball="${output_dir}/${tarball_name}"
 
     verbose "Downloading ${remote_url} ..."
-    http_get "${remote_url}" "${local_file}"
+    http_get "${remote_url}" "${local_tarball}"
 
-    http_get "${url}/${APP_NAME}_${GOOS}_${ARCH}_${VERSION}.sha256" \
-             "${output_dir}/${APP_NAME}_${GOOS}_${ARCH}_${VERSION}.sha256" \
-             "besteffort"
+    # 解压 tar.gz 到 output_dir
+    verbose "Extracting ${tarball_name} ..."
+    tar xzf "${local_tarball}" -C "${output_dir}"
 
-    echo "${local_file}"
+    # 返回解压后的二进制路径
+    local binary_name_inside
+    binary_name_inside=$(get_binary_name_inside)
+    echo "${output_dir}/${binary_name_inside}"
 }
 
 # ---------------------------------------------------------------------------

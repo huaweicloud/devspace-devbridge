@@ -166,9 +166,16 @@ Environment Variables:
     }
 
     # ---------------------------------------------------------------------------
-    # Get-BinaryName - 获取远程产物二进制文件名
+    # Get-BinaryName - 获取远程产物 tar.gz 包名
     # ---------------------------------------------------------------------------
     function Get-BinaryName {
+        return "$($Script:APP_NAME)_$($Script:GOOS)_$($Script:ARCH)_$($Script:VERSION)$($Script:EXE_SUFFIX).tar.gz"
+    }
+
+    # ---------------------------------------------------------------------------
+    # Get-BinaryNameInside - 获取 tar 包内的二进制文件名（不含 .tar.gz 后缀）
+    # ---------------------------------------------------------------------------
+    function Get-BinaryNameInside {
         return "$($Script:APP_NAME)_$($Script:GOOS)_$($Script:ARCH)_$($Script:VERSION)$($Script:EXE_SUFFIX)"
     }
 
@@ -222,32 +229,21 @@ Environment Variables:
     }
 
     # ---------------------------------------------------------------------------
-    # Test-RemoteHash - 比较本地与远程 SHA256 哈希
+    # Test-RemoteHash - 比较本地已安装版本与目标版本
+    #
+    # 打包后 .sha256 在 tar.gz 内，不再单独下载。
+    # 改为直接比较已安装二进制的 version 输出与目标版本号。
     # ---------------------------------------------------------------------------
     function Test-RemoteHash {
         param([string]$BinaryPath)
 
-        $hashUrl = "$($Script:ARTIFACT_URL)/$($Script:APP_NAME)_$($Script:GOOS)_$($Script:ARCH)_$($Script:VERSION).sha256"
+        $installedVersion = & $BinaryPath version 2>$null
+        if (-not $installedVersion) { $installedVersion = "unknown" }
 
-        Write-Step "Downloading hash from $hashUrl"
-        $remoteHashes = Get-WebContent -Url $hashUrl -BestEffort
-        if ([string]::IsNullOrWhiteSpace($remoteHashes)) {
-            Write-Step "Failed to download remote hash, skipping comparison"
-            return $true
-        }
+        Write-Step "Installed version: $installedVersion"
+        Write-Step "Target version:    $($Script:VERSION)"
 
-        $localHash = Get-FileSha256 -Path $BinaryPath
-
-        $remoteHash = ($remoteHashes -split "`n" | Select-Object -First 1).Trim() -split '\s' | Select-Object -First 1
-        if ([string]::IsNullOrWhiteSpace($remoteHash)) {
-            Write-Step "Remote hash is empty, skipping comparison"
-            return $true
-        }
-
-        Write-Step "Hash Local:  $localHash"
-        Write-Step "Hash Remote: $remoteHash"
-
-        return $localHash -eq $remoteHash
+        return $installedVersion -eq $Script:VERSION
     }
 
     # ---------------------------------------------------------------------------
@@ -271,24 +267,27 @@ Environment Variables:
     }
 
     # ---------------------------------------------------------------------------
-    # Download-Binary - 从远程下载二进制文件及 SHA256 校验文件
+    # Download-Binary - 从远程下载 tar.gz 包并解压
+    #
+    # 返回解压后的二进制文件路径（.sha256 也在同目录下，供 Verify-Checksum 使用）
     # ---------------------------------------------------------------------------
     function Download-Binary {
         param([string]$Url, [string]$OutputDir)
 
-        $filename = Get-BinaryName
-
-        $remoteUrl = "${Url}/${filename}"
-        $localFile = Join-Path $OutputDir $filename
+        $tarballName = Get-BinaryName
+        $remoteUrl = "${Url}/${tarballName}"
+        $localTarball = Join-Path $OutputDir $tarballName
 
         Write-Step "Downloading ${remoteUrl} ..."
-        Invoke-HttpGet -Url $remoteUrl -Output $localFile
+        Invoke-HttpGet -Url $remoteUrl -Output $localTarball
 
-        Invoke-HttpGet -Url "${Url}/$($Script:APP_NAME)_$($Script:GOOS)_$($Script:ARCH)_$($Script:VERSION).sha256" `
-                       -Output (Join-Path $OutputDir "$($Script:APP_NAME)_$($Script:GOOS)_$($Script:ARCH)_$($Script:VERSION).sha256") `
-                       -BestEffort
+        # 解压 tar.gz（Windows 10+ 内置 tar）
+        Write-Step "Extracting ${tarballName} ..."
+        tar xzf "$localTarball" -C "$OutputDir"
 
-        return $localFile
+        # 返回解压后的二进制路径
+        $binaryNameInside = Get-BinaryNameInside
+        return Join-Path $OutputDir $binaryNameInside
     }
 
     # ---------------------------------------------------------------------------

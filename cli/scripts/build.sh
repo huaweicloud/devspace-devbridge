@@ -215,6 +215,43 @@ sign_binary() {
 }
 
 # ---------------------------------------------------------------------------
+# package_tarballs - 将每个平台的二进制 + .sha256 打成 tar.gz 包
+#
+# 打包后删除单个二进制和 .sha256 文件，bin/ 目录只保留:
+#   devbridge_{os}_{arch}_{version}.tar.gz  (6 个)
+#   install.sh / install.ps1               (如有)
+# ---------------------------------------------------------------------------
+package_tarballs() {
+    log_info "打包 tar.gz ..."
+
+    for platform in "${PLATFORMS[@]}"; do
+        local goos goarch exe_suffix=""
+        IFS='/' read -r goos goarch <<< "${platform}"
+        [[ "${goos}" == "windows" ]] && exe_suffix=".exe"
+
+        local binary_name="devbridge_${goos}_${goarch}_${VERSION}${exe_suffix}"
+        local binary_path="${OUTPUT_DIR}/${binary_name}"
+        local sha_path="${binary_path}.sha256"
+        local tar_name="${binary_name}.tar.gz"
+        local tar_path="${OUTPUT_DIR}/${tar_name}"
+
+        if [[ ! -f "${binary_path}" ]]; then
+            log_warn "跳过打包：${binary_name} 不存在"
+            continue
+        fi
+
+        # 打包二进制 + .sha256（使用相对路径，tar 内只含文件名）
+        tar czf "${tar_path}" -C "${OUTPUT_DIR}" "${binary_name}"
+        [[ -f "${sha_path}" ]] && tar rzf "${tar_path}" -C "${OUTPUT_DIR}" "${binary_name}.sha256"
+
+        # 删除单个文件
+        rm -f "${binary_path}" "${sha_path}"
+
+        log_info "✓ ${tar_name} ($(du -h "${tar_path}" | cut -f1))"
+    done
+}
+
+# ---------------------------------------------------------------------------
 # 主流程
 # ---------------------------------------------------------------------------
 main() {
@@ -235,6 +272,9 @@ main() {
         [[ "${goos}" == "windows" ]] && exe_suffix=".exe"
         sign_binary "${OUTPUT_DIR}/devbridge_${goos}_${goarch}_${VERSION}${exe_suffix}"
     done
+
+    echo ""
+    package_tarballs
 
     echo ""
     log_info "构建完成。产物列表:"

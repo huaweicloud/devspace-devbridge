@@ -128,10 +128,15 @@ jobs:
       - name: Verify injected version
         working-directory: cli
         run: |
-          BIN="bin/devbridge_linux_amd64_${{ steps.meta.outputs.version }}"
+          VERSION="${{ steps.meta.outputs.version }}"
+          TARBALL="bin/devbridge_linux_amd64_${VERSION}.tar.gz"
+          mkdir -p /tmp/verify
+          tar xzf "$TARBALL" -C /tmp/verify
+          BIN="/tmp/verify/devbridge_linux_amd64_${VERSION}"
           echo "实际注入的版本号: $(./"$BIN" version)"
-          [ "$(./"$BIN" version)" = "${{ steps.meta.outputs.version }}" ] || \
+          [ "$(./"$BIN" version)" = "${VERSION}" ] || \
             { echo "❌ 版本号注入不匹配！"; exit 1; }
+          rm -rf /tmp/verify
 
       # ---- 烤制一键安装脚本：注入版本号 + Release 下载基址 ----
       # 仅 release 版本执行（非 release 版本不需要安装脚本）
@@ -161,7 +166,7 @@ jobs:
         with:
           name: devbridge-${{ steps.meta.outputs.version }}
           path: |
-            cli/bin/devbridge_*
+            cli/bin/devbridge_*.tar.gz
             cli/bin/install.sh
             cli/bin/install.ps1
           if-no-files-found: error
@@ -175,7 +180,7 @@ jobs:
           tag_name: ${{ steps.meta.outputs.version }}
           name: ${{ steps.meta.outputs.version }}
           files: |
-            cli/bin/devbridge_*
+            cli/bin/devbridge_*.tar.gz
             cli/bin/install.sh
             cli/bin/install.ps1
           generate_release_notes: true
