@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"os"
 	"path/filepath"
 
@@ -11,6 +10,8 @@ import (
 func main() {
 	cmd.RootCmd.Use = filepath.Base(os.Args[0])
 	if err := cmd.RootCmd.Execute(); err != nil {
-		log.Fatal(err)
+		// Error already printed by runError wrapper in root.go;
+		// only need to set a non-zero exit code here.
+		os.Exit(1)
 	}
 }
