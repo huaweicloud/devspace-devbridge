@@ -53,50 +53,6 @@ irm https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install
 | CLI 可执行文件 | `~/.huawei/bin`       |
 | CLI 配置与状态 | `~/.huawei/devbridge` |
 
-## 安装脚本参数
-
-标准安装无需任何参数。如需自定义版本、下载源或安装目录，通过参数传入。
-
-### Bash
-
-| 参数              | 说明                                      |
-| ----------------- | ----------------------------------------- |
-| `-v, --version`   | 指定安装版本，默认使用脚本内置版本。      |
-| `-u, --url`       | 制品下载基础 URL，默认使用内置 CDN 地址。 |
-| `-p, --prefix`    | 安装目录，默认 `~/.huawei/bin`。          |
-| `-s, --silent`    | 静默模式，跳过交互提示。                  |
-| `--skip-checksum` | 跳过 SHA256 校验。                        |
-| `-h, --help`      | 显示帮助。                                |
-
-```bash
-curl -fsSL <url>/install.sh | bash -s -- -v 1.0.0
-curl -fsSL <url>/install.sh | bash -s -- -p /custom/path -s
-```
-
-### PowerShell
-
-| 参数            | 说明                                      |
-| --------------- | ----------------------------------------- |
-| `-Version`      | 指定安装版本，默认使用脚本内置版本。      |
-| `-Url`          | 制品下载基础 URL，默认使用内置 CDN 地址。 |
-| `-Prefix`       | 安装目录，默认 `~/.huawei/bin`。          |
-| `-Silent`       | 静默模式，跳过交互提示。                  |
-| `-SkipChecksum` | 跳过 SHA256 校验。                        |
-
-PowerShell 管道方式不支持传参，需先保存脚本再执行：
-
-```powershell
-irm <url>/install.ps1 -OutFile install.ps1
-.\install.ps1 -Version 1.0.0
-```
-
-### 环境变量
-
-| 变量                    | 等价参数     | 说明                               |
-| ----------------------- | ------------ | ---------------------------------- |
-| `APP_VERSION`           | `--version`  | 指定安装版本。                     |
-| `ARTIFACT_URL_FROM_ENV` | `--url`      | 制品下载基础 URL。                 |
-
 ## 配置 PATH
 
 如果终端无法直接找到 `devbridge`，在当前会话执行：
