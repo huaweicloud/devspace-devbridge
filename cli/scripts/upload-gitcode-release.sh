@@ -127,7 +127,7 @@ find_or_create_release() {
 
   # 先按 tag 查询是否已存在
   local code
-  code=$(curl -s --connect-timeout 10 --max-time 30 -o /tmp/gc_rel_find.json -w "%{http_code}" \
+  code=$(curl -s --connect-timeout 30 --max-time 60 -o /tmp/gc_rel_find.json -w "%{http_code}" \
     -H "Authorization: Bearer ${TOKEN}" \
     "$(api_url "/releases/tags/${tag}")")
 
@@ -144,7 +144,7 @@ find_or_create_release() {
   # 404 → 创建
   log_info "Release 不存在（tag=${tag}），创建..." >&2
 
-  code=$(curl -s --connect-timeout 10 --max-time 30 -o /tmp/gc_rel_create.json -w "%{http_code}" \
+  code=$(curl -s --connect-timeout 30 --max-time 60 -o /tmp/gc_rel_create.json -w "%{http_code}" \
     -X POST \
     -H "Authorization: Bearer ${TOKEN}" \
     -H "Content-Type: application/json" \
@@ -175,7 +175,7 @@ delete_all_assets() {
 
   # 获取 Release 详情（含 assets 列表）
   local code
-  code=$(curl -s --connect-timeout 10 --max-time 30 -o /tmp/gc_rel_assets.json -w "%{http_code}" \
+  code=$(curl -s --connect-timeout 30 --max-time 60 -o /tmp/gc_rel_assets.json -w "%{http_code}" \
     -H "Authorization: Bearer ${TOKEN}" \
     "$(api_url "/releases/tags/${tag}")")
 
@@ -195,7 +195,7 @@ delete_all_assets() {
 
   log_info "  清理 ${#asset_ids[@]} 个旧附件..."
   for aid in "${asset_ids[@]}"; do
-    curl -s --connect-timeout 10 --max-time 30 -o /dev/null \
+    curl -s --connect-timeout 30 --max-time 60 -o /dev/null \
       -X DELETE \
       -H "Authorization: Bearer ${TOKEN}" \
       "$(api_url "/releases/${tag}/attach_files/${aid}")"
@@ -222,13 +222,13 @@ upload_asset() {
 
   log_info "  上传: ${filename} (${filesize} bytes)"
 
-  local max_retries=3
+  local max_retries=10
   local attempt
 
   for attempt in $(seq 1 "$max_retries"); do
     # Step 1: 获取 OBS 预签名上传地址
     local resp code
-    resp=$(curl -s --connect-timeout 10 --max-time 30 -w "\n%{http_code}" \
+    resp=$(curl -s --connect-timeout 30 --max-time 60 -w "\n%{http_code}" \
       -H "Authorization: Bearer ${TOKEN}" \
       "$(api_url "/releases/${tag}/upload_url")?file_name=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${filename}'))")")
 
@@ -259,7 +259,7 @@ upload_asset() {
     # 先清空响应文件，防止上次上传残留的 "success" body 导致误判
     : > /tmp/gc_upload_resp.txt
     local put_code
-    put_code=$(curl -s --connect-timeout 15 --max-time 300 -o /tmp/gc_upload_resp.txt -w "%{http_code}" \
+    put_code=$(curl -s --connect-timeout 30 --max-time 600 -o /tmp/gc_upload_resp.txt -w "%{http_code}" \
       -X PUT \
       -H "Content-Type: ${content_type}" \
       ${obs_meta:+-H "x-obs-meta-project-id: ${obs_meta}"} \
