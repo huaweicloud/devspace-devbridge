@@ -70,7 +70,7 @@ type restClientType struct {
 	BaseURL    string
 }
 
-var restClient *restClientType //nolint:gochecknoglobals
+var restClient *restClientType
 
 func InitClient(baseURL string) {
 	if baseURL == "" {
@@ -137,21 +137,21 @@ func doRequest(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 	if resp.StatusCode == http.StatusUnauthorized {
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096)) //nolint:errcheck
-		_ = resp.Body.Close()                                  //nolint:errcheck
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+		_ = resp.Body.Close()
 		logHTTPResponse(resp, body, time.Since(start))
 		if strings.Contains(string(body), "APIGW.0301") {
 			return nil, fmt.Errorf("%w: %s", errors.New(i18n.T(i18n.Msg.API.APIKeyExpired)), string(body))
 		}
 
 		if apiErr := parseErrorBody(body); apiErr != nil {
-			return nil, fmt.Errorf("%w: %w", errors.New(i18n.T(i18n.Msg.API.Unauthorized)), apiErr) //nolint:errorlint
+			return nil, fmt.Errorf("%w: %w", errors.New(i18n.T(i18n.Msg.API.Unauthorized)), apiErr)
 		}
 		return nil, fmt.Errorf("%w: %s", errors.New(i18n.T(i18n.Msg.API.Unauthorized)), string(body))
 	}
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096)) //nolint:errcheck
-		_ = resp.Body.Close()                                  //nolint:errcheck
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+		_ = resp.Body.Close()
 		logHTTPResponse(resp, body, time.Since(start))
 
 		if apiErr := parseErrorBody(body); apiErr != nil {
@@ -201,7 +201,7 @@ func request(method, path string, body interface{}, result interface{}) error {
 		return err
 	}
 	respBody, err := io.ReadAll(resp.Body)
-	_ = resp.Body.Close() //nolint:errcheck
+	_ = resp.Body.Close()
 	if err != nil {
 		return err
 	}
@@ -209,7 +209,7 @@ func request(method, path string, body interface{}, result interface{}) error {
 
 	if result != nil && len(respBody) > 0 {
 		if err := json.Unmarshal(respBody, result); err != nil {
-			return fmt.Errorf("%w: %w", errors.New(i18n.T(i18n.Msg.API.InvalidResponse)), err) //nolint:errorlint
+			return fmt.Errorf("%w: %w", errors.New(i18n.T(i18n.Msg.API.InvalidResponse)), err)
 		}
 	}
 	return nil

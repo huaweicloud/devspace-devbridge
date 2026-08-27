@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var verbose bool //nolint:gochecknoglobals
+var verbose bool
 
 var version = "dev"
 
@@ -29,7 +29,7 @@ var RootCmd = &cobra.Command{
 	},
 }
 
-var versionCmd = &cobra.Command{ //nolint:gochecknoglobals
+var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: i18n.T(i18n.Msg.Common.VersionInfo),
 	Args:  cobra.NoArgs,
@@ -50,7 +50,7 @@ func runError(fn func(cmd *cobra.Command, args []string) error) func(cmd *cobra.
 	}
 }
 
-func init() { //nolint:gochecknoinits
+func init() {
 	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, i18n.T(i18n.Msg.Common.FlagVerbose))
 	RootCmd.AddCommand(versionCmd)
 }

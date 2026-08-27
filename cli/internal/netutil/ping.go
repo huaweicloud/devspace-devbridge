@@ -17,7 +17,7 @@ func PingURI(rawURI string, timeout time.Duration) *PingResult {
 	start := time.Now()
 
 	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		Proxy:           http.ProxyFromEnvironment,
 	}
 	client := &http.Client{
@@ -43,7 +43,7 @@ func PingURI(rawURI string, timeout time.Duration) *PingResult {
 		}
 		return result
 	}
-	defer func() { _ = resp.Body.Close() }() //nolint:errcheck
+	defer func() { _ = resp.Body.Close() }()
 
 	result.StatusText = resp.Status
 	return result

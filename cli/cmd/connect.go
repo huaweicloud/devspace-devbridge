@@ -12,13 +12,13 @@ import (
 	client "huawei.com/devbridge/internal/connect"
 )
 
-var hostPorts []uint       //nolint:gochecknoglobals
-var hostDescription string //nolint:gochecknoglobals
-var hostExpiration int     //nolint:gochecknoglobals
-var connectToken string    //nolint:gochecknoglobals
-var hostToken string       //nolint:gochecknoglobals
-var hostAPIKey string      //nolint:gochecknoglobals
-var connectAPIKey string   //nolint:gochecknoglobals
+var hostPorts []uint
+var hostDescription string
+var hostExpiration int
+var connectToken string
+var hostToken string
+var hostAPIKey string
+var connectAPIKey string
 
 var tunnelIDPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)
 
@@ -35,7 +35,7 @@ func validateTunnelID(id string) error {
 func portsToInt(ports []uint) []int {
 	result := make([]int, len(ports))
 	for i, p := range ports {
-		result[i] = int(p) //nolint:gosec
+		result[i] = int(p)
 	}
 	return result
 }
@@ -171,7 +171,7 @@ var hostCmd = &cobra.Command{
 		client.Listen(tunnelID, ports, jwtToken, hostAPIKey)
 		return nil
 	}),
-} //nolint:gochecknoglobals
+}
 
 func resolveConnectConfig(args []string) (tunnelID string, ports []int, jwtToken string, err error) {
 	if connectAPIKey != "" {
@@ -241,7 +241,7 @@ var connectCmd = &cobra.Command{
 		client.Connect(tunnelID, jwtToken, ports, connectAPIKey)
 		return nil
 	}),
-} //nolint:gochecknoglobals
+}
 
 func init() {
 	RootCmd.AddCommand(hostCmd)
@@ -253,9 +253,9 @@ func init() {
 	hostCmd.Flags().StringVarP(&hostToken, "token", "t", "",
 		"JWT token for host (skip API token and port lookup)")
 	hostCmd.Flags().StringVarP(&hostAPIKey, "api-key", "k", "",
-		"API key for host (skip TunnelToken, use X-API-Key for WebSocket auth)") //nolint:lll
+		"API key for host (skip TunnelToken, use X-API-Key for WebSocket auth)")
 	connectCmd.Flags().StringVarP(&connectToken, "token", "t", "",
 		"JWT token for connect (skip API token and port lookup)")
 	connectCmd.Flags().StringVarP(&connectAPIKey, "api-key", "k", "",
-		"API key for connect (skip TunnelToken, use X-API-Key for WebSocket auth)") //nolint:lll
+		"API key for connect (skip TunnelToken, use X-API-Key for WebSocket auth)")
 }

@@ -89,8 +89,8 @@ func hcBrowserLogin() (Credential, *UserInfo, error) {
 	if err != nil {
 		return Credential{}, nil, err
 	}
-	defer func() { _ = listener.Close() }()     //nolint:errcheck
-	port := listener.Addr().(*net.TCPAddr).Port //nolint:errcheck
+	defer func() { _ = listener.Close() }()
+	port := listener.Addr().(*net.TCPAddr).Port
 
 	lang := "en-us"
 	if i18n.DetectSystemLang() == i18n.ZH {
@@ -180,7 +180,7 @@ func handleLoginCallback(
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte("OK")) //nolint:errcheck
+	_, _ = w.Write([]byte("OK"))
 	resultCh <- resp
 }
 

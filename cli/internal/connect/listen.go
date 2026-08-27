@@ -62,10 +62,10 @@ func Listen(tunnelID string, ports []int, jwtToken string, apiKey string) {
 		}
 
 		shift := consecutiveFailures - 1
-		if shift > 4 { //nolint:gomnd
+		if shift > 4 {
 			shift = 4
 		}
-		delay := baseReconnectDelay << uint(shift) //nolint:gosec
+		delay := baseReconnectDelay << uint(shift)
 		if delay > maxReconnectDelay {
 			delay = maxReconnectDelay
 		}
@@ -108,7 +108,7 @@ func setupOuterSession(ctx context.Context, netConn net.Conn, tunnelID string) (
 				return nil, nil, errDuplicateHost
 			}
 		}
-		_ = netConn.Close() //nolint:errcheck
+		_ = netConn.Close()
 		return nil, nil, fmt.Errorf("outer SSH client connect failed: %w", err)
 	}
 	slog.Debug("host: outer SSH session established", "tunnelID", tunnelID)
@@ -127,7 +127,7 @@ func setupOuterSession(ctx context.Context, netConn net.Conn, tunnelID string) (
 		slog.Debug("keepalive failed", "count", count)
 		if count >= 5 {
 			slog.Error("keepalive failed 5 times, forcing reconnect", "tunnelID", tunnelID)
-			_ = outerSession.Close() //nolint:errcheck
+			_ = outerSession.Close()
 		}
 	}
 
@@ -188,7 +188,7 @@ func runListenSession(ctx context.Context, wsURL string, sniHost string, header 
 	if err != nil {
 		return false, err
 	}
-	defer func() { _ = netConn.Close() }() //nolint:errcheck
+	defer func() { _ = netConn.Close() }()
 
 	outerSession, disconnected, err := setupOuterSession(ctx, netConn, tunnelID)
 	if err != nil {

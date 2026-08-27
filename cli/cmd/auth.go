@@ -11,14 +11,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var hcLoginAPIKey string //nolint:gochecknoglobals
+var hcLoginAPIKey string
 
-var authCmd = &cobra.Command{ //nolint:gochecknoglobals
+var authCmd = &cobra.Command{
 	Use:   "auth",
 	Short: i18n.T(i18n.Msg.Common.AuthCommands),
 }
 
-var loginCmd = &cobra.Command{ //nolint:gochecknoglobals
+var loginCmd = &cobra.Command{
 	Use:   "login",
 	Short: i18n.T(i18n.Msg.Auth.LoginShort),
 	Args:  cobra.NoArgs,
@@ -48,7 +48,7 @@ var loginCmd = &cobra.Command{ //nolint:gochecknoglobals
 	}),
 }
 
-var logoutCmd = &cobra.Command{ //nolint:gochecknoglobals
+var logoutCmd = &cobra.Command{
 	Use:   "logout",
 	Short: i18n.T(i18n.Msg.Auth.LogoutShort),
 	Args:  cobra.NoArgs,
@@ -64,7 +64,7 @@ var logoutCmd = &cobra.Command{ //nolint:gochecknoglobals
 	}),
 }
 
-var statusCmd = &cobra.Command{ //nolint:gochecknoglobals
+var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: i18n.T(i18n.Msg.Auth.StatusShort),
 	Args:  cobra.NoArgs,
@@ -88,7 +88,7 @@ var statusCmd = &cobra.Command{ //nolint:gochecknoglobals
 	}),
 }
 
-func init() { //nolint:gochecknoinits
+func init() {
 	loginCmd.Flags().StringVar(&hcLoginAPIKey, "api-key", "", i18n.T(i18n.Msg.Common.FlagAPIKey))
 
 	authCmd.AddCommand(loginCmd, logoutCmd, statusCmd)

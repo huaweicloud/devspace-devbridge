@@ -12,13 +12,13 @@ import (
 )
 
 var (
-	tunnelDescription string //nolint:gochecknoglobals
-	tunnelExpiration  int    //nolint:gochecknoglobals
-	tunnelName        string //nolint:gochecknoglobals
-	tunnelScope       string //nolint:gochecknoglobals
+	tunnelDescription string
+	tunnelExpiration  int
+	tunnelName        string
+	tunnelScope       string
 )
 
-var listCmd = &cobra.Command{ //nolint:gochecknoglobals
+var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: i18n.T(i18n.Msg.Tunnel.ListShort),
 	Args:  cobra.NoArgs,
@@ -53,7 +53,7 @@ var listCmd = &cobra.Command{ //nolint:gochecknoglobals
 	}),
 }
 
-var createCmd = &cobra.Command{ //nolint:gochecknoglobals
+var createCmd = &cobra.Command{
 	Use:   "create [name]",
 	Short: i18n.T(i18n.Msg.Tunnel.CreateShort),
 	Args:  cobra.ExactArgs(1),
@@ -76,7 +76,7 @@ var createCmd = &cobra.Command{ //nolint:gochecknoglobals
 	}),
 }
 
-var showCmd = &cobra.Command{ //nolint:gochecknoglobals
+var showCmd = &cobra.Command{
 	Use:   "show [tunnel-id]",
 	Short: i18n.T(i18n.Msg.Tunnel.ShowShort),
 	Args:  cobra.MaximumNArgs(1),
@@ -107,7 +107,7 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 	}),
 }
 
-var updateCmd = &cobra.Command{ //nolint:gochecknoglobals
+var updateCmd = &cobra.Command{
 	Use:   "update [tunnel-id]",
 	Short: i18n.T(i18n.Msg.Tunnel.UpdateShort),
 	Args:  cobra.MaximumNArgs(1),
@@ -136,7 +136,7 @@ var updateCmd = &cobra.Command{ //nolint:gochecknoglobals
 	}),
 }
 
-var deleteCmd = &cobra.Command{ //nolint:gochecknoglobals
+var deleteCmd = &cobra.Command{
 	Use:   "delete [tunnel-id]",
 	Short: i18n.T(i18n.Msg.Tunnel.DeleteShort),
 	Args:  cobra.MaximumNArgs(1),
@@ -149,7 +149,7 @@ var deleteCmd = &cobra.Command{ //nolint:gochecknoglobals
 			return err
 		}
 		if def, e := config.LoadDefaultTunnel(); e == nil && def == tunnelID {
-			_ = config.DeleteDefaultTunnel() //nolint:errcheck
+			_ = config.DeleteDefaultTunnel()
 			fmt.Println(i18n.T(i18n.Msg.Tunnel.DefaultTunnelCleared))
 		}
 		fmt.Println(i18n.T(i18n.Msg.Tunnel.TunnelDeleted))
@@ -157,7 +157,7 @@ var deleteCmd = &cobra.Command{ //nolint:gochecknoglobals
 	}),
 }
 
-var deleteAllCmd = &cobra.Command{ //nolint:gochecknoglobals
+var deleteAllCmd = &cobra.Command{
 	Use:   "delete-all",
 	Short: i18n.T(i18n.Msg.Tunnel.DeleteAllShort),
 	Args:  cobra.NoArgs,
@@ -170,7 +170,7 @@ var deleteAllCmd = &cobra.Command{ //nolint:gochecknoglobals
 	}),
 }
 
-var tokenCmd = &cobra.Command{ //nolint:gochecknoglobals
+var tokenCmd = &cobra.Command{
 	Use:   "token [tunnel-id]",
 	Short: i18n.T(i18n.Msg.Tunnel.TokenIssueShort),
 	Args:  cobra.MaximumNArgs(1),
@@ -192,7 +192,7 @@ var tokenCmd = &cobra.Command{ //nolint:gochecknoglobals
 	}),
 }
 
-var setCmd = &cobra.Command{ //nolint:gochecknoglobals
+var setCmd = &cobra.Command{
 	Use:   "set [tunnel-id]",
 	Short: i18n.T(i18n.Msg.Tunnel.SetShort),
 	Args:  cobra.ExactArgs(1),
@@ -214,12 +214,12 @@ var setCmd = &cobra.Command{ //nolint:gochecknoglobals
 	}),
 }
 
-var unsetCmd = &cobra.Command{ //nolint:gochecknoglobals
+var unsetCmd = &cobra.Command{
 	Use:   "unset",
 	Short: i18n.T(i18n.Msg.Tunnel.UnsetShort),
 	Args:  cobra.NoArgs,
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
-		_ = config.DeleteDefaultTunnel() //nolint:errcheck
+		_ = config.DeleteDefaultTunnel()
 		fmt.Println(i18n.T(i18n.Msg.Tunnel.DefaultTunnelUnset))
 		return nil
 	}),
@@ -232,7 +232,7 @@ func getTunnelIDArg(args []string) (string, error) {
 	return api.ResolveTunnelID("")
 }
 
-func init() { //nolint:gochecknoinits
+func init() {
 	createCmd.Flags().StringVarP(&tunnelDescription, "description", "d", "", i18n.T(i18n.Msg.Tunnel.FlagDescription))
 	createCmd.Flags().IntVarP(&tunnelExpiration, "expiration", "e", 0, i18n.T(i18n.Msg.Tunnel.FlagExpiration))
 
@@ -241,7 +241,7 @@ func init() { //nolint:gochecknoinits
 	updateCmd.Flags().IntVarP(&tunnelExpiration, "expiration", "e", 0, i18n.T(i18n.Msg.Tunnel.FlagExpiration))
 
 	tokenCmd.Flags().StringVarP(&tunnelScope, "scope", "s", "", i18n.T(i18n.Msg.Tunnel.FlagScope))
-	_ = tokenCmd.MarkFlagRequired("scope") //nolint:errcheck
+	_ = tokenCmd.MarkFlagRequired("scope")
 
 	RootCmd.AddCommand(listCmd, createCmd, showCmd, updateCmd, deleteCmd, deleteAllCmd, tokenCmd, setCmd, unsetCmd)
 }

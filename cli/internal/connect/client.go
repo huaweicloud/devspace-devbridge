@@ -70,17 +70,17 @@ func traceFunc() ssh.TraceFunc {
 
 // 隧道服务连接地址配置（导出，供 cmd 包引用）.
 var (
-	ServerAddr = "gateway.cn-north-4-bridge.myhuaweicloud.com:443" //nolint:gochecknoglobals
-	ServerHost = "cn-north-4-bridge.myhuaweicloud.com"             //nolint:gochecknoglobals
+	ServerAddr = "gateway.cn-north-4-bridge.myhuaweicloud.com:443"
+	ServerHost = "cn-north-4-bridge.myhuaweicloud.com"
 )
 
 const relayChannelType = "relay"
 
-var sessionLookup = make(map[uint32]*ssh.ServerSession) //nolint:gochecknoglobals
+var sessionLookup = make(map[uint32]*ssh.ServerSession)
 
-var persistentHostKey ssh.KeyPair //nolint:gochecknoglobals
+var persistentHostKey ssh.KeyPair
 
-func init() { //nolint:gochecknoinits
+func init() {
 	var err error
 	persistentHostKey, err = ssh.GenerateKeyPair(ssh.AlgoPKEcdsaSha2P256)
 	if err != nil {
@@ -162,8 +162,8 @@ func dialWithRetry(ctx context.Context, url string, opts *websocket.DialOptions,
 		}
 
 		if resp != nil && resp.StatusCode == http.StatusTooManyRequests {
-			body, _ := io.ReadAll(resp.Body) //nolint:errcheck
-			_ = resp.Body.Close()            //nolint:errcheck
+			body, _ := io.ReadAll(resp.Body)
+			_ = resp.Body.Close()
 			reason := strings.TrimSpace(string(body))
 			if attempt == 0 {
 				fmt.Printf("Connection rejected by gateway: %s, retrying...\n", reason)
@@ -177,7 +177,7 @@ func dialWithRetry(ctx context.Context, url string, opts *websocket.DialOptions,
 			break
 		}
 
-		delay := baseDelay * time.Duration(1<<uint(attempt)) //nolint:gosec
+		delay := baseDelay * time.Duration(1<<uint(attempt))
 		if delay > maxDelay {
 			delay = maxDelay
 		}

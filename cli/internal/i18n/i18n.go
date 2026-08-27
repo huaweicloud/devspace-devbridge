@@ -17,7 +17,7 @@ type Message struct {
 	EN string
 }
 
-var currentLang = detectLang() //nolint:gochecknoglobals
+var currentLang = detectLang()
 
 func detectLang() Lang {
 	if env := os.Getenv("DEVBRIDGE_LANG"); env != "" {

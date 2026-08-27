@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var limitsCmd = &cobra.Command{ //nolint:gochecknoglobals
+var limitsCmd = &cobra.Command{
 	Use:   "limits",
 	Short: i18n.T(i18n.Msg.Limits.LimitsShort),
 	Args:  cobra.NoArgs,
@@ -44,6 +44,6 @@ func printLimitsDetail(l *api.LimitsResult) {
 	})
 }
 
-func init() { //nolint:gochecknoinits
+func init() {
 	RootCmd.AddCommand(limitsCmd)
 }

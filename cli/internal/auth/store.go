@@ -42,7 +42,7 @@ func decodeBase64(s string) (string, error) {
 func StoreCredential(name string, cred *Credential, userInfo *UserInfo) error {
 	blob := encodeCredential(cred)
 
-	cfg, _ := config.Load() //nolint:errcheck
+	cfg, _ := config.Load()
 	if cfg == nil {
 		cfg = make(map[string]any)
 	}
@@ -81,7 +81,7 @@ func LoadCredential(name string) (*Credential, *UserInfo, error) {
 }
 
 func DeleteCredential(name string) error {
-	_ = keyring.Delete(name, "Credentials") //nolint:errcheck
+	_ = keyring.Delete(name, "Credentials")
 	cfg, err := config.Load()
 	if err != nil {
 		return err

@@ -13,7 +13,7 @@ func maskSecret(s string) string {
 	return s[:4] + "****" + s[len(s)-4:]
 }
 
-var overrideAPIKey string //nolint:gochecknoglobals
+var overrideAPIKey string
 
 // SetOverrideAPIKey 设置命令行传入的 API Key，使后续 API 调用直接使用该 key.
 func SetOverrideAPIKey(key string) {

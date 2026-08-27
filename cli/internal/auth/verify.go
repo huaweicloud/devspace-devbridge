@@ -21,7 +21,7 @@ const (
 // ErrAPIKeyInvalid 表示 API Key 无效（401）。
 var ErrAPIKeyInvalid = errors.New("api key is invalid or disabled")
 
-var verifyClient = &http.Client{Timeout: 10 * time.Second} //nolint:gochecknoglobals
+var verifyClient = &http.Client{Timeout: 10 * time.Second}
 
 // Identity 是 check 接口返回的身份信息。
 type Identity struct {
@@ -49,7 +49,7 @@ func VerifyAPIKey(apiKey string) (*Identity, error) {
 	if err != nil {
 		return nil, fmt.Errorf("verify api key: %w", err)
 	}
-	defer func() { _ = resp.Body.Close() }() //nolint:errcheck
+	defer func() { _ = resp.Body.Close() }()
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 4096))
 	if err != nil {
 		return nil, fmt.Errorf("read verify response: %w", err)

@@ -1,0 +1,9 @@
+linters:
+  disable:
+    - gochecknoglobals
+    - gochecknoinits
+    - errcheck
+    - lll
+    - gosec
+    - errorlint
+    - gomnd

@@ -54,13 +54,13 @@ func (f *listenerFactory) CreateTCPListener(
 	if localPort != 0 {
 		conn, err := net.Dial("tcp", net.JoinHostPort(localIPAddress, strconv.Itoa(localPort)))
 		if err == nil {
-			_ = conn.Close() //nolint:errcheck
+			_ = conn.Close()
 			if canChangeLocalPort {
 				randomListener, listenErr := net.Listen("tcp", net.JoinHostPort(localIPAddress, strconv.Itoa(0)))
 				if listenErr != nil {
 					return nil, listenErr
 				}
-				actualPort := randomListener.Addr().(*net.TCPAddr).Port //nolint:errcheck
+				actualPort := randomListener.Addr().(*net.TCPAddr).Port
 				f.portOverrides[remotePort] = actualPort
 				f.listeners = append(f.listeners, randomListener)
 				f.addForwarding(fmt.Sprintf("Forwarding localhost: %s%d%s -> tunnel port: %s%d%s (port %s%d%s in use)\n",
@@ -77,7 +77,7 @@ func (f *listenerFactory) CreateTCPListener(
 		if listenErr != nil {
 			return nil, listenErr
 		}
-		actualPort := randomListener.Addr().(*net.TCPAddr).Port //nolint:errcheck
+		actualPort := randomListener.Addr().(*net.TCPAddr).Port
 		f.portOverrides[remotePort] = actualPort
 		f.listeners = append(f.listeners, randomListener)
 		f.addForwarding(fmt.Sprintf("Forwarding localhost: %s%d%s -> tunnel port: %s%d%s (port %s%d%s in use)\n",
@@ -121,7 +121,7 @@ func (f *listenerFactory) reset() {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	for _, l := range f.listeners {
-		_ = l.Close() //nolint:errcheck
+		_ = l.Close()
 	}
 	f.listeners = nil
 	f.pendingForwardings = nil
@@ -202,18 +202,18 @@ func runSendSession(ctx context.Context, wsURL string, sniHost string, header ht
 
 	session := ssh.NewClientSession(config)
 	session.Trace = traceFunc()
-	defer func() { _ = session.Close() }() //nolint:errcheck
+	defer func() { _ = session.Close() }()
 
 	pfs := tcp.GetPortForwardingService(&session.Session)
 	if pfs == nil {
-		_ = netConn.Close() //nolint:errcheck
+		_ = netConn.Close()
 		return false, fmt.Errorf("port forwarding service unavailable")
 	}
 	factory.reset()
 	pfs.ListenerFactory = factory
 
 	if err = session.Connect(ctx, netConn); err != nil {
-		_ = netConn.Close() //nolint:errcheck
+		_ = netConn.Close()
 		return false, fmt.Errorf("SSH client connect failed: %w", err)
 	}
 	connected = true

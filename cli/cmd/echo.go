@@ -18,13 +18,13 @@ import (
 )
 
 var (
-	echoPort      int    //nolint:gochecknoglobals
-	echoInterface string //nolint:gochecknoglobals
+	echoPort      int
+	echoInterface string
 )
 
-var pingInterval int //nolint:gochecknoglobals
+var pingInterval int
 
-var echoCmd = &cobra.Command{ //nolint:gochecknoglobals
+var echoCmd = &cobra.Command{
 	Use:   "echo",
 	Short: i18n.T(i18n.Msg.Echo.EchoShort),
 	Args:  cobra.NoArgs,
@@ -42,7 +42,7 @@ var echoCmd = &cobra.Command{ //nolint:gochecknoglobals
 	}),
 }
 
-var pingCmd = &cobra.Command{ //nolint:gochecknoglobals
+var pingCmd = &cobra.Command{
 	Use:   "ping <uri>",
 	Short: i18n.T(i18n.Msg.Ping.PingShort),
 	Args:  cobra.ExactArgs(1),
@@ -116,10 +116,10 @@ func handleHTTPEcho(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte(sb.String())) //nolint:errcheck
+	_, _ = w.Write([]byte(sb.String()))
 }
 
-func init() { //nolint:gochecknoinits
+func init() {
 	echoCmd.Flags().IntVarP(&echoPort, "port", "p", 0, i18n.T(i18n.Msg.Common.FlagEchoPort))
 	echoCmd.Flags().StringVarP(&echoInterface, "interface", "i", "127.0.0.1", i18n.T(i18n.Msg.Common.FlagInterface))
 	RootCmd.AddCommand(echoCmd)

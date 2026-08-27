@@ -87,7 +87,7 @@ func formatRemaining(v float64, unit string) string {
 	return strconv.FormatFloat(rounded, 'f', -1, 64) + " " + unit
 }
 
-var byteUnits = []string{"B", "KB", "MB", "GB", "TB", "PB", "EB"} //nolint:gochecknoglobals
+var byteUnits = []string{"B", "KB", "MB", "GB", "TB", "PB", "EB"}
 
 func formatBytes(b int64) string {
 	const unit = 1024.0

@@ -7,9 +7,9 @@ import (
 	"sync/atomic"
 )
 
-var currentLevel atomic.Int32 //nolint:gochecknoglobals
+var currentLevel atomic.Int32
 
-func init() { //nolint:gochecknoinits
+func init() {
 	currentLevel.Store(int32(slog.LevelError + 1))
 }
 
@@ -18,7 +18,7 @@ func LogLevel() slog.Level {
 }
 
 func SetLevel(level slog.Level) {
-	currentLevel.Store(int32(level)) //nolint:gosec
+	currentLevel.Store(int32(level))
 }
 
 // NewHandler 创建日志 handler，级别由 logging 包动态控制。
