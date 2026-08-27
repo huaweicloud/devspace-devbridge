@@ -33,7 +33,7 @@ SIGN_KEY=""
 
 # 环境配置（与 Makefile/run.sh 保持一致）
 declare -A ENV_CONFIG
-ENV_CONFIG[SERVER_DOMAIN,test]="http://100.85.118.163:8443"
+ENV_CONFIG[SERVER_DOMAIN,test]="https://100.85.118.163:8443"
 ENV_CONFIG[SERVER_DOMAIN,prod]="https://devstation.myhuaweicloud.com"
 ENV_CONFIG[LOGIN_URL,test]="https://devstation.ulanqab.huawei.com"
 ENV_CONFIG[LOGIN_URL,prod]="https://devstation.connect.huaweicloud.com"
