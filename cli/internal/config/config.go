@@ -9,7 +9,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var DefaultServerDomain = "http://relay-dev-local.tailb4159e.ts.net:8443"
+var DefaultServerDomain = "https://relay-dev-local.tailb4159e.ts.net:8443"
 
 var ErrKeyNotFound = errors.New("key not found")
 

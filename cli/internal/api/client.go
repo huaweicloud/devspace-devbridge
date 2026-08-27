@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"crypto/tls"
 	"context"
 	"encoding/json"
 	"errors"
@@ -72,20 +73,25 @@ type restClientType struct {
 
 var restClient *restClientType
 
-func InitClient(baseURL string) {
+func InitClient(baseURL string, insecure bool) {
 	if baseURL == "" {
-
 		baseURL = config.DefaultServerDomain + "/open-api-inner/v1/relay-controller"
 	}
+	httpClient := &http.Client{Timeout: 30 * time.Second}
+	if insecure {
+		httpClient.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+	}
 	restClient = &restClientType{
-		httpClient: &http.Client{Timeout: 30 * time.Second},
+		httpClient: httpClient,
 		BaseURL:    baseURL,
 	}
 }
 
 func getClient() *restClientType {
 	if restClient == nil {
-		InitClient("")
+		InitClient("", false)
 	}
 	return restClient
 }

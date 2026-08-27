@@ -9,6 +9,7 @@ func init() {
 	Msg.Common.FlagAPIKey = Message{ZH: "API Key", EN: "API Key"}
 	Msg.Common.FlagVerbose = Message{ZH: "启用调试日志", EN: "Enable debug logging"}
 	Msg.Common.FlagEchoPort = Message{ZH: "本地服务器端口号 (未指定则自动分配随机端口)", EN: "Local server port number (auto-assign random port if not specified)"}
+	Msg.Common.FlagInsecure = Message{ZH: "跳过 TLS 证书校验", EN: "Skip TLS certificate verification"}
 	Msg.Common.FlagInterface = Message{ZH: "本地接口地址", EN: "Local interface address"}
 	Msg.Common.FlagPingInterval = Message{ZH: "消息间隔(毫秒)", EN: "Interval between messages in ms"}
 
