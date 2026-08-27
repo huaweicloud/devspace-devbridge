@@ -29,10 +29,7 @@ type Identity struct {
 	UserID   string `json:"userId"`
 }
 
-// VerifyAPIKey 调用 /open-api-inner/v1/relay-controller/auth/check 校验 API Key 有效性。
-// 接口返回 204 表示校验成功，其他非 2xx 视为失败。
-//
-// 端点位于 config.DefaultServerDomain，使用 X-API-Key 头认证。
+// VerifyAPIKey 校验 API Key 有效性，返回 204 表示有效。
 func VerifyAPIKey(apiKey string) (*Identity, error) {
 	if apiKey == "" {
 		return nil, ErrAPIKeyInvalid

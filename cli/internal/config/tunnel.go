@@ -23,8 +23,7 @@ func LoadDefaultTunnel() (string, error) {
 		"please specify via argument or use 'devbridge set' to set default") //nolint:lll
 }
 
-// DeleteDefaultTunnel 从配置文件删除默认隧道 ID.
-// 没设过默认隧道（key 不存在）视为已删除，不返回错误.
+// DeleteDefaultTunnel 删除默认隧道 ID，key 不存在视为已删除。
 func DeleteDefaultTunnel() error {
 	if err := Delete(defaultTunnelKey); err != nil && !errors.Is(err, ErrKeyNotFound) {
 		return err

@@ -21,8 +21,7 @@ func SetLevel(level slog.Level) {
 	currentLevel.Store(int32(level)) //nolint:gosec
 }
 
-// NewHandler 创建一个基于 slog.TextHandler 的日志 handler，
-// 日志级别由 logging 包动态控制.
+// NewHandler 创建日志 handler，级别由 logging 包动态控制。
 func NewHandler(w io.Writer) slog.Handler {
 	return &levelHandler{
 		inner: slog.NewTextHandler(w, &slog.HandlerOptions{Level: slog.LevelDebug}),
