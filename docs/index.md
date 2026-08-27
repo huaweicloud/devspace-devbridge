@@ -23,16 +23,30 @@ description: 安装 DevBridge CLI，登录并通过开发隧道托管本地服�
 
 ## 安装
 
-使用 Bash 运行官方安装脚本：
+使用 Bash 运行官方安装脚本（任选一个渠道）：
 
 ```bash
-curl -fsSL https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge/install.sh | bash
+# GitHub 渠道
+curl -fsSL https://github.com/huaweicloud/devspace-devbridge/releases/latest/download/install.sh | bash
+
+# GitCode 渠道
+curl -fsSL https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/latest/install.sh | bash
+
+# OBS 渠道
+curl -fsSL https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install.sh | bash
 ```
 
-使用 PowerShell 时运行：
+使用 PowerShell 时运行（任选一个渠道）：
 
 ```powershell
-irm https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge/install.ps1 | iex
+# GitHub 渠道
+irm https://github.com/huaweicloud/devspace-devbridge/releases/latest/download/install.ps1 | iex
+
+# GitCode 渠道
+irm https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/latest/install.ps1 | iex
+
+# OBS 渠道
+irm https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install.ps1 | iex
 ```
 
 安装完成后验证 CLI：

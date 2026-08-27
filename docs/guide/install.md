@@ -18,14 +18,32 @@ description: 使用官方安装脚本安装并验证 DevBridge CLI。
 
 ### Bash
 
+任选一个渠道运行安装脚本：
+
 ```bash
-curl -fsSL https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge/install.sh | bash
+# GitHub 渠道
+curl -fsSL https://github.com/huaweicloud/devspace-devbridge/releases/latest/download/install.sh | bash
+
+# GitCode 渠道
+curl -fsSL https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/latest/install.sh | bash
+
+# OBS 渠道
+curl -fsSL https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install.sh | bash
 ```
 
 ### PowerShell
 
+任选一个渠道运行安装脚本：
+
 ```powershell
-irm https://res-hd.hc-cdn.cn/sharedata/hdspace/devbridge/install.ps1 | iex
+# GitHub 渠道
+irm https://github.com/huaweicloud/devspace-devbridge/releases/latest/download/install.ps1 | iex
+
+# GitCode 渠道
+irm https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/latest/install.ps1 | iex
+
+# OBS 渠道
+irm https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install.ps1 | iex
 ```
 
 标准安装会安装当前发布版本并使用默认目录，不需要指定版本或下载源。
