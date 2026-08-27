@@ -108,7 +108,6 @@ type CommonMessages struct {
 	FlagEchoPort     Message
 	FlagInterface    Message
 	FlagPingInterval Message
-	FlagInsecure      Message
 }
 
 type LimitsMessages struct {

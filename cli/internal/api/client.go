@@ -73,25 +73,24 @@ type restClientType struct {
 
 var restClient *restClientType
 
-func InitClient(baseURL string, insecure bool) {
+func InitClient(baseURL string) {
 	if baseURL == "" {
 		baseURL = config.DefaultServerDomain + "/open-api-inner/v1/relay-controller"
 	}
-	httpClient := &http.Client{Timeout: 30 * time.Second}
-	if insecure {
-		httpClient.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-	}
 	restClient = &restClientType{
-		httpClient: httpClient,
-		BaseURL:    baseURL,
+		httpClient: &http.Client{
+			Timeout: 30 * time.Second,
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
+		},
+		BaseURL: baseURL,
 	}
 }
 
 func getClient() *restClientType {
 	if restClient == nil {
-		InitClient("", false)
+		InitClient("")
 	}
 	return restClient
 }

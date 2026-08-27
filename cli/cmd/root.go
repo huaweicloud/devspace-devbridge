@@ -13,7 +13,6 @@ import (
 )
 
 var verbose bool
-var insecure bool
 
 var version = "dev"
 
@@ -22,7 +21,7 @@ var RootCmd = &cobra.Command{
 	Short: i18n.T(i18n.Msg.Common.VersionInfo),
 	Long:  i18n.T(i18n.Msg.Common.VersionInfo),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		api.InitClient("", insecure)
+		api.InitClient("")
 		if verbose {
 			logging.SetLevel(slog.LevelDebug)
 			slog.SetDefault(slog.New(logging.NewHandler(os.Stderr)))
@@ -53,6 +52,5 @@ func runError(fn func(cmd *cobra.Command, args []string) error) func(cmd *cobra.
 
 func init() {
 	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, i18n.T(i18n.Msg.Common.FlagVerbose))
-	RootCmd.PersistentFlags().BoolVarP(&insecure, "insecure", "k", false, i18n.T(i18n.Msg.Common.FlagInsecure))
 	RootCmd.AddCommand(versionCmd)
 }
