@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"log/slog"
@@ -21,7 +22,12 @@ const (
 // ErrAPIKeyInvalid 表示 API Key 无效（401）。
 var ErrAPIKeyInvalid = errors.New("api key is invalid or disabled")
 
-var verifyClient = &http.Client{Timeout: 10 * time.Second}
+var verifyClient = &http.Client{
+	Timeout: 10 * time.Second,
+	Transport: &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	},
+}
 
 // Identity 是 check 接口返回的身份信息。
 type Identity struct {
