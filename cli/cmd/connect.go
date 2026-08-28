@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"huawei.com/devbridge/internal/api"
+	"huawei.com/devbridge/internal/config"
 	"huawei.com/devbridge/internal/auth"
 	client "huawei.com/devbridge/internal/connect"
 )
@@ -114,7 +115,7 @@ func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelID string,
 	}
 
 	if !cmd.Flags().Changed("ports") {
-		defaultID, err := api.ResolveTunnelID("")
+		defaultID, err := config.LoadDefaultTunnel()
 		if err != nil {
 			return "", nil, fmt.Errorf("no tunnelID and no -p specified; either set a default tunnel "+
 				"(tunnel set) or pass -p to create a temporary tunnel: %w", err)
@@ -222,7 +223,7 @@ func resolveConnectTunnelID(args []string) (string, error) {
 	if len(args) > 0 && args[0] != "" {
 		return args[0], nil
 	}
-	id, err := api.ResolveTunnelID("")
+	id, err := config.LoadDefaultTunnel()
 	if err != nil {
 		return "", fmt.Errorf("tunnelID is required (no default tunnel set): %w", err)
 	}

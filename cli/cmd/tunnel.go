@@ -229,7 +229,7 @@ func getTunnelIDArg(args []string) (string, error) {
 	if len(args) > 0 && args[0] != "" {
 		return args[0], nil
 	}
-	return api.ResolveTunnelID("")
+	return config.LoadDefaultTunnel()
 }
 
 func init() {

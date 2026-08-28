@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"regexp"
 
-	"huawei.com/devbridge/internal/config"
 	"huawei.com/devbridge/internal/i18n"
 )
 
@@ -81,16 +80,6 @@ func ValidateTunnelID(tunnelID string) error {
 	return nil
 }
 
-func ResolveTunnelID(tunnelID string) (string, error) {
-	if tunnelID == "" {
-		id, err := config.LoadDefaultTunnel()
-		if err != nil {
-			return "", err
-		}
-		return id, nil
-	}
-	return tunnelID, nil
-}
 
 func ListTunnels() ([]ListTunnelResult, error) {
 	var result []ListTunnelResult
