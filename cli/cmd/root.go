@@ -7,7 +7,6 @@ import (
 
 	"huawei.com/devbridge/internal/api"
 	"huawei.com/devbridge/internal/i18n"
-	"huawei.com/devbridge/internal/logging"
 
 	"github.com/spf13/cobra"
 )
@@ -22,10 +21,11 @@ var RootCmd = &cobra.Command{
 	Long:  i18n.T(i18n.Msg.Common.VersionInfo),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		api.InitClient("")
+		level := slog.LevelInfo
 		if verbose {
-			logging.SetLevel(slog.LevelDebug)
-			slog.SetDefault(slog.New(logging.NewHandler(os.Stderr)))
+			level = slog.LevelDebug
 		}
+		slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level})))
 	},
 }
 

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"crypto/tls"
 	"fmt"
@@ -11,7 +12,6 @@ import (
 	"time"
 
 	"huawei.com/devbridge/internal/config"
-	"huawei.com/devbridge/internal/logging"
 )
 
 const (
@@ -81,7 +81,7 @@ func maskAPIKey(key string) string {
 }
 
 func logVerifyRequest(req *http.Request, apiKey string) {
-	if logging.LogLevel() > slog.LevelDebug {
+	if !slog.Default().Enabled(context.Background(), slog.LevelDebug) {
 		return
 	}
 	slog.Debug("api key verify request",
@@ -92,7 +92,7 @@ func logVerifyRequest(req *http.Request, apiKey string) {
 }
 
 func logVerifyResponse(resp *http.Response, body []byte, elapsed time.Duration) {
-	if logging.LogLevel() > slog.LevelDebug {
+	if !slog.Default().Enabled(context.Background(), slog.LevelDebug) {
 		return
 	}
 	slog.Debug("api key verify response",

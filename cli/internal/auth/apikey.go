@@ -1,9 +1,8 @@
 package auth
 
 import (
+	"context"
 	"log/slog"
-
-	"huawei.com/devbridge/internal/logging"
 )
 
 func maskSecret(s string) string {
@@ -22,7 +21,7 @@ func SetOverrideAPIKey(key string) {
 
 func ReadValidAPIKey() *Credential {
 	cred := readValidAPIKey()
-	if cred != nil && logging.LogLevel() <= slog.LevelDebug {
+	if cred != nil && slog.Default().Enabled(context.Background(), slog.LevelDebug) {
 		slog.Debug("read valid API key",
 			"apiKey", maskSecret(cred.APIKey),
 		)

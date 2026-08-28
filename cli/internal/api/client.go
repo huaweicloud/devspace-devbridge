@@ -16,7 +16,6 @@ import (
 	"huawei.com/devbridge/internal/auth"
 	"huawei.com/devbridge/internal/config"
 	"huawei.com/devbridge/internal/i18n"
-	"huawei.com/devbridge/internal/logging"
 )
 
 const (
@@ -96,7 +95,7 @@ func getClient() *restClientType {
 }
 
 func isDebugEnabled() bool {
-	return logging.LogLevel() <= slog.LevelDebug
+	return slog.Default().Enabled(context.Background(), slog.LevelDebug)
 }
 
 func logHTTPRequest(req *http.Request, body []byte) {
