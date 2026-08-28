@@ -67,7 +67,7 @@ func formatTunnelExpiration(tunnelExpiration int64) string {
 	return fmt.Sprintf("%d %s", tunnelExpiration, i18n.T(i18n.Msg.Common.Hours))
 }
 
-func FormatTunnelRemaining(expireAt int64) string {
+func formatTunnelRemaining(expireAt int64) string {
 	now := time.Now().Unix()
 	remaining := expireAt - now
 	if remaining <= 0 {

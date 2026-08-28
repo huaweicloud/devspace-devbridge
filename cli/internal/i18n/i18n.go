@@ -36,6 +36,3 @@ func T(msg Message) string {
 	return msg.EN
 }
 
-func GetLang() Lang {
-	return currentLang
-}

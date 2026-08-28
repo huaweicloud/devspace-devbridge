@@ -44,7 +44,7 @@ var listCmd = &cobra.Command{
 				t.TunnelID,
 				t.Name,
 				t.Description,
-				FormatTunnelRemaining(int64(t.TunnelExpiration)),
+				formatTunnelRemaining(int64(t.TunnelExpiration)),
 				strconv.Itoa(t.PortCount),
 			})
 		}
@@ -96,7 +96,7 @@ var showCmd = &cobra.Command{
 		printKV([][2]string{
 			{i18n.T(i18n.Msg.Tunnel.TunnelID), result.TunnelID},
 			{i18n.T(i18n.Msg.Tunnel.Name), result.Name},
-			{i18n.T(i18n.Msg.Tunnel.TunnelExpiration), FormatTunnelRemaining(int64(result.TunnelExpiration))},
+			{i18n.T(i18n.Msg.Tunnel.TunnelExpiration), formatTunnelRemaining(int64(result.TunnelExpiration))},
 			{i18n.T(i18n.Msg.Tunnel.Description), result.Description},
 			{i18n.T(i18n.Msg.Tunnel.ClientConnectionCount), fmt.Sprintf("%d", status.ClientConnectionCount)},
 			{i18n.T(i18n.Msg.Tunnel.HostConnectionCount), fmt.Sprintf("%d", status.HostConnectionCount)},

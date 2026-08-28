@@ -104,7 +104,7 @@ func (f *listenerFactory) addForwarding(msg string) {
 	}
 }
 
-func (f *listenerFactory) PrintForwardings() {
+func (f *listenerFactory) printForwardings() {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	for _, msg := range f.pendingForwardings {
@@ -227,7 +227,7 @@ func runSendSession(ctx context.Context, wsURL string, sniHost string, header ht
 		factory.waitForForwardings(2 * time.Second)
 	}
 
-	factory.PrintForwardings()
+	factory.printForwardings()
 
 	fmt.Println("Auto reconnect: enabled")
 
