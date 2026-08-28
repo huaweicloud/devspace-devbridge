@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"net/url"
 	"os/signal"
 	"strings"
 	"syscall"
@@ -48,14 +47,6 @@ var pingCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
 		uri := args[0]
-		parsedURL, err := url.Parse(uri)
-		if err != nil {
-			return fmt.Errorf("%s: %s (%w)", i18n.T(i18n.Msg.Ping.URIInvalid), uri, err)
-		}
-		scheme := strings.ToUpper(parsedURL.Scheme)
-		if scheme == "" {
-			scheme = "UNKNOWN"
-		}
 		interval := time.Duration(pingInterval) * time.Millisecond
 
 		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -72,13 +63,13 @@ var pingCmd = &cobra.Command{
 				result := netutil.PingURI(uri, 10*time.Second)
 				statusText := result.StatusText
 				if result.Err != nil {
-					fmt.Printf("%s %s -- %d ms (err: %v)\n",
-						scheme, statusText,
+					fmt.Printf("HTTP %s -- %d ms (err: %v)\n",
+						statusText,
 						result.Latency.Milliseconds(), result.Err)
 					return nil
 				} else {
-					fmt.Printf("%s %s -- %d ms\n",
-						scheme, statusText,
+					fmt.Printf("HTTP %s -- %d ms\n",
+						statusText,
 						result.Latency.Milliseconds())
 				}
 			}
