@@ -65,7 +65,7 @@ checksum:
   algorithm: sha256
 
 changelog:
-  use: github
+  use: git
 
 release:
   github:
