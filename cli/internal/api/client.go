@@ -183,19 +183,21 @@ func request(method, path string, body interface{}, result interface{}) error {
 	client := getClient()
 	url := client.BaseURL + path
 
-	bodyBytes, err := json.Marshal(body)
-	if err != nil {
-		return err
-	}
-	if body == nil {
-		bodyBytes = nil
+	var bodyBytes []byte
+	hasBody := method == http.MethodPost || method == http.MethodPut
+	if hasBody {
+		var err error
+		bodyBytes, err = json.Marshal(body)
+		if err != nil {
+			return err
+		}
 	}
 
 	req, err := http.NewRequestWithContext(context.Background(), method, url, bytes.NewReader(bodyBytes))
 	if err != nil {
 		return err
 	}
-	if body != nil {
+	if hasBody {
 		req.Header.Set(headerContentType, headerApplicationJSON)
 	}
 	logHTTPRequest(req, bodyBytes)
