@@ -26,7 +26,7 @@ func Listen(tunnelID string, ports []int, jwtToken string, apiKey string) {
 	header, subprotocols := buildWSHeader(jwtToken, apiKey)
 	header.Set("Cookie", "APP_COOKIE=7")
 
-	sniHost := tunnelID + "." + serverHost
+	sniHost := tunnelID + "." + ServerHost
 	wsURL := "wss://" + sniHost + "/" + tunnelID
 
 	const maxReconnectAttempts = 5
@@ -177,7 +177,7 @@ func printListenReady(ports []int, tunnelID string) {
 		fmt.Printf("Hosting port: %s%d%s\n", colorCyan, p, colorReset)
 	}
 	for _, p := range ports {
-		fmt.Printf("Tunnel URL: https://%s-%d.%s\n", tunnelID, p, serverHost)
+		fmt.Printf("Tunnel URL: https://%s-%d.%s\n", tunnelID, p, ServerHost)
 	}
 	fmt.Println("Ready to accept connections")
 	fmt.Println("Auto reconnect: enabled")

@@ -143,7 +143,7 @@ func Connect(tunnelID string, jwtToken string, ports []int, apiKey string) {
 
 	header, subprotocols := buildWSHeader(jwtToken, apiKey)
 
-	sniHost := tunnelID + "." + serverHost
+	sniHost := tunnelID + "." + ServerHost
 	wsURL := "wss://" + sniHost + "/"
 
 	factory := newListenerFactory(len(ports))
