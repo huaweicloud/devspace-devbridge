@@ -70,7 +70,7 @@ var createCmd = &cobra.Command{
 			{i18n.T(i18n.Msg.Tunnel.TunnelID), result.TunnelID},
 			{i18n.T(i18n.Msg.Tunnel.Name), result.Name},
 			{i18n.T(i18n.Msg.Tunnel.Description), result.Description},
-			{i18n.T(i18n.Msg.Tunnel.TunnelExpiration), FormatTunnelExpiration(int64(result.ExpirationHours))},
+			{i18n.T(i18n.Msg.Tunnel.TunnelExpiration), formatTunnelExpiration(int64(result.ExpirationHours))},
 		})
 		return nil
 	}),

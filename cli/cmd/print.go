@@ -59,7 +59,7 @@ func printTable(headers []string, rows [][]string) {
 	}
 }
 
-func FormatTunnelExpiration(tunnelExpiration int64) string {
+func formatTunnelExpiration(tunnelExpiration int64) string {
 	if tunnelExpiration >= 24 {
 		days := tunnelExpiration / 24
 		return fmt.Sprintf("%d %s", days, i18n.T(i18n.Msg.Common.Days))
