@@ -2,14 +2,16 @@ package netutil
 
 import (
 	"crypto/tls"
+	"errors"
+	"net"
 	"net/http"
 	"time"
 )
 
 type PingResult struct {
 	StatusText string
-	Latency    time.Duration
-	Err        error
+	Latency   time.Duration
+	Err       error
 }
 
 func PingURI(rawURI string, timeout time.Duration) *PingResult {
@@ -50,12 +52,9 @@ func PingURI(rawURI string, timeout time.Duration) *PingResult {
 }
 
 func isTimeout(err error) bool {
-	if err == nil {
-		return false
-	}
-	type timeout interface{ Timeout() bool }
-	if t, ok := err.(timeout); ok {
-		return t.Timeout()
+	var netErr net.Error
+	if errors.As(err, &netErr) {
+		return netErr.Timeout()
 	}
 	return false
 }

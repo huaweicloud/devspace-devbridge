@@ -2,15 +2,13 @@ package connect
 
 import (
 	"context"
-	"crypto/rand"
 	"crypto/tls"
-	"crypto/x509"
 	"errors"
 	"fmt"
 	"io"
 	"log"
 	"log/slog"
-	"math/big"
+	"math/rand/v2"
 	"net"
 	"net/http"
 	"strings"
@@ -131,15 +129,10 @@ func getHTTPClient(serverHost string) *http.Client {
 }
 
 func createTLSConfig(serverHost string) *tls.Config {
-	rootPool, err := x509.SystemCertPool()
-	if err != nil {
-		rootPool = x509.NewCertPool()
-	}
 	return &tls.Config{
 		MinVersion: tls.VersionTLS12,
 		MaxVersion: tls.VersionTLS13,
 		ServerName: serverHost,
-		RootCAs:    rootPool,
 	}
 }
 
@@ -182,13 +175,7 @@ func dialWithRetry(ctx context.Context, url string, opts *websocket.DialOptions,
 			delay = maxDelay
 		}
 
-		var jittered time.Duration
-		bigN, err := rand.Int(rand.Reader, big.NewInt(int64(delay)))
-		if err != nil {
-			jittered = delay / 2
-		} else {
-			jittered = time.Duration(bigN.Int64())
-		}
+		jittered := time.Duration(rand.Int64N(int64(delay)))
 
 		slog.Debug("WebSocket dial retry", "attempt", attempt+1,
 			"maxRetries", maxRetries, "retryAfter", jittered, "err", lastErr)

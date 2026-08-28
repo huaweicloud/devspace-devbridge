@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
-	"os"
 	"os/signal"
 	"strconv"
 	"sync"
@@ -64,23 +63,12 @@ func (f *listenerFactory) CreateTCPListener(
 		localPort = override
 	}
 
-	if localPort != 0 {
-		conn, err := net.Dial("tcp", net.JoinHostPort(localIPAddress, strconv.Itoa(localPort)))
-		if err == nil {
-			_ = conn.Close()
-			if canChangeLocalPort {
-				return f.listenOnRandomPort(localIPAddress, remotePort, localPort)
-			}
-			return nil, fmt.Errorf("port %d is already in use", localPort)
-		}
-	}
-
 	listener, err := net.Listen("tcp", net.JoinHostPort(localIPAddress, strconv.Itoa(localPort)))
-	if err != nil && canChangeLocalPort {
-		return f.listenOnRandomPort(localIPAddress, remotePort, localPort)
-	}
 	if err != nil {
-		return nil, err
+		if canChangeLocalPort {
+			return f.listenOnRandomPort(localIPAddress, remotePort, localPort)
+		}
+		return nil, fmt.Errorf("port %d is already in use", localPort)
 	}
 	f.portOverrides[remotePort] = localPort
 	f.listeners = append(f.listeners, listener)
@@ -132,14 +120,8 @@ func (f *listenerFactory) waitForForwardings(timeout time.Duration) {
 
 // Connect 启动发送端连接到网关，等待 host 端下发端口转发。
 func Connect(tunnelID string, jwtToken string, ports []int, apiKey string) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		<-sigCh
-		cancel()
-	}()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	header, subprotocols := buildWSHeader(jwtToken, apiKey)
 

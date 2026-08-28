@@ -3,7 +3,6 @@ package auth
 import (
 	"encoding/base64"
 	"fmt"
-	"strings"
 
 	"huawei.com/devbridge/internal/config"
 
@@ -22,21 +21,11 @@ func encodeCredential(cred *Credential) string {
 }
 
 func decodeCredential(blob string) (*Credential, bool) {
-	parts := strings.Split(blob, ":")
-
-	apiKey, err := decodeBase64(parts[0])
+	data, err := base64.StdEncoding.DecodeString(blob)
 	if err != nil {
 		return nil, false
 	}
-	return &Credential{APIKey: apiKey}, true
-}
-
-func decodeBase64(s string) (string, error) {
-	data, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		return "", err
-	}
-	return string(data), nil
+	return &Credential{APIKey: string(data)}, true
 }
 
 func StoreCredential(name string, cred *Credential, userInfo *UserInfo) error {
