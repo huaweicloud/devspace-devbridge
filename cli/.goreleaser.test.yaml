@@ -76,5 +76,5 @@ release:
     - glob: ./dist-extra/install.sh
     - glob: ./dist-extra/install.ps1
   draft: false
-  prerelease: auto
+  prerelease: false
   name_template: "{{ .Tag }}"
