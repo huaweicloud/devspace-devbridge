@@ -11,7 +11,7 @@ import (
 
 var DefaultServerDomain = "https://relay-dev-local.tailb4159e.ts.net:8443"
 
-var ErrKeyNotFound = errors.New("key not found")
+var errKeyNotFound = errors.New("key not found")
 
 var (
 	configMu sync.Mutex
@@ -76,7 +76,7 @@ func Save(cfg map[string]any) error {
 	return os.Chmod(path, 0o600)
 }
 
-func Get(key string) (any, bool) {
+func get(key string) (any, bool) {
 	cfg, err := Load()
 	if err != nil {
 		return nil, false
@@ -85,7 +85,7 @@ func Get(key string) (any, bool) {
 	return v, ok
 }
 
-func Set(key string, value any) error {
+func set(key string, value any) error {
 	cfg, err := Load()
 	if err != nil {
 		return err
@@ -94,13 +94,13 @@ func Set(key string, value any) error {
 	return Save(cfg)
 }
 
-func Delete(key string) error {
+func deleteKey(key string) error {
 	cfg, err := Load()
 	if err != nil {
 		return err
 	}
 	if _, ok := cfg[key]; !ok {
-		return ErrKeyNotFound
+		return errKeyNotFound
 	}
 	delete(cfg, key)
 	return Save(cfg)

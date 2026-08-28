@@ -68,10 +68,10 @@ func traceFunc() ssh.TraceFunc {
 	return nil
 }
 
-// 隧道服务连接地址配置（导出，供 cmd 包引用）.
+// 隧道服务连接地址配置。
 var (
-	ServerAddr = "gateway.cn-north-4-bridge.myhuaweicloud.com:443"
-	ServerHost = "cn-north-4-bridge.myhuaweicloud.com"
+	serverAddr = "gateway.cn-north-4-bridge.myhuaweicloud.com:443"
+	serverHost = "cn-north-4-bridge.myhuaweicloud.com"
 )
 
 const relayChannelType = "relay"
@@ -124,7 +124,7 @@ func getHTTPClient(serverHost string) *http.Client {
 			TLSClientConfig: createTLSConfig(serverHost),
 			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 
-				return dialer.DialContext(ctx, network, ServerAddr)
+				return dialer.DialContext(ctx, network, serverAddr)
 			},
 		},
 	}

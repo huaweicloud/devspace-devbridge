@@ -19,8 +19,8 @@ const (
 	headerXAPIKey = "X-API-Key"
 )
 
-// ErrAPIKeyInvalid 表示 API Key 无效（401）。
-var ErrAPIKeyInvalid = errors.New("api key is invalid or disabled")
+// errAPIKeyInvalid 表示 API Key 无效（401）。
+var errAPIKeyInvalid = errors.New("api key is invalid or disabled")
 
 var verifyClient = &http.Client{
 	Timeout: 10 * time.Second,
@@ -38,7 +38,7 @@ type Identity struct {
 // VerifyAPIKey 校验 API Key 有效性，返回 204 表示有效。
 func VerifyAPIKey(apiKey string) (*Identity, error) {
 	if apiKey == "" {
-		return nil, ErrAPIKeyInvalid
+		return nil, errAPIKeyInvalid
 	}
 
 	url := strings.TrimRight(config.DefaultServerDomain, "/") + authCheckPath
@@ -67,7 +67,7 @@ func VerifyAPIKey(apiKey string) (*Identity, error) {
 	case http.StatusNoContent:
 		return &Identity{}, nil
 	case http.StatusUnauthorized:
-		return nil, ErrAPIKeyInvalid
+		return nil, errAPIKeyInvalid
 	default:
 		return nil, fmt.Errorf("verify api key: unexpected status %d, body=%s", resp.StatusCode, string(body))
 	}

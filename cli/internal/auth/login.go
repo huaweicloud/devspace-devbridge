@@ -82,7 +82,7 @@ const (
 	loginSuccessCode = "0000"
 )
 
-var LoginURL = "https://devstation.ulanqab.huawei.com"
+var loginURL = "https://devstation.ulanqab.huawei.com"
 
 func hcBrowserLogin() (Credential, *UserInfo, error) {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
@@ -100,12 +100,12 @@ func hcBrowserLogin() (Credential, *UserInfo, error) {
 	params.Set("origin", loginOriginParam)
 	params.Set("language", lang)
 	params.Set("callback", fmt.Sprintf("%d", port))
-	redirectURL := fmt.Sprintf(loginPageURL, LoginURL, params.Encode())
+	redirectURL := fmt.Sprintf(loginPageURL, loginURL, params.Encode())
 
 	slog.Debug(i18n.T(i18n.Msg.Auth.OpenBrowser))
 	if err := browser.OpenURL(redirectURL); err != nil {
 		slog.Debug("open browser failed", "err", err)
-		apikeyPageURL := LoginURL + "/space/devbridge/apikey"
+		apikeyPageURL := loginURL + "/space/devbridge/apikey"
 		return Credential{}, nil, fmt.Errorf(i18n.T(i18n.Msg.Auth.NoBrowserHint), apikeyPageURL)
 	}
 	slog.Debug(i18n.T(i18n.Msg.Auth.BrowserOpened))
@@ -118,7 +118,7 @@ func hcBrowserLogin() (Credential, *UserInfo, error) {
 
 	server := &http.Server{
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			handleLoginCallback(w, r, LoginURL, resultCh, errCh)
+			handleLoginCallback(w, r, loginURL, resultCh, errCh)
 		}),
 	}
 	go func() {
@@ -190,7 +190,7 @@ func parseLoginCallbackBody(body []byte) (callbackResponse, error) {
 		return callbackResponse{}, err
 	}
 	if envelope.ErrorCode != loginSuccessCode {
-		apikeyPageURL := LoginURL + "/space/devbridge/apikey"
+		apikeyPageURL := loginURL + "/space/devbridge/apikey"
 		return callbackResponse{}, fmt.Errorf("Failed to login: %w\n%s", &loginError{
 			Code:    envelope.ErrorCode,
 			Message: envelope.ErrorMsg,
