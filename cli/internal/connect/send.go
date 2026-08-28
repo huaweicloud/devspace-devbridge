@@ -68,7 +68,7 @@ func (f *listenerFactory) CreateTCPListener(
 		if canChangeLocalPort {
 			return f.listenOnRandomPort(localIPAddress, remotePort, localPort)
 		}
-		return nil, fmt.Errorf("port %d is already in use", localPort)
+		return nil, fmt.Errorf("port %d is already in use: %w", localPort, err)
 	}
 	f.portOverrides[remotePort] = localPort
 	f.listeners = append(f.listeners, listener)
