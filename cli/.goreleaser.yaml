@@ -54,8 +54,9 @@ archives:
   - formats:
       - tar.gz
     # 保持与 install.sh 对齐: devbridge_{os}_{arch}_{version}[.exe].tar.gz
+    # 注意: 不带 .tar.gz 后缀，GoReleaser 会根据 formats 自动追加
     name_template: >-
-      devbridge_{{ .Os }}_{{ .Arch }}_{{ .Version }}{{ if eq .Os "windows" }}.exe{{ end }}.tar.gz
+      devbridge_{{ .Os }}_{{ .Arch }}_{{ .Version }}{{ if eq .Os "windows" }}.exe{{ end }}
 
 checksum:
   name_template: checksums.txt

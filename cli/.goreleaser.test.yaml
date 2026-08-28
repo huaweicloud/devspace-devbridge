@@ -8,11 +8,12 @@
 #   goreleaser release --clean --skip=publish --skip=post-hooks --config .goreleaser.test.yaml
 #     → 手动触发（非 release 版本）：构建 + 打包 + 存 dist/，不发布
 #
+#   goreleaser release --clean --config .goreleaser.test.yaml
+#     → 手动触发（release 版本）：构建 + 发布 GitHub Release + 上传 GitCode
+#
 # 与 prod 配置的区别:
-#   - ldflags 注入 test 环境的 4 个地址
-#   - 无 release block（不发布 GitHub Release）
-#   - 无 after.hooks（不上传 GitCode）
-#   - 无 bake-install before.hook（test 不需要安装脚本）
+#   - 仅 ldflags 注入 test 环境的 4 个地址不同
+#   - release / before.hooks / after.hooks 完全相同（release 版本都需要烤制脚本 + 上传 GitCode）
 # =============================================================================
 version: 2
 
@@ -21,6 +22,8 @@ project_name: devbridge
 before:
   hooks:
     - go test ./...
+    # 烤制安装脚本：注入版本号 + GitHub Release 下载地址
+    - ./scripts/bake-install.sh {{ .Version }} "https://github.com/huaweicloud/devspace-devbridge/releases/download/{{ .Version }}"
 
 builds:
   - id: devbridge
@@ -49,9 +52,29 @@ builds:
 archives:
   - formats:
       - tar.gz
+    # 保持与 install.sh 对齐: devbridge_{os}_{arch}_{version}[.exe].tar.gz
+    # 注意: 不带 .tar.gz 后缀，GoReleaser 会根据 formats 自动追加
     name_template: >-
-      devbridge_{{ .Os }}_{{ .Arch }}_{{ .Version }}{{ if eq .Os "windows" }}.exe{{ end }}.tar.gz
+      devbridge_{{ .Os }}_{{ .Arch }}_{{ .Version }}{{ if eq .Os "windows" }}.exe{{ end }}
 
 checksum:
   name_template: checksums.txt
   algorithm: sha256
+
+release:
+  github:
+    owner: huaweicloud
+    name: devspace-devbridge
+  # 烤制好的安装脚本作为额外附件
+  extra_files:
+    - glob: ./dist-extra/install.sh
+    - glob: ./dist-extra/install.ps1
+  draft: false
+  prerelease: auto
+  name_template: "{{ .Tag }}"
+  generate_release_notes: true
+
+after:
+  hooks:
+    # 上传到 GitCode Release（需 GITCODE_TOKEN 环境变量，留空则跳过）
+    - ./scripts/post-release.sh {{ .Version }}
