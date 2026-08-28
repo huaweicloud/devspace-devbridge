@@ -241,7 +241,7 @@ Environment Variables:
     # ---------------------------------------------------------------------------
     # Test-RemoteHash - 比较本地已安装版本与目标版本
     #
-    # 打包后 .sha256 在 tar.gz 内，不再单独下载。
+    # GoReleaser 产物: checksums.txt 在 Release 根目录，tar.gz 内只有二进制。
     # 改为直接比较已安装二进制的 version 输出与目标版本号。
     # ---------------------------------------------------------------------------
     function Test-RemoteHash {
@@ -314,7 +314,7 @@ Environment Variables:
     # Download-Binary - 从远程下载 tar.gz 包并解压
     #
     # 下载源：显式 -Url 优先，否则用 DEFAULT_ARTIFACT_URL（各渠道烤制时写入自己的地址）
-    # 返回解压后的二进制文件路径（.sha256 也在同目录下，供 Verify-Checksum 使用）
+    # 返回解压后的二进制文件路径（checksums.txt 也在同目录下，供 Verify-Checksum 使用）
     # ---------------------------------------------------------------------------
     function Download-Binary {
         param([string]$Url, [string]$OutputDir)
@@ -327,6 +327,12 @@ Environment Variables:
 
         Write-Step "Downloading from ${remoteUrl} ..."
         Invoke-HttpGet -Url $remoteUrl -Output $localTarball
+
+        # 下载 checksums.txt（GoReleaser 生成的校验汇总文件，besteffort: 旧 Release 可能没有）
+        $checksumsUrl = "${mirror}/checksums.txt"
+        Write-Step "Downloading ${checksumsUrl} ..."
+        $checksumsPath = Join-Path $OutputDir "checksums.txt"
+        Invoke-HttpGet -Url $checksumsUrl -Output $checksumsPath -BestEffort
 
         # 解压 tar.gz（Windows 10+ 内置 tar）
         Write-Step "Extracting ${tarballName} ..."
@@ -354,22 +360,36 @@ Possible fixes:
     function Verify-Checksum {
         param([string]$BinaryFile)
 
-        $shaFile = "${BinaryFile}.sha256"
+        # GoReleaser 产物: checksums.txt 在 Release 根目录，校验对象是 tar.gz 而非裸二进制
+        $tarballFile = "${BinaryFile}.tar.gz"
+        $checksumsFile = Join-Path (Split-Path $BinaryFile) "checksums.txt"
 
         if ($Script:SKIP_CHECKSUM) {
             Write-Warn "Skipping checksum verification"
             return
         }
 
-        if (-not (Test-Path $shaFile)) {
-            Write-Warn "SHA256 file not found, skipping checksum verification"
+        if (-not (Test-Path $checksumsFile)) {
+            Write-Warn "checksums.txt not found, skipping checksum verification"
             return
         }
 
-        $localHash = Get-FileSha256 -Path $BinaryFile
+        if (-not (Test-Path $tarballFile)) {
+            Write-Warn "Archive $tarballFile not found, skipping checksum verification"
+            return
+        }
 
-        $shaContent = Get-Content -Path $shaFile -Raw
-        $remoteHash = ($shaContent -split "`n" | Select-Object -First 1).Trim() -split '\s' | Select-Object -First 1
+        $localHash = Get-FileSha256 -Path $tarballFile
+
+        # checksums.txt 格式: <hash>  <filename>，查找 tar.gz 对应的 hash
+        $tarballBasename = Split-Path $tarballFile -Leaf
+        $remoteHash = ""
+        foreach ($line in (Get-Content $checksumsFile)) {
+            if ($line -match "\s+$($tarballBasename)$") {
+                $remoteHash = ($line -split "\s+")[0]
+                break
+            }
+        }
         if ([string]::IsNullOrWhiteSpace($remoteHash)) {
             Write-Warn "Remote hash is empty, skipping checksum verification"
             return
@@ -379,7 +399,7 @@ Possible fixes:
             return
         }
 
-        Write-ErrorAndExit "Checksum verification failed for ${BinaryFile}"
+        Write-ErrorAndExit "Checksum verification failed for ${tarballFile}"
     }
 
     # ---------------------------------------------------------------------------

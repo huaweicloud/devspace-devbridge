@@ -1,12 +1,12 @@
 # =============================================================================
-# Build and Release DevBridge CLI
+# Build and Release DevBridge CLI (GoReleaser)
 #
 # 触发:
-#   pull_request       提 PR 时自动构建 + 测试（验证代码能编译，不发布 Release）
+#   pull_request       提 PR 时自动构建（验证代码能编译，不发布 Release）
 #   workflow_dispatch  手动触发（构建 + 可选发布 Release）
 #
 # PR 触发:
-#   自动运行，环境固定 test，强制不发布 Release（即使版本号含 "release"）
+#   自动运行，环境固定 test，goreleaser build --snapshot（只编译，不打包不发布）
 #
 # 手动触发:
 #   inputs.version       版本号（留空则 git describe --tags --always）
@@ -14,14 +14,14 @@
 #   inputs.gitcode_token GitCode 个人访问令牌（留空则跳过 GitCode 上传）
 #
 # 发布逻辑:
-#   PR 触发            → 仅构建 + 测试，不发布 Release（无论版本号是否含 "release"）
-#   版本号包含 "release" → 烤制安装脚本 + 发布 GitHub Release + 上传 GitCode Release
-#   版本号不含 "release" → 仅构建并存为 workflow artifact
+#   PR 触发            → 仅编译验证，不发布
+#   版本号包含 "release" → goreleaser release（发布 GitHub Release + 上传 GitCode Release）
+#   版本号不含 "release" → goreleaser release --skip=publish（构建打包存 artifact，不发布）
 #
-# Release 附件（散装单文件，可直接 curl 下载）:
-#   devbridge_{OS}_{Arch}_{Version}[.exe]         ×6 平台二进制
-#   devbridge_{OS}_{Arch}_{Version}[.exe].sha256  ×6 校验文件
-#   install.sh / install.ps1                      版本与 Release 地址已内置
+# Release 附件（GoReleaser 自动管理）:
+#   devbridge_{OS}_{Arch}_{Version}[.exe].tar.gz   ×6 平台压缩包
+#   checksums.txt                                    SHA256 校验汇总
+#   install.sh / install.ps1                        版本与 Release 地址已内置
 #
 # 发布目标:
 #   GitHub:  https://github.com/<repo>/releases/download/<Version>/install.sh
@@ -67,7 +67,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      # ---- 解析版本号、环境、Release 下载基址 ----
+      # ---- 解析版本号、环境、是否发布 ----
       - name: Resolve metadata
         id: meta
         run: |
@@ -92,19 +92,26 @@ jobs:
           # PR 触发时强制不发布（即使版本号含 "release"，避免误发 Release）
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "is_release=false" >> "$GITHUB_OUTPUT"
+            echo "is_pr=true" >> "$GITHUB_OUTPUT"
             echo "  发布 Release: 否（PR 触发，跳过发布）"
           elif echo "$VERSION" | grep -qi "release"; then
             echo "is_release=true" >> "$GITHUB_OUTPUT"
+            echo "is_pr=false" >> "$GITHUB_OUTPUT"
             echo "  发布 Release: 是"
           else
             echo "is_release=false" >> "$GITHUB_OUTPUT"
+            echo "is_pr=false" >> "$GITHUB_OUTPUT"
             echo "  发布 Release: 否（仅构建，不发布 Release）"
           fi
 
-          # Release 下载基址（tag = 版本号）；install 脚本据此拼接单个二进制 URL
-          RELEASE_URL="${{ github.server_url }}/${{ github.repository }}/releases/download/${VERSION}"
-          echo "release_url=$RELEASE_URL" >> "$GITHUB_OUTPUT"
-          echo "  Release URL: $RELEASE_URL"
+          # 选择 GoReleaser config
+          if [ "$ENV" = "test" ]; then
+            CONFIG=".goreleaser.test.yaml"
+          else
+            CONFIG=".goreleaser.yaml"
+          fi
+          echo "config=$CONFIG" >> "$GITHUB_OUTPUT"
+          echo "  GoReleaser config: $CONFIG"
 
       # ---- 装 Go（go.mod 声明 1.26）----
       - name: Setup Go
@@ -113,23 +120,60 @@ jobs:
           go-version: '1.26'
           cache-dependency-path: cli/go.sum
 
-      # ---- 跑单元测试 ----
-      - name: Run tests
-        working-directory: cli
-        run: go test ./...
+      # ---- 装 GoReleaser ----
+      - name: Setup GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: latest
+          install-only: true
 
-      # ---- 构建：调 build.sh，-e 选环境，-v 指定版本号 ----
-      - name: Build all platforms
-        working-directory: cli
-        run: |
-          ./scripts/build.sh -e "${{ steps.meta.outputs.env }}" -v "${{ steps.meta.outputs.version }}"
-
-      # ---- 验证注入生效：跑一下 linux 产物，打印内嵌版本号 ----
-      - name: Verify injected version
+      # ---- 创建本地 tag（GoReleaser 依赖 tag 推导版本号）----
+      # 非快照模式需要 tag；PR 快照模式不需要
+      - name: Create local tag
+        if: steps.meta.outputs.is_pr != 'true'
         working-directory: cli
         run: |
           VERSION="${{ steps.meta.outputs.version }}"
-          TARBALL="bin/devbridge_linux_amd64_${VERSION}.tar.gz"
+          git tag -f "${VERSION}" HEAD
+          echo "已创建本地 tag: ${VERSION}"
+
+      # ---- PR 触发：只编译验证，不打包不发布 ----
+      - name: Build (PR snapshot)
+        if: steps.meta.outputs.is_pr == 'true'
+        working-directory: cli
+        run: |
+          goreleaser build --snapshot --clean --config ${{ steps.meta.outputs.config }}
+          echo "✓ PR 编译验证通过"
+
+      # ---- 手动触发，非 release 版本：构建 + 打包，不发布 ----
+      - name: Build (no release)
+        if: steps.meta.outputs.is_pr != 'true' && steps.meta.outputs.is_release != 'true'
+        working-directory: cli
+        run: |
+          goreleaser release --clean --skip=publish --skip=post-hooks \
+            --config ${{ steps.meta.outputs.config }}
+
+      # ---- 手动触发，release 版本：构建 + 发布 GitHub Release + 上传 GitCode ----
+      - name: Release
+        if: steps.meta.outputs.is_release == 'true'
+        working-directory: cli
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITCODE_TOKEN: ${{ inputs.gitcode_token }}
+        run: |
+          goreleaser release --clean --config ${{ steps.meta.outputs.config }}
+
+      # ---- 验证注入生效：跑一下 linux 产物，打印内嵌版本号 ----
+      - name: Verify injected version
+        if: steps.meta.outputs.is_pr != 'true'
+        working-directory: cli
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          TARBALL="dist/devbridge_linux_amd64_${VERSION}.tar.gz"
+          if [ ! -f "$TARBALL" ]; then
+            echo "⚠️  tar.gz 不存在（可能是 snapshot 模式只编译不打包），跳过验证"
+            exit 0
+          fi
           mkdir -p /tmp/verify
           tar xzf "$TARBALL" -C /tmp/verify
           BIN="/tmp/verify/devbridge_linux_amd64_${VERSION}"
@@ -138,93 +182,15 @@ jobs:
             { echo "❌ 版本号注入不匹配！"; exit 1; }
           rm -rf /tmp/verify
 
-      # ---- 烤制一键安装脚本：注入版本号 + Release 下载基址 ----
-      # 仅 release 版本执行（非 release 版本不需要安装脚本）
-      # ---- 烤制安装脚本：只注入版本号，DEFAULT_ARTIFACT_URL 保留 OBS 默认值 ----
-      # artifact 里的 install.sh 带 OBS 地址，可直接手动上传到 OBS 桶
-      - name: Bake install scripts
-        if: steps.meta.outputs.is_release == 'true'
-        working-directory: cli
-        run: |
-          VERSION="${{ steps.meta.outputs.version }}"
-          sed -e "s|^DEFAULT_VERSION=.*|DEFAULT_VERSION=\"${VERSION}\"|" \
-              install.sh > bin/install.sh
-          chmod +x bin/install.sh
-          sed -e "s|DEFAULT_VERSION = \".*\"|DEFAULT_VERSION = \"${VERSION}\"|" \
-              install.ps1 > bin/install.ps1
-          echo "=== baked install.sh (OBS default URL) ==="
-          grep -E '^DEFAULT_ARTIFACT_URL=|^DEFAULT_VERSION=' bin/install.sh
-          echo "=== baked install.ps1 ==="
-          grep -E 'DEFAULT_ARTIFACT_URL = "|DEFAULT_VERSION = "' bin/install.ps1 | head -2
-
-      # ---- 存 artifact（备份，含安装脚本）----
+      # ---- 存 artifact（备份）----
       - name: Upload artifacts
+        if: steps.meta.outputs.is_pr != 'true'
         uses: actions/upload-artifact@v7
         with:
           name: devbridge-${{ steps.meta.outputs.version }}
           path: |
-            cli/bin/devbridge_*.tar.gz
-            cli/bin/install.sh
-            cli/bin/install.ps1
-          if-no-files-found: error
-
-      # ---- 烤制 GitHub Release 专用安装脚本：把 DEFAULT_ARTIFACT_URL 改为 GitHub 地址 ----
-      - name: Bake install scripts for GitHub Release
-        if: steps.meta.outputs.is_release == 'true'
-        working-directory: cli
-        run: |
-          RELEASE_URL="${{ steps.meta.outputs.release_url }}"
-          sed -i "s|^DEFAULT_ARTIFACT_URL=.*|DEFAULT_ARTIFACT_URL=\"${RELEASE_URL}\"|" bin/install.sh
-          sed -i "s|DEFAULT_ARTIFACT_URL = \".*\"|DEFAULT_ARTIFACT_URL = \"${RELEASE_URL}\"|" bin/install.ps1
-          echo "=== GitHub Release install.sh ==="
-          grep -E '^DEFAULT_ARTIFACT_URL=' bin/install.sh
-
-      # ---- 创建 GitHub Release，挂全部产物 + 安装脚本 ----
-      # 仅 release 版本执行
-      - name: Create GitHub Release
-        if: steps.meta.outputs.is_release == 'true'
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: ${{ steps.meta.outputs.version }}
-          name: ${{ steps.meta.outputs.version }}
-          files: |
-            cli/bin/devbridge_*.tar.gz
-            cli/bin/install.sh
-            cli/bin/install.ps1
-          generate_release_notes: true
-          fail_on_unmatched_files: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # ---- 镜像上传到 GitCode Release（CloudDeveloperDepartment/devbrige）----
-      # 产物与 GitHub Release 完全相同；GitCode Release 用同一 tag。
-      # 令牌通过 workflow input 传入（仓库 Write 权限无法配 Secret）。
-      # 仅 release 版本执行
-      - name: Upload to GitCode Release
-        if: steps.meta.outputs.is_release == 'true'
-        working-directory: cli
-        env:
-          GITCODE_TOKEN: ${{ inputs.gitcode_token }}
-        run: |
-          if [ -z "$GITCODE_TOKEN" ]; then
-            echo "⚠️  未传入 gitcode_token，跳过 GitCode Release 上传"
-            echo "    如需上传：触发 workflow 时在 gitcode_token 输入框填入 GitCode 个人访问令牌"
-            exit 0
-          fi
-
-          # 确保 jq 可用（ubuntu-latest 默认已装，防御性检查）
-          if ! command -v jq >/dev/null 2>&1; then
-            sudo apt-get update -qq && sudo apt-get install -y -qq jq
-          fi
-
-          # 令牌不回显到日志
-          echo "GitCode 令牌已接收（${#GITCODE_TOKEN} 字符），开始上传..."
-
-          ./scripts/upload-gitcode-release.sh \
-            -t "$GITCODE_TOKEN" \
-            -o CloudDeveloperDepartment \
-            -r devbrige \
-            -v "${{ steps.meta.outputs.version }}" \
-            -d bin \
-            -n "${{ steps.meta.outputs.version }}" \
-            -b "DevBridge CLI ${{ steps.meta.outputs.version }} - 同步自 GitHub Release"
+            cli/dist/devbridge_*.tar.gz
+            cli/dist/checksums.txt
+            cli/dist-extra/install.sh
+            cli/dist-extra/install.ps1
+          if-no-files-found: warn

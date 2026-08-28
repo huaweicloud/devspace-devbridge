@@ -1,0 +1,57 @@
+# =============================================================================
+# GoReleaser 配置 — test 环境
+#
+# 用法:
+#   goreleaser build --snapshot --clean --config .goreleaser.test.yaml
+#     → PR 触发：只验证编译，不打包不发布
+#
+#   goreleaser release --clean --skip=publish --skip=post-hooks --config .goreleaser.test.yaml
+#     → 手动触发（非 release 版本）：构建 + 打包 + 存 dist/，不发布
+#
+# 与 prod 配置的区别:
+#   - ldflags 注入 test 环境的 4 个地址
+#   - 无 release block（不发布 GitHub Release）
+#   - 无 after.hooks（不上传 GitCode）
+#   - 无 bake-install before.hook（test 不需要安装脚本）
+# =============================================================================
+version: 2
+
+project_name: devbridge
+
+before:
+  hooks:
+    - go test ./...
+
+builds:
+  - id: devbridge
+    main: ./cmd/cli
+    binary: devbridge_{{ .Os }}_{{ .Arch }}_{{ .Version }}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X huawei.com/devbridge/cmd.version={{ .Version }}
+      - -X huawei.com/devbridge/internal/auth.LoginURL=https://devstation.ulanqab.huawei.com
+      - -X huawei.com/devbridge/internal/config.DefaultServerDomain=https://100.85.118.163:8443
+      - -X huawei.com/devbridge/internal/connect.ServerAddr=100.85.117.75:443
+      - -X huawei.com/devbridge/internal/connect.ServerHost=cn-north-4-bridge.myhuaweicloud.com
+    flags:
+      - -trimpath
+    buildmode: pie
+
+archives:
+  - formats:
+      - tar.gz
+    name_template: >-
+      devbridge_{{ .Os }}_{{ .Arch }}_{{ .Version }}{{ if eq .Os "windows" }}.exe{{ end }}.tar.gz
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256

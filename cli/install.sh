@@ -295,7 +295,7 @@ check_existing_install() {
 # ---------------------------------------------------------------------------
 # check_remote_hash - 比较本地已安装版本与目标版本
 #
-# 打包后 .sha256 在 tar.gz 内，不再单独下载。
+# GoReleaser 产物: checksums.txt 在 Release 根目录，tar.gz 内只有二进制。
 # 改为直接比较已安装二进制的 version 输出与目标版本号。
 # ---------------------------------------------------------------------------
 check_remote_hash() {
@@ -334,7 +334,7 @@ prompt_clean_old_data() {
 # download_binary - 从远程下载 tar.gz 包并解压
 #
 # 下载源：显式 -u 优先，否则用 DEFAULT_ARTIFACT_URL（各渠道烤制时写入自己的地址）
-# 返回解压后的二进制文件路径（.sha256 也在同目录下，供 verify_checksum 使用）
+# 返回解压后的二进制文件路径（checksums.txt 也在同目录下，供 verify_checksum 使用）
 # ---------------------------------------------------------------------------
 download_binary() {
     local url="$1" output_dir="$2"
@@ -347,6 +347,11 @@ download_binary() {
 
     verbose "Downloading ${remote_url} ..."
     http_get "${remote_url}" "${local_tarball}"
+
+    # 下载 checksums.txt（GoReleaser 生成的校验汇总文件，besteffort: 旧 Release 可能没有）
+    local checksums_url="${mirror}/checksums.txt"
+    verbose "Downloading ${checksums_url} ..."
+    http_get "${checksums_url}" "${output_dir}/checksums.txt" besteffort
 
     verbose "Extracting ${tarball_name} ..."
     tar xzf "${local_tarball}" -C "${output_dir}"
@@ -361,34 +366,45 @@ download_binary() {
 # ---------------------------------------------------------------------------
 verify_checksum() {
     local binary_file="$1"
-    local sha_file="${binary_file}.sha256"
+    # GoReleaser 产物: checksums.txt 在 Release 根目录，校验对象是 tar.gz 而非裸二进制
+    local tarball_file="${binary_file}.tar.gz"
+    local checksums_file
+    checksums_file="$(dirname "${binary_file}")/checksums.txt"
 
     if [[ "${SKIP_CHECKSUM}" == true ]]; then
         warn "Skipping checksum verification"
         return 0
     fi
 
-    if [[ ! -f "${sha_file}" ]]; then
-        warn "SHA256 file not found, skipping checksum verification"
+    if [[ ! -f "${checksums_file}" ]]; then
+        warn "checksums.txt not found, skipping checksum verification"
+        return 0
+    fi
+
+    if [[ ! -f "${tarball_file}" ]]; then
+        warn "Archive ${tarball_file} not found, skipping checksum verification"
         return 0
     fi
 
     local local_hash
-    local_hash=$(compute_sha256 "${binary_file}")
+    local_hash=$(compute_sha256 "${tarball_file}")
     if [[ -z "${local_hash}" ]]; then
         warn "No sha256 tool available, skipping checksum verification"
         return 0
     fi
 
+    # checksums.txt 格式: <hash>  <filename>，查找 tar.gz 对应的 hash
+    local tarball_basename
+    tarball_basename=$(basename "${tarball_file}")
     local remote_hash
-    remote_hash=$(awk '{print $1}' "${sha_file}" | head -1)
+    remote_hash=$(grep "${tarball_basename}\$" "${checksums_file}" | awk '{print $1}' | head -1)
     [[ -z "${remote_hash}" ]] && { warn "Remote hash is empty, skipping checksum verification"; return 0; }
 
     if [[ "${local_hash}" == "${remote_hash}" ]]; then
         return 0
     fi
 
-    error "Checksum verification failed for ${binary_file}"
+    error "Checksum verification failed for ${tarball_file}"
 }
 
 # ---------------------------------------------------------------------------
