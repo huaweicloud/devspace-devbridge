@@ -15,7 +15,7 @@
 #
 # 发布逻辑:
 #   PR 触发            → 仅编译验证，不发布
-#   版本号包含 "release" → goreleaser release（发布 GitHub Release + 上传 GitCode Release）
+#   版本号包含 "release" → goreleaser release（发布 GitHub Release）+ 上传 GitCode Release
 #   版本号不含 "release" → goreleaser release --skip=publish（构建打包存 artifact，不发布）
 #
 # Release 附件（GoReleaser 自动管理）:
@@ -150,18 +150,27 @@ jobs:
         if: steps.meta.outputs.is_pr != 'true' && steps.meta.outputs.is_release != 'true'
         working-directory: cli
         run: |
-          goreleaser release --clean --skip=publish --skip=post-hooks \
+          goreleaser release --clean --skip=publish \
             --config ${{ steps.meta.outputs.config }}
 
-      # ---- 手动触发，release 版本：构建 + 发布 GitHub Release + 上传 GitCode ----
+      # ---- 手动触发，release 版本：构建 + 发布 GitHub Release ----
       - name: Release
         if: steps.meta.outputs.is_release == 'true'
         working-directory: cli
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITCODE_TOKEN: ${{ inputs.gitcode_token }}
         run: |
           goreleaser release --clean --config ${{ steps.meta.outputs.config }}
+
+      # ---- 上传到 GitCode Release（release 版本 + 提供了 token 才执行）----
+      # after.hooks 是 GoReleaser Pro 功能，OSS 版用 workflow 步骤替代
+      - name: Upload to GitCode
+        if: steps.meta.outputs.is_release == 'true' && inputs.gitcode_token != ''
+        working-directory: cli
+        env:
+          GITCODE_TOKEN: ${{ inputs.gitcode_token }}
+        run: |
+          ./scripts/post-release.sh ${{ steps.meta.outputs.version }}
 
       # ---- 验证注入生效：跑一下 linux 产物，打印内嵌版本号 ----
       - name: Verify injected version

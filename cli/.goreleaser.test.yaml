@@ -5,15 +5,18 @@
 #   goreleaser build --snapshot --clean --config .goreleaser.test.yaml
 #     → PR 触发：只验证编译，不打包不发布
 #
-#   goreleaser release --clean --skip=publish --skip=post-hooks --config .goreleaser.test.yaml
+#   goreleaser release --clean --skip=publish --config .goreleaser.test.yaml
 #     → 手动触发（非 release 版本）：构建 + 打包 + 存 dist/，不发布
 #
 #   goreleaser release --clean --config .goreleaser.test.yaml
-#     → 手动触发（release 版本）：构建 + 发布 GitHub Release + 上传 GitCode
+#     → 手动触发（release 版本）：构建 + 发布 GitHub Release
 #
 # 与 prod 配置的区别:
 #   - 仅 ldflags 注入 test 环境的 4 个地址不同
-#   - release / before.hooks / after.hooks 完全相同（release 版本都需要烤制脚本 + 上传 GitCode）
+#   - release / before.hooks 完全相同（release 版本都需要烤制脚本）
+#
+# 注意: after.hooks 是 GoReleaser Pro 功能，OSS 版不支持。
+# GitCode 上传由 workflow 的单独步骤完成（post-release.sh）。
 # =============================================================================
 version: 2
 
@@ -61,6 +64,9 @@ checksum:
   name_template: checksums.txt
   algorithm: sha256
 
+changelog:
+  use: github
+
 release:
   github:
     owner: huaweicloud
@@ -72,9 +78,3 @@ release:
   draft: false
   prerelease: auto
   name_template: "{{ .Tag }}"
-  generate_release_notes: true
-
-after:
-  hooks:
-    # 上传到 GitCode Release（需 GITCODE_TOKEN 环境变量，留空则跳过）
-    - ./scripts/post-release.sh {{ .Version }}
