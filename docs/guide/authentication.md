@@ -34,6 +34,14 @@ devbridge auth login
 
 不要把真实 API Key 直接写进命令、脚本或流水线定义。应通过受保护的环境变量或密钥服务注入。
 
+### 获取 API Key
+
+你可以在 DevBridge 管理页面创建和管理 API Key：
+
+> **API Key 管理页面**：<https://devstation.connect.huaweicloud.com/space/devbridge/apikey>
+
+在该页面创建新的 API Key 后，将其复制并通过环境变量 `HW_API_KEY` 注入 CLI 即可使用。
+
 ## 查看登录状态
 
 ```bash
