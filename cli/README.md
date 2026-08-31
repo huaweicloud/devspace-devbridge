@@ -365,9 +365,10 @@ devbridge [-v|--verbose]                      # 全局调试日志标志
 │   ├── logging/            # 结构化日志（slog Handler + 动态级别）
 │   └── netutil/            # 网络工具（URI ping + 系统代理探测）
 ├── scripts/                # 构建与发布脚本
-│   ├── build.sh            # 跨平台构建脚本（6 平台 + SHA256 + ldflags 注入）
+│   ├── bake-install.sh     # 烤制安装脚本（注入版本号 + Release 下载地址，GoReleaser before.hook）
+│   ├── post-release.sh     # Release 后处理（收集产物 + 调用 GitCode 上传）
 │   └── upload-gitcode-release.sh  # GitCode Release 上传脚本（含 latest 滚动）
-├── Makefile                # Make 构建脚本
+├── Makefile                # 本地构建快捷命令（build-dev/build-test/build-prod）
 ├── install.sh              # 一键安装脚本 - Bash（远程下载 + SHA256 校验 + 跨平台）
 ├── install.ps1             # 一键安装脚本 - PowerShell
 ├── go.mod                  # Go 模块定义

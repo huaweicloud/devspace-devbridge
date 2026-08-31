@@ -2,7 +2,7 @@
 
 本文件记录 DevBridge 文档站点的变更内容。
 
-## 2026-08-25
+## 2026-08-31
 
 ### 端侧变更
 
@@ -15,11 +15,15 @@
 - 移除 `--access-key`、`--secret-key` 和 `--security-token` 参数。
 - 新增 `HW_API_KEY` 环境变量支持，CLI 自动读取。
 - 浏览器登录回调适配 `{error_code, error_msg, result}` 包装格式，失败错误格式与 API 客户端一致。
+- 登录失败时附上 API Key 管理页 URL，提示用户删除后重试。
+- 凭证存储改为 Keyring 优先、配置文件降级，移除过期逻辑。
 
 ##### Host / Connect
 
 - `host` 和 `connect` 命令新增 `--token` / `-t` 参数，支持直接传入 JWT 令牌，跳过 API 令牌签发和端口查询。
 - `host` 和 `connect` 命令新增 `--api-key` / `-k` 参数，支持使用 API Key 鉴权，跳过 TunnelToken 签发。
+- `host` 和 `connect` 支持通过 `set` 设置的默认隧道，未指定隧道 ID 时自动使用。
+- `connect --token` 模式要求显式指定隧道 ID，不走默认隧道。
 
 ##### 隧道详情
 
@@ -28,6 +32,40 @@
 #### 移除
 
 - 移除 `list` 和 `port list` 命令的 `-j` / JSON 输出参数。
+- 移除 `--huaweicloud` flag 和 `loginType` 参数。
+- 移除开发用自签名证书。
+
+### 构建与发布
+
+#### 变更
+
+##### CI 流水线
+
+- 新增 `build-cli.yml` 工作流，支持手动触发构建和 PR 自动构建验证。
+- PR 触发时仅编译验证（`goreleaser build --snapshot`），不发布 Release。
+- 版本号包含 `release` 时才发布到 GitHub Release 和 GitCode Release。
+
+##### GoReleaser
+
+- 构建工具从手写跨平台脚本迁移到 GoReleaser，统一管理 6 平台交叉编译、版本号注入、SHA256 校验和 tar.gz 打包。
+- 烤制安装脚本（`bake-install.sh`）作为 GoReleaser `before.hook`，自动注入版本号和 Release 下载地址。
+- 移除已废弃的 `scripts/build.sh` 手写构建脚本。
+
+##### GitCode Release
+
+- 构建产物镜像上传到 GitCode Release，支持 `latest` 滚动标签。
+- 上传采用两步式 API（upload_url + PUT），增加超时和重试机制。
+
+##### 安装脚本
+
+- 精简为纯远程模式，支持多源自动检测（GitHub / GitCode / OBS）。
+- 各渠道独立烤制下载地址，不做跨源 fallback。
+
+### 安全与质量
+
+- 修复 7 个 P0 安全问题（gosec）。
+- 修复 codecheck P1/P2/P3 问题。
+- 后端 API 请求改用 HTTPS。
 
 ## 2026-08-11
 
