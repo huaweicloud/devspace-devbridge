@@ -33,18 +33,16 @@
 
 - 移除 `list` 和 `port list` 命令的 `-j` / JSON 输出参数。
 - 移除 `--huaweicloud` flag 和 `loginType` 参数。
-- 移除开发用自签名证书。
 
 ### 服务端变更
 
-#### Management Service
+#### 新增
 
-- 新增 `mgmt-service`，根据已认证用户的 `domainId`、`userId` 解析或创建 namespace。
-- 同一云账户下的用户拥有独立 namespace，隔离隧道资源，并通过共享 `accountNamespace` 统一计算账户额度。
-- 支持 API key 创建、列表查询、删除与校验；校验返回 namespace、accountNamespace 和 scope。
-- API key 按 `devbridge`、`devbox` 场景区分，每个 namespace 每种 scope 最多 20 个 key。
-- API key 完整值仅在创建时返回，列表展示脱敏值和最近使用时间；删除后无法再通过校验。
-- Relay Controller 支持通过 `X-API-Key` 接收业务凭证，调用 Management Service 校验并获取对应身份。
+##### API Key 管理
+
+- 新增 API Key 创建、查看和删除功能。
+- API Key 按 DevBridge、DevBox 使用场景区分，每个场景最多可创建 20 个。
+- API Key 完整值仅在创建时展示，列表显示脱敏值和最近使用时间；删除后立即失效。
 
 ### 构建与发布
 
