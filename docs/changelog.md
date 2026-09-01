@@ -33,7 +33,6 @@
 
 - 移除 `list` 和 `port list` 命令的 `-j` / JSON 输出参数。
 - 移除 `--huaweicloud` flag 和 `loginType` 参数。
-- 移除开发用自签名证书。
 
 ### 服务端变更
 
