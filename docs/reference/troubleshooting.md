@@ -52,7 +52,7 @@ devbridge auth logout
 devbridge auth login
 ```
 
-使用临时 AK/SK 时，确认 AK、SK 和 Security Token 来自同一组凭证且都未过期。
+使用 API Key 登录时，确认 API Key 有效且未过期。通过环境变量传入时，检查 `HW_API_KEY` 是否已正确设置。
 
 ## 找不到隧道
 
@@ -132,7 +132,7 @@ devbridge port create <tunnelId> -p 8080 --protocol http
 
 - `devbridge version`；
 - 操作系统和架构；
-- 执行的命令，不包含 AK、SK 和令牌；
+- 执行的命令，不包含 API Key 和令牌；
 - 隧道 ID、端口和协议；
 - 错误发生时间；
 - 已脱敏的错误信息。

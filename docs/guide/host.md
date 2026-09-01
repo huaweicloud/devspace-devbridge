@@ -42,6 +42,26 @@ devbridge host -p 8080 -d "隧道描述信息" -e 8
 需要稳定地址、多个端口或明确访问策略时，建议先使用 `devbridge create` 和
 `devbridge port create` 完成配置，再启动 Host。
 
+## 使用已有令牌
+
+集成其他客户端或跳过 API 调用时，可以直接提供 JWT 令牌：
+
+```bash
+devbridge host <tunnelId> --token <jwt>
+```
+
+`--token` 模式跳过令牌签发和端口查询，端口由网关通过中继通道下发。必须显式指定隧道 ID。
+
+## 使用 API Key 鉴权
+
+跳过令牌签发，直接使用 API Key 通过 WebSocket 认证：
+
+```bash
+devbridge host <tunnelId> --api-key <key>
+```
+
+此模式仍会通过 API 查询隧道端口配置，但跳过 TunnelToken 签发步骤。
+
 ## 访问隧道地址
 
 Host 成功后会输出隧道 ID 和访问地址，形如：

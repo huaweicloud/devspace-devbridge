@@ -1,0 +1,78 @@
+# =============================================================================
+# GoReleaser 配置 — prod 环境
+#
+# 用法:
+#   goreleaser release --clean                     # 从 git tag 推导版本，发布 Release
+#   goreleaser release --clean --skip=publish      # 构建但不发布（仅产物到 dist/）
+#
+# 产物:
+#   dist/devbridge_{os}_{arch}_{version}[.exe].tar.gz   ×6 平台压缩包
+#   dist/checksums.txt                                  SHA256 校验汇总
+#   dist-extra/install.sh / install.ps1                烤制的安装脚本
+#
+# Release 附件（GitHub）:
+#   6 个 tar.gz + checksums.txt + install.sh + install.ps1
+#
+# 注意: after.hooks 是 GoReleaser Pro 功能，OSS 版不支持。
+# GitCode 上传由 workflow 的单独步骤完成（post-release.sh）。
+# =============================================================================
+version: 2
+
+project_name: devbridge
+
+before:
+  hooks:
+    - go test ./...
+    # 烤制安装脚本：注入版本号 + GitHub Release 下载地址
+    - ./scripts/bake-install.sh {{ .Version }} "https://github.com/huaweicloud/devspace-devbridge/releases/download/{{ .Version }}"
+
+builds:
+  - id: devbridge
+    main: ./cmd/cli
+    binary: devbridge_{{ .Os }}_{{ .Arch }}_{{ .Version }}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X huawei.com/devbridge/cmd.version={{ .Version }}
+      - -X huawei.com/devbridge/internal/auth.LoginURL=https://devstation.connect.huaweicloud.com
+      - -X huawei.com/devbridge/internal/config.DefaultServerDomain=https://bridge.developer.myhuaweicloud.com
+      - -X huawei.com/devbridge/internal/connect.ServerAddr=gateway.cn-north-4-bridge.myhuaweicloud.com:443
+      - -X huawei.com/devbridge/internal/connect.ServerHost=cn-north-4-bridge.myhuaweicloud.com
+    flags:
+      - -trimpath
+    buildmode: pie
+
+archives:
+  - formats:
+      - tar.gz
+    # 保持与 install.sh 对齐: devbridge_{os}_{arch}_{version}[.exe].tar.gz
+    # 注意: 不带 .tar.gz 后缀，GoReleaser 会根据 formats 自动追加
+    name_template: >-
+      devbridge_{{ .Os }}_{{ .Arch }}_{{ .Version }}{{ if eq .Os "windows" }}.exe{{ end }}
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+changelog:
+  use: git
+
+release:
+  github:
+    owner: huaweicloud
+    name: devspace-devbridge
+  # 烤制好的安装脚本作为额外附件
+  extra_files:
+    - glob: ./dist-extra/install.sh
+    - glob: ./dist-extra/install.ps1
+  draft: false
+  prerelease: false
+  name_template: "{{ .Tag }}"

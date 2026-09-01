@@ -122,7 +122,7 @@ devbridge connect <tunnelId> --verbose
 devbridge -v list
 ```
 
-`--verbose` 不输出 AK、SK 或令牌明文。
+`--verbose` 不输出 API Key 或令牌明文。
 
 ## 相关内容
 

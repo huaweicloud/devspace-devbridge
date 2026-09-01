@@ -14,7 +14,7 @@ description: 了解 DevBridge CLI 的安装目录、配置目录、凭证和默�
 | `~/.huawei/bin`       | DevBridge CLI 可执行文件。               |
 | `~/.huawei/devbridge` | 登录状态、CLI 配置、默认隧道和运行状态。 |
 
-安装脚本不提供自定义安装目录参数。
+安装脚本支持 `-p/--prefix` 参数自定义安装目录，默认为 `~/.huawei/bin`。
 
 ## PATH
 
@@ -35,10 +35,10 @@ $env:Path = "$HOME/.huawei/bin;$env:Path"
 
 ## 登录凭证
 
-登录成功后，CLI 将凭证保存到受保护的本地存储。以下内容不应复制、提交或输出：
+登录成功后，CLI 将 API Key 保存到受保护的本地存储。凭证存储优先使用系统密钥环（keyring），
+密钥环不可用时降级到配置文件。以下内容不应复制、提交或输出：
 
-- AK 和 SK；
-- Security Token；
+- API Key；
 - Host 和 Connect 令牌；
 - CLI 保存的登录状态。
 
@@ -46,16 +46,18 @@ $env:Path = "$HOME/.huawei/bin;$env:Path"
 
 ## 环境变量
 
-自动化环境可以先通过密钥服务注入变量，再传给登录命令：
+自动化环境可以先通过密钥服务注入 `HW_API_KEY`，CLI 会自动读取：
 
 ```bash
-devbridge auth login \
-  --access-key "$DEVBRIDGE_ACCESS_KEY" \
-  --secret-key "$DEVBRIDGE_SECRET_KEY" \
-  --security-token "$DEVBRIDGE_SECURITY_TOKEN"
+export HW_API_KEY="your-api-key"
+devbridge auth login
 ```
 
-这些变量名用于示例，不代表 CLI 会自动读取它们。
+也可以通过 `--api-key` 参数显式传入：
+
+```bash
+devbridge auth login --api-key "$HW_API_KEY"
+```
 
 ## 默认隧道
 

@@ -24,21 +24,20 @@ description: DevBridge CLI 的认证、隧道、端口、Host 和 Connect 命令
 
 ## 认证
 
-| 命令                                                                                | 说明                  |
-| ----------------------------------------------------------------------------------- | --------------------- |
-| `devbridge auth login`                                                              | 交互登录。            |
-| `devbridge auth login --access-key <ak> --secret-key <sk>`                          | 使用 AK/SK 登录。     |
-| `devbridge auth login --access-key <ak> --secret-key <sk> --security-token <token>` | 使用临时 AK/SK 登录。 |
-| `devbridge auth status`                                                             | 查看当前登录状态。    |
-| `devbridge auth logout`                                                             | 清除本地登录凭证。    |
+| 命令                                | 说明                   |
+| ----------------------------------- | ---------------------- |
+| `devbridge auth login`              | 交互登录（打开浏览器）。 |
+| `devbridge auth login --api-key <key>` | 使用 API Key 登录。    |
+| `devbridge auth status`             | 查看当前登录状态。     |
+| `devbridge auth logout`             | 清除本地登录凭证。     |
 
 ### 登录参数
 
-| 参数               | 说明                            |
-| ------------------ | ------------------------------- |
-| `--access-key`     | Access Key。                    |
-| `--secret-key`     | Secret Key。                    |
-| `--security-token` | 临时凭证对应的 Security Token。 |
+| 参数        | 说明                                            |
+| ----------- | ----------------------------------------------- |
+| `--api-key` | API Key，跳过浏览器交互直接登录。               |
+
+CLI 也会自动读取 `HW_API_KEY` 环境变量。
 
 ## 隧道
 
@@ -46,7 +45,6 @@ description: DevBridge CLI 的认证、隧道、端口、Host 和 Connect 命令
 | --------------------------------------- | ---------------------------- |
 | `devbridge create <name>`               | 创建隧道。                   |
 | `devbridge list`                        | 列出当前工作空间的有效隧道。 |
-| `devbridge list -j`                     | 使用 JSON 输出隧道列表。     |
 | `devbridge show <tunnelId>`             | 查看隧道详情。               |
 | `devbridge update <tunnelId>`           | 更新隧道。                   |
 | `devbridge delete <tunnelId>`           | 删除一条隧道。               |
@@ -63,7 +61,6 @@ description: DevBridge CLI 的认证、隧道、端口、Host 和 Connect 命令
 | `-n` | `update`                                | 更新隧道名称。                  |
 | `-d` | `create`、`update`、无隧道 ID 的 `host` | 设置隧道描述。                  |
 | `-e` | `create`、`update`、无隧道 ID 的 `host` | 设置有效期规格，单位为小时。    |
-| `-j` | `list`                                  | 输出 JSON。                     |
 | `-s` | `token`                                 | 令牌范围：`host` 或 `connect`。 |
 
 ## 端口
@@ -72,7 +69,6 @@ description: DevBridge CLI 的认证、隧道、端口、Host 和 Connect 命令
 | ------------------------------------------------------------------ | ------------------------ |
 | `devbridge port create <tunnelId> -p <port> --protocol <protocol>` | 创建端口。               |
 | `devbridge port list <tunnelId>`                                   | 列出隧道端口。           |
-| `devbridge port list <tunnelId> -j`                                | 使用 JSON 输出端口列表。 |
 | `devbridge port show <tunnelId> -p <port>`                         | 查看端口详情。           |
 | `devbridge port update <tunnelId> -p <port>`                       | 更新匿名访问策略。       |
 | `devbridge port delete <tunnelId> -p <port>`                       | 删除端口。               |
@@ -81,11 +77,10 @@ description: DevBridge CLI 的认证、隧道、端口、Host 和 Connect 命令
 
 | 参数                      | 说明                                                     |
 | ------------------------- | -------------------------------------------------------- |
-| `-p`                      | 端口号，范围为 `1` 到 `65535`。                          |
+| `-p`、`--port-number`     | 端口号，范围为 `1` 到 `65535`。                          |
 | `--protocol`              | `http`、`https` 或 `auto`。仅创建时可用，默认为 `auto`。 |
 | `--deny-anonymous`        | 创建或更新时禁止匿名访问。                               |
 | `-a`、`--allow-anonymous` | 创建或更新时允许匿名访问。                               |
-| `-j`、`--json`            | 使用 JSON 输出端口列表。                                 |
 
 当前 CLI 不支持修改已有端口的协议。端口命令不支持 `-d` 描述参数，也不提供端口批量删除命令。
 
@@ -95,16 +90,35 @@ description: DevBridge CLI 的认证、隧道、端口、Host 和 Connect 命令
 | ------------------------------------------------------ | ------------------------------ |
 | `devbridge host <tunnelId>`                            | 托管已有隧道中配置的全部端口。 |
 | `devbridge host -p <port> -d <description> -e <hours>` | 创建隧道并立即托管端口。       |
+| `devbridge host <tunnelId> --token <jwt>`              | 使用已有 JWT 令牌托管，跳过 API 调用。 |
+| `devbridge host <tunnelId> --api-key <key>`            | 使用 API Key 鉴权，跳过令牌签发。       |
 
 Host 是前台长运行命令。`-d` 和 `-e` 只在 Host 同时创建隧道时描述新隧道。
 
+### Host 参数
+
+| 参数                  | 说明                                                         |
+| --------------------- | ------------------------------------------------------------ |
+| `-p`、`--ports`       | 本地端口号，可传多个。仅在创建临时隧道时使用。               |
+| `-d`、`--description` | 新隧道的描述。                                               |
+| `-e`、`--expiration`  | 新隧道的有效期，单位为小时。                                 |
+| `-t`、`--token`       | 直接提供 JWT 令牌，跳过 API 令牌签发和端口查询。             |
+| `-k`、`--api-key`     | 使用 API Key 鉴权，跳过 TunnelToken，通过 X-API-Key 认证。   |
+
 ## Connect
 
-| 命令                           | 说明                         |
-| ------------------------------ | ---------------------------- |
-| `devbridge connect <tunnelId>` | 连接隧道并建立本地端口映射。 |
+| 命令                                                | 说明                               |
+| --------------------------------------------------- | ---------------------------------- |
+| `devbridge connect <tunnelId>`                      | 连接隧道并建立本地端口映射。       |
+| `devbridge connect <tunnelId> --token <jwt>`        | 使用已有 JWT 令牌连接，跳过 API 调用。 |
+| `devbridge connect <tunnelId> --api-key <key>`      | 使用 API Key 鉴权，跳过令牌签发。       |
 
-当前文档不声明 Connect 支持 `--port`；应以当前 CLI 的 `--help` 输出为准。
+### Connect 参数
+
+| 参数              | 说明                                                         |
+| ----------------- | ------------------------------------------------------------ |
+| `-t`、`--token`   | 直接提供 JWT 令牌，跳过 API 令牌签发和端口查询。             |
+| `-k`、`--api-key` | 使用 API Key 鉴权，跳过 TunnelToken，通过 X-API-Key 认证。   |
 
 ## 配额查询
 
