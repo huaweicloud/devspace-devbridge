@@ -72,5 +72,5 @@ docs/
 
 ## Publishing
 
-推送到 `main` 后，GitHub Actions 会在 `docs/` 中校验 Markdown、构建 VitePress，
+推送到 `master` 后，GitHub Actions 会在 `docs/` 中校验 Markdown、构建 VitePress，
 并发布 `docs/.vitepress/dist`。GitHub Pages 的 Source 必须设置为 **GitHub Actions**。
