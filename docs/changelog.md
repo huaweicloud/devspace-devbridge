@@ -20,7 +20,6 @@
 
 ##### Host / Connect
 
-- `host` 和 `connect` 命令新增 `--token` / `-t` 参数，支持直接传入 JWT 令牌，跳过 API 令牌签发和端口查询。
 - `host` 和 `connect` 命令新增 `--api-key` / `-k` 参数，支持使用 API Key 鉴权，跳过 TunnelToken 签发。
 - `host` 和 `connect` 支持通过 `set` 设置的默认隧道，未指定隧道 ID 时自动使用。
 - `connect --token` 模式要求显式指定隧道 ID，不走默认隧道。
