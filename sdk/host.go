@@ -29,10 +29,10 @@ import (
 
 // HostConfig Host 托管配置
 type HostConfig struct {
-	TunnelID  string   // 隧道 ID
-	Ports     []int    // 本地端口列表（为空时从网关下发）
-	JWTToken  string   // JWT 令牌（与 APIKey 二选一）
-	APIKey    string   // API Key（与 JWTToken 二选一）
+	TunnelID string   // 隧道 ID
+	Ports    []int    // 本地端口列表（为空时从网关下发）
+	JWTToken string   // JWT 令牌（与 APIKey 二选一）
+	APIKey   string   // API Key（与 JWTToken 二选一）
 }
 
 // HostResult Host 运行结果信息
@@ -115,10 +115,12 @@ func (c *Client) Host(ctx context.Context, cfg HostConfig) error {
 			return nil
 		}
 		if errors.Is(err, ErrQuotaExceeded) || errors.Is(err, ErrTunnelNotFound) {
-			return err
+			c.logger.Error("connection rejected by gateway", "tunnelID", cfg.TunnelID, "err", err)
+			return nil
 		}
 		if errors.Is(err, ErrDuplicateHost) && !everConnected {
-			return err
+			c.logger.Error("duplicate host, tunnel already has a listener", "tunnelID", cfg.TunnelID)
+			return nil
 		}
 		if err == nil {
 			return nil
@@ -130,7 +132,8 @@ func (c *Client) Host(ctx context.Context, cfg HostConfig) error {
 			consecutiveFailures++
 		}
 		if consecutiveFailures >= maxReconnectAttempts {
-			return fmt.Errorf("reconnect exhausted after %d attempts: %w", maxReconnectAttempts, err)
+			c.logger.Error("reconnect exhausted", "maxAttempts", maxReconnectAttempts, "err", err)
+			return nil
 		}
 
 		shift := consecutiveFailures - 1
@@ -141,7 +144,7 @@ func (c *Client) Host(ctx context.Context, cfg HostConfig) error {
 		if delay > maxReconnectDelay {
 			delay = maxReconnectDelay
 		}
-		c.logger.Info("connection lost, reconnecting...", "delay", delay)
+		fmt.Println("Connection lost, reconnecting...")
 		select {
 		case <-ctx.Done():
 			return nil
@@ -208,15 +211,19 @@ func (c *Client) runHostSession(ctx context.Context, wsURL string, sniHost strin
 		}
 	}
 
-	// 打印就绪信息
+	// 打印就绪信息（用户可见输出，带颜色）
 	printPorts := ports
 	if len(ports) == 0 {
 		printPorts = pn.ports
 	}
 	for _, p := range printPorts {
-		c.logger.Info("hosting port", "port", p,
-			"tunnelURL", fmt.Sprintf("https://%s-%d.%s", tunnelID, p, c.gatewayHost))
+		fmt.Printf("Hosting port: %s%d%s\n", colorCyan, p, colorReset)
 	}
+	for _, p := range printPorts {
+		fmt.Printf("Tunnel URL: https://%s-%d.%s\n", tunnelID, p, c.gatewayHost)
+	}
+	fmt.Println("Ready to accept connections")
+	fmt.Println("Auto reconnect: enabled")
 
 	// 等待断开
 	for {

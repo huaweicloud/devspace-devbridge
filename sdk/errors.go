@@ -41,7 +41,7 @@ type APIError struct {
 }
 
 func (e *APIError) Error() string {
-	return fmt.Sprintf("api error [%s]: %s", e.Code, e.Message)
+	return fmt.Sprintf("error code: %s, error message: %s", e.Code, e.Message)
 }
 
 // IsAPIError 判断 error 是否为 APIError，并返回错误码

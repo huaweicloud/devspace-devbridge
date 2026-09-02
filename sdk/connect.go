@@ -30,11 +30,11 @@ import (
 
 // ConnectConfig Connect 连接配置
 type ConnectConfig struct {
-	TunnelID  string   // 隧道 ID
-	Ports     []int    // 端口列表（为空时从 Host 端通过 SSH 下发）
-	JWTToken  string   // JWT 令牌（与 APIKey 二选一）
-	APIKey    string   // API Key（与 JWTToken 二选一）
-	LocalIP   string   // 本地监听地址，默认 127.0.0.1
+	TunnelID string   // 隧道 ID
+	Ports    []int    // 端口列表（为空时从 Host 端通过 SSH 下发）
+	JWTToken string   // JWT 令牌（与 APIKey 二选一）
+	APIKey   string   // API Key（与 JWTToken 二选一）
+	LocalIP  string   // 本地监听地址，默认 127.0.0.1
 }
 
 // Forwarding 端口转发映射信息
@@ -103,7 +103,8 @@ func (c *Client) Connect(ctx context.Context, cfg ConnectConfig) error {
 			return nil
 		}
 		if errors.Is(err, ErrQuotaExceeded) || errors.Is(err, ErrTunnelNotFound) {
-			return err
+			c.logger.Error("connection rejected by gateway", "tunnelID", cfg.TunnelID, "err", err)
+			return nil
 		}
 		if connected {
 			consecutiveFailures = 0
@@ -111,7 +112,8 @@ func (c *Client) Connect(ctx context.Context, cfg ConnectConfig) error {
 			consecutiveFailures++
 		}
 		if consecutiveFailures >= maxReconnectAttempts {
-			return fmt.Errorf("reconnect exhausted after %d attempts: %w", maxReconnectAttempts, err)
+			c.logger.Error("reconnect exhausted", "maxAttempts", maxReconnectAttempts, "err", err)
+			return nil
 		}
 
 		delay := baseReconnectDelay
@@ -122,7 +124,7 @@ func (c *Client) Connect(ctx context.Context, cfg ConnectConfig) error {
 				break
 			}
 		}
-		c.logger.Info("connection lost, reconnecting...", "delay", delay, "err", err)
+		fmt.Printf("Connection lost, reconnecting... (%v)\n", err)
 		select {
 		case <-ctx.Done():
 			return nil
@@ -162,12 +164,12 @@ func (c *Client) runConnectSession(ctx context.Context, wsURL string, sniHost st
 	}
 	connected = true
 
-	c.logger.Info("connected to tunnel", "tunnelID", tunnelID)
+	fmt.Printf("Connected to tunnel: %s\n", tunnelID)
 
 	if len(ports) > 0 {
-		c.logger.Debug("mode: active forwarding (ports from API)", "ports", ports)
+		fmt.Println("Mode: active forwarding (ports from API)")
 	} else {
-		c.logger.Debug("mode: passive forwarding (ports from host via SSH)")
+		fmt.Println("Mode: passive forwarding (ports from host via SSH)")
 	}
 
 	// 等待转发建立
@@ -177,6 +179,8 @@ func (c *Client) runConnectSession(ctx context.Context, wsURL string, sniHost st
 		factory.waitForForwardings(2 * time.Second)
 	}
 	factory.printForwardings()
+
+	fmt.Println("Auto reconnect: enabled")
 
 	select {
 	case <-session.Session.Done():
@@ -232,7 +236,8 @@ func (f *listenerFactory) CreateTCPListener(
 	}
 	f.portOverrides[remotePort] = localPort
 	f.listeners = append(f.listeners, listener)
-	f.addForwarding(fmt.Sprintf("Forwarding %s:%d -> tunnel port: %d", f.localIP, localPort, remotePort))
+	f.addForwarding(fmt.Sprintf("Forwarding localhost: %s%d%s -> tunnel port: %s%d%s\n",
+		colorCyan, localPort, colorReset, colorCyan, remotePort, colorReset))
 	return listener, nil
 }
 
@@ -245,8 +250,8 @@ func (f *listenerFactory) listenOnRandomPort(remotePort, originalPort int) (net.
 	actualPort := listener.Addr().(*net.TCPAddr).Port
 	f.portOverrides[remotePort] = actualPort
 	f.listeners = append(f.listeners, listener)
-	f.addForwarding(fmt.Sprintf("Forwarding %s:%d -> tunnel port: %d (port %d in use)",
-		f.localIP, actualPort, remotePort, originalPort))
+	f.addForwarding(fmt.Sprintf("Forwarding localhost: %s%d%s -> tunnel port: %s%d%s (port %s%d%s in use)\n",
+		colorCyan, actualPort, colorReset, colorCyan, remotePort, colorReset, colorYellow, originalPort, colorReset))
 	return listener, nil
 }
 
@@ -269,7 +274,7 @@ func (f *listenerFactory) printForwardings() {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	for _, msg := range f.pendingForwardings {
-		f.logger.Info(msg)
+		fmt.Print(msg)
 	}
 }
 

@@ -154,6 +154,45 @@ func (c *Client) resolveAPIKey() (string, error) {
 	return c.apiKey, nil
 }
 
+// isDebugEnabled 检查当前 logger 是否启用了 Debug 级别
+func (c *Client) isDebugEnabled() bool {
+	return c.logger.Enabled(context.Background(), slog.LevelDebug)
+}
+
+// logHTTPRequest 记录 HTTP 请求日志（Debug 级别）
+func (c *Client) logHTTPRequest(req *http.Request, body []byte) {
+	if !c.isDebugEnabled() {
+		return
+	}
+	attrs := []slog.Attr{
+		slog.String("method", req.Method),
+		slog.String("url", req.URL.String()),
+	}
+	if len(body) > 0 {
+		attrs = append(attrs, slog.String("body", string(body)))
+	}
+	c.logger.LogAttrs(context.Background(), slog.LevelDebug, "HTTP request", attrs...)
+}
+
+// logHTTPResponse 记录 HTTP 响应日志（Debug 级别）
+func (c *Client) logHTTPResponse(resp *http.Response, body []byte, elapsed time.Duration) {
+	if !c.isDebugEnabled() {
+		return
+	}
+	attrs := []slog.Attr{
+		slog.Int("statusCode", resp.StatusCode),
+		slog.String("status", resp.Status),
+		slog.Int64("elapsed", elapsed.Milliseconds()),
+	}
+	c.logger.LogAttrs(context.Background(), slog.LevelDebug, "HTTP response", attrs...)
+	if len(body) > 0 {
+		c.logger.LogAttrs(context.Background(), slog.LevelDebug, "HTTP response body",
+			slog.String("data", string(body)),
+			slog.String("size", fmt.Sprintf("%d bytes total", len(body))),
+		)
+	}
+}
+
 // doRequest 发送 HTTP 请求并处理响应
 func (c *Client) doRequest(ctx context.Context, method, path string, body any, result any) error {
 	apiKey, err := c.resolveAPIKey()
@@ -181,6 +220,9 @@ func (c *Client) doRequest(ctx context.Context, method, path string, body any, r
 		req.Header.Set(headerContentType, headerJSON)
 	}
 
+	c.logHTTPRequest(req, bodyBytes)
+
+	start := time.Now()
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("http request failed: %w", err)
@@ -191,6 +233,8 @@ func (c *Client) doRequest(ctx context.Context, method, path string, body any, r
 	if err != nil {
 		return fmt.Errorf("read response: %w", err)
 	}
+
+	c.logHTTPResponse(resp, respBody, time.Since(start))
 
 	// 处理 HTTP 错误状态码
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {

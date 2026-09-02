@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"math/rand/v2"
 	"net"
-	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -24,6 +24,11 @@ import (
 const (
 	subprotocolDevBridge = "devbridge-v1"
 	relayChannelType     = "relay"
+
+	// ANSI 颜色码，用于用户可见的终端输出
+	colorCyan   = "\033[36m"
+	colorYellow = "\033[33m"
+	colorReset  = "\033[0m"
 )
 
 // buildWSHeader 构建 WebSocket 握手头
@@ -104,7 +109,13 @@ func (c *Client) dialWithRetry(ctx context.Context, url string, opts *websocket.
 		if resp != nil && resp.StatusCode == http.StatusTooManyRequests {
 			body, _ := io.ReadAll(resp.Body)
 			_ = resp.Body.Close()
-			lastErr = fmt.Errorf("connection rejected by gateway (429): %s", strings.TrimSpace(string(body)))
+			reason := strings.TrimSpace(string(body))
+			if attempt == 0 {
+				fmt.Printf("Connection rejected by gateway: %s, retrying...\n", reason)
+			}
+			lastErr = fmt.Errorf("connection rejected by gateway (429): %s", reason)
+		} else if attempt == 0 {
+			fmt.Println("Connection failed, retrying...")
 		}
 
 		if attempt == maxRetries {
