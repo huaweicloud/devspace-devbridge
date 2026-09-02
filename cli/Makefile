@@ -8,8 +8,8 @@ CLUSTER_DOMAIN ?= cn-north-4-bridge.myhuaweicloud.com
 LDFLAGS = -X huawei.com/devbridge/cmd.version=$(VERSION) \
           -X huawei.com/devbridge/internal/auth.LoginURL=$(LOGIN_URL) \
           -X huawei.com/devbridge/internal/config.DefaultServerDomain=$(SERVER_DOMAIN) \
-          -X huawei.com/devbridge/internal/connect.ServerAddr=$(GATEWAY_ADDR) \
-          -X huawei.com/devbridge/internal/connect.ServerHost=$(CLUSTER_DOMAIN)
+          -X huawei.com/devbridge/internal/sdk.ServerAddr=$(GATEWAY_ADDR) \
+          -X huawei.com/devbridge/internal/sdk.ServerHost=$(CLUSTER_DOMAIN)
 
 GOFLAGS = -ldflags "-s -w $(LDFLAGS)" -buildmode=pie -trimpath
 CGO_FLAG = CGO_ENABLED=0

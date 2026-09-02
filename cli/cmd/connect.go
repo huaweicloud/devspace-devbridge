@@ -1,16 +1,19 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
+	"os/signal"
 	"regexp"
+	"syscall"
 	"time"
 
 	"github.com/spf13/cobra"
-	"huawei.com/devbridge/internal/api"
-	"huawei.com/devbridge/internal/config"
 	"huawei.com/devbridge/internal/auth"
-	client "huawei.com/devbridge/internal/connect"
+	"huawei.com/devbridge/internal/config"
+	"huawei.com/devbridge/internal/sdk"
+	devbridge "huawei.com/devbridge/sdk"
 )
 
 var hostPorts []uint
@@ -21,13 +24,13 @@ var hostToken string
 var hostAPIKey string
 var connectAPIKey string
 
-var tunnelIDPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)
+var tunnelIDPatternConnect = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)
 
-func validateTunnelID(id string) error {
+func validateTunnelIDConnect(id string) error {
 	if id == "" {
 		return fmt.Errorf("tunnel ID cannot be empty")
 	}
-	if !tunnelIDPattern.MatchString(id) {
+	if !tunnelIDPatternConnect.MatchString(id) {
 		return fmt.Errorf("invalid tunnel ID: %q (only letters, digits, hyphens, underscores allowed, length 1-64)", id)
 	}
 	return nil
@@ -41,7 +44,7 @@ func portsToInt(ports []uint) []int {
 	return result
 }
 
-func portResultsToInt(results []api.ListPortsResult) []int {
+func portResultsToInt(results []devbridge.Port) []int {
 	ports := make([]int, len(results))
 	for i, p := range results {
 		ports[i] = int(p.Port)
@@ -71,7 +74,7 @@ func resolveHostConfig(cmd *cobra.Command, args []string) (tunnelID string, port
 			return "", nil, "", fmt.Errorf("tunnelID is required when using --token")
 		}
 		tunnelID = args[0]
-		if err := validateTunnelID(tunnelID); err != nil {
+		if err := validateTunnelIDConnect(tunnelID); err != nil {
 			return "", nil, "", err
 		}
 		if cmd.Flags().Changed("ports") {
@@ -87,7 +90,8 @@ func resolveHostConfig(cmd *cobra.Command, args []string) (tunnelID string, port
 	}
 
 	if hostAPIKey == "" {
-		tokenResult, err := api.TunnelToken(tunnelID, "host")
+		client := sdk.NewClient()
+		tokenResult, err := client.IssueToken(context.Background(), tunnelID, "host")
 		if err != nil {
 			return "", nil, "", fmt.Errorf("Failed to get host token: %w", err)
 		}
@@ -97,13 +101,15 @@ func resolveHostConfig(cmd *cobra.Command, args []string) (tunnelID string, port
 }
 
 func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelID string, ports []int, err error) {
+	client := sdk.NewClient()
+
 	if len(args) > 0 && args[0] != "" {
 
 		tunnelID = args[0]
-		if err := validateTunnelID(tunnelID); err != nil {
+		if err := validateTunnelIDConnect(tunnelID); err != nil {
 			return "", nil, err
 		}
-		portsResult, err := api.ListPorts(tunnelID)
+		portsResult, err := client.ListPorts(context.Background(), tunnelID)
 		if err != nil {
 			return "", nil, fmt.Errorf("Failed to list ports: %w", err)
 		}
@@ -121,7 +127,7 @@ func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelID string,
 				"(tunnel set) or pass -p to create a temporary tunnel: %w", err)
 		}
 		tunnelID = defaultID
-		portsResult, err := api.ListPorts(tunnelID)
+		portsResult, err := client.ListPorts(context.Background(), tunnelID)
 		if err != nil {
 			return "", nil, fmt.Errorf("Failed to list ports: %w", err)
 		}
@@ -142,18 +148,19 @@ func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelID string,
 	if cmd.Flags().Changed("expiration") {
 		exp = &hostExpiration
 	}
-	result, err := api.CreateTunnel(
+	result, err := client.CreateTunnel(
+		context.Background(),
 		fmt.Sprintf("tunnel-%d-%d", ports[0], time.Now().UnixMilli()%10000),
 		hostDescription, exp)
 	if err != nil {
 		return "", nil, fmt.Errorf("Failed to create tunnel: %w", err)
 	}
-	tunnelID = result.TunnelID
+	tunnelID = result.ID
 	fmt.Printf("Created tunnel: %s\n", tunnelID)
 
 	allowAnon := true
 	for _, p := range ports {
-		if err := api.CreatePort(tunnelID, p, "auto", &allowAnon); err != nil {
+		if err := client.CreatePort(context.Background(), tunnelID, p, "auto", &allowAnon); err != nil {
 			return "", nil, fmt.Errorf("Failed to create port %d for tunnel %s: %w", p, tunnelID, err)
 		}
 	}
@@ -161,16 +168,25 @@ func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelID string,
 }
 
 var hostCmd = &cobra.Command{
-	Use:   "host [tunnelID]",
-	Short: "Start listener, register to gateway and wait for connections",
-	Args:  cobra.RangeArgs(0, 1),
+	Use:   "host [tunnel-id]",
+	Short: "Host local service through DevBridge tunnel",
+	Args:  cobra.MaximumNArgs(1),
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
 		tunnelID, ports, jwtToken, err := resolveHostConfig(cmd, args)
 		if err != nil {
 			return err
 		}
-		client.Listen(tunnelID, ports, jwtToken, hostAPIKey)
-		return nil
+
+		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+		defer stop()
+
+		client := sdk.NewClient()
+		return client.Host(ctx, devbridge.HostConfig{
+			TunnelID: tunnelID,
+			Ports:    ports,
+			JWTToken: jwtToken,
+			APIKey:   hostAPIKey,
+		})
 	}),
 }
 
@@ -183,7 +199,7 @@ func resolveConnectConfig(args []string) (tunnelID string, ports []int, jwtToken
 	if err != nil {
 		return "", nil, "", err
 	}
-	if err := validateTunnelID(tunnelID); err != nil {
+	if err := validateTunnelIDConnect(tunnelID); err != nil {
 		return "", nil, "", err
 	}
 
@@ -193,7 +209,8 @@ func resolveConnectConfig(args []string) (tunnelID string, ports []int, jwtToken
 		return
 	}
 
-	portsResult, err := api.ListPorts(tunnelID)
+	client := sdk.NewClient()
+	portsResult, err := client.ListPorts(context.Background(), tunnelID)
 	if err != nil {
 		return "", nil, "", fmt.Errorf("Failed to list ports: %w", err)
 	}
@@ -203,7 +220,7 @@ func resolveConnectConfig(args []string) (tunnelID string, ports []int, jwtToken
 	ports = portResultsToInt(portsResult)
 
 	if connectAPIKey == "" {
-		tokenResult, err := api.TunnelToken(tunnelID, "connect")
+		tokenResult, err := client.IssueToken(context.Background(), tunnelID, "connect")
 		if err != nil {
 			return "", nil, "", fmt.Errorf("Failed to get connect token: %w", err)
 		}
@@ -231,7 +248,7 @@ func resolveConnectTunnelID(args []string) (string, error) {
 }
 
 var connectCmd = &cobra.Command{
-	Use:   "connect [tunnelID]",
+	Use:   "connect [tunnel-id]",
 	Short: "Start sender, connect to gateway and wait for port forwarding requests",
 	Args:  cobra.MaximumNArgs(1),
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
@@ -239,8 +256,17 @@ var connectCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		client.Connect(tunnelID, jwtToken, ports, connectAPIKey)
-		return nil
+
+		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+		defer stop()
+
+		client := sdk.NewClient()
+		return client.Connect(ctx, devbridge.ConnectConfig{
+			TunnelID: tunnelID,
+			Ports:    ports,
+			JWTToken: jwtToken,
+			APIKey:   connectAPIKey,
+		})
 	}),
 }
 

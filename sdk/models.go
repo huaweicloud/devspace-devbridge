@@ -8,10 +8,12 @@ import "encoding/json"
 
 // Tunnel 隧道
 type Tunnel struct {
-	ID              string `json:"tunnelId"`        // 隧道 ID，8 位小写 Base32
-	Name            string `json:"name"`            // 隧道名称
-	Description     string `json:"description"`     // 隧道描述
-	ExpirationHours int    `json:"expirationHours"` // 有效期（小时）
+	ID               string `json:"tunnelId"`         // 隧道 ID，8 位小写 Base32
+	Name             string `json:"name"`            // 隧道名称
+	Description      string `json:"description"`     // 隧道描述
+	ExpirationHours  int    `json:"expirationHours"` // 有效期（小时）
+	TunnelExpiration uint32 `json:"tunnelExpiration"` // 隧道过期时间（Unix 秒）
+	PortCount        int    `json:"portCount"`       // 端口数量
 }
 
 // TunnelDetail 隧道详情（含状态）

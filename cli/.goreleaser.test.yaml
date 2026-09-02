@@ -46,8 +46,8 @@ builds:
       - -X huawei.com/devbridge/cmd.version={{ .Version }}
       - -X huawei.com/devbridge/internal/auth.LoginURL=https://devstation.ulanqab.huawei.com
       - -X huawei.com/devbridge/internal/config.DefaultServerDomain=https://100.85.118.163:8443
-      - -X huawei.com/devbridge/internal/connect.ServerAddr=100.85.117.75:443
-      - -X huawei.com/devbridge/internal/connect.ServerHost=cn-north-4-bridge.myhuaweicloud.com
+      - -X huawei.com/devbridge/internal/sdk.ServerAddr=100.85.117.75:443
+      - -X huawei.com/devbridge/internal/sdk.ServerHost=cn-north-4-bridge.myhuaweicloud.com
     flags:
       - -trimpath
     buildmode: pie

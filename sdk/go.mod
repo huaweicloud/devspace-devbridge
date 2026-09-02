@@ -1,6 +1,6 @@
 module huawei.com/devbridge/sdk
 
-go 1.23.0
+go 1.22.0
 
 require (
 	github.com/coder/websocket v1.8.13
