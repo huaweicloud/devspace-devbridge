@@ -21,8 +21,9 @@ import (
 
 // 默认服务地址
 const (
-	// DefaultAPIBaseURL REST API 基础地址（公网）
-	DefaultAPIBaseURL = "https://hdspace-partner.cn-north-4.myhuaweicloud.com/open-api-public/v1/relay"
+	// DefaultAPIBaseURL REST API 基础地址（与 CLI 生产环境对齐）
+	// 对应 cli/.goreleaser.yaml 中注入的 DefaultServerDomain + cli/internal/api/client.go 的路径后缀
+	DefaultAPIBaseURL = "https://bridge.developer.myhuaweicloud.com/open-api-inner/v1/relay-controller"
 
 	// DefaultGatewayAddr WebSocket 网关地址
 	DefaultGatewayAddr = "gateway.cn-north-4-bridge.myhuaweicloud.com:443"

@@ -90,7 +90,13 @@ func (c *Client) Host(ctx context.Context, cfg HostConfig) error {
 		return err
 	}
 
-	header, subprotocols := buildWSHeader(cfg.JWTToken, cfg.APIKey)
+	// 认证回退：cfg 未显式指定时，使用 Client 级别的 API Key
+	apiKey := cfg.APIKey
+	if apiKey == "" && cfg.JWTToken == "" {
+		apiKey = c.apiKey
+	}
+
+	header, subprotocols := buildWSHeader(cfg.JWTToken, apiKey)
 	header.Set("Cookie", "APP_COOKIE=7")
 
 	sniHost := cfg.TunnelID + "." + c.gatewayHost

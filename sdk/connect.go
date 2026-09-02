@@ -77,7 +77,13 @@ func (c *Client) Connect(ctx context.Context, cfg ConnectConfig) error {
 		cfg.LocalIP = "127.0.0.1"
 	}
 
-	header, subprotocols := buildWSHeader(cfg.JWTToken, cfg.APIKey)
+	// 认证回退：cfg 未显式指定时，使用 Client 级别的 API Key
+	apiKey := cfg.APIKey
+	if apiKey == "" && cfg.JWTToken == "" {
+		apiKey = c.apiKey
+	}
+
+	header, subprotocols := buildWSHeader(cfg.JWTToken, apiKey)
 	sniHost := cfg.TunnelID + "." + c.gatewayHost
 	wsURL := "wss://" + sniHost + "/"
 
