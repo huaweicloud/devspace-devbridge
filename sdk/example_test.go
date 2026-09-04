@@ -17,7 +17,10 @@ func ExampleClient_fullWorkflow() {
 	ctx := context.Background()
 
 	// 创建客户端（API Key 也可通过 HW_API_KEY 环境变量设置）
-	client := devbridge.NewClient(devbridge.WithAPIKey("your-api-key"))
+	client, err := devbridge.NewClient(devbridge.Config{APIKey: "your-api-key"})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// 1. 创建隧道
 	tunnel, err := client.CreateTunnel(ctx, "my-dev-tunnel", "开发联调环境", nil)
@@ -73,7 +76,10 @@ func ExampleClient_fullWorkflow() {
 // ──────────────────────────────────────────────────────────────
 
 func ExampleClient_host() {
-	client := devbridge.NewClient(devbridge.WithAPIKey("your-api-key"))
+	client, err := devbridge.NewClient(devbridge.Config{APIKey: "your-api-key"})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// 查询隧道端口
 	ports, err := client.ListPorts(context.Background(), "aaaadysa")
@@ -101,7 +107,10 @@ func ExampleClient_host() {
 // ──────────────────────────────────────────────────────────────
 
 func ExampleClient_hostWithToken() {
-	client := devbridge.NewClient()
+	client, err := devbridge.NewClient(devbridge.Config{})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// 先签发 Host 令牌
 	token, err := client.IssueToken(context.Background(), "aaaadysa", "host")
@@ -124,11 +133,14 @@ func ExampleClient_hostWithToken() {
 // ──────────────────────────────────────────────────────────────
 
 func ExampleClient_connect() {
-	client := devbridge.NewClient(devbridge.WithAPIKey("your-api-key"))
+	client, err := devbridge.NewClient(devbridge.Config{APIKey: "your-api-key"})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// 连接隧道，在本地建立端口映射
 	// 连接成功后，http://localhost:8080 → 远端 Host 的 8080 端口
-	err := client.Connect(context.Background(), devbridge.ConnectConfig{
+	err = client.Connect(context.Background(), devbridge.ConnectConfig{
 		TunnelID: "aaaadysa",
 		Ports:    []int{8080},
 	})
@@ -143,7 +155,10 @@ func ExampleClient_connect() {
 
 func ExampleClient_tunnelManagement() {
 	ctx := context.Background()
-	client := devbridge.NewClient(devbridge.WithAPIKey("your-api-key"))
+	client, err := devbridge.NewClient(devbridge.Config{APIKey: "your-api-key"})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// 创建隧道，有效期 24 小时
 	exp := 24

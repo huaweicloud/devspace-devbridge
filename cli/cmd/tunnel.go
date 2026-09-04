@@ -38,7 +38,10 @@ var listCmd = &cobra.Command{
 	Short: i18n.T(i18n.Msg.Tunnel.ListShort),
 	Args:  cobra.NoArgs,
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
-		client := sdk.NewClient()
+		client, err := sdk.NewClient()
+		if err != nil {
+			return err
+		}
 		tunnels, err := client.ListTunnels(context.Background())
 		if err != nil {
 			return err
@@ -78,7 +81,10 @@ var createCmd = &cobra.Command{
 		if cmd.Flags().Changed("expiration") {
 			exp = &tunnelExpiration
 		}
-		client := sdk.NewClient()
+		client, err := sdk.NewClient()
+		if err != nil {
+			return err
+		}
 		result, err := client.CreateTunnel(context.Background(), args[0], tunnelDescription, exp)
 		if err != nil {
 			return fmt.Errorf("%s: %w", i18n.T(i18n.Msg.Tunnel.CreateFailed), err)
@@ -102,7 +108,10 @@ var showCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		client := sdk.NewClient()
+		client, err := sdk.NewClient()
+		if err != nil {
+			return err
+		}
 		result, err := client.ShowTunnel(context.Background(), tunnelID)
 		if err != nil {
 			return err
@@ -146,7 +155,10 @@ var updateCmd = &cobra.Command{
 		if cmd.Flags().Changed("description") {
 			desc = &tunnelDescription
 		}
-		client := sdk.NewClient()
+		client, err := sdk.NewClient()
+		if err != nil {
+			return err
+		}
 		if err := client.UpdateTunnel(context.Background(), tunnelID, name, desc, exp); err != nil {
 			return fmt.Errorf("%s: %w", i18n.T(i18n.Msg.Tunnel.UpdateFailed), err)
 		}
@@ -164,7 +176,10 @@ var deleteCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		client := sdk.NewClient()
+		client, err := sdk.NewClient()
+		if err != nil {
+			return err
+		}
 		if err := client.DeleteTunnel(context.Background(), tunnelID); err != nil {
 			return err
 		}
@@ -182,7 +197,10 @@ var deleteAllCmd = &cobra.Command{
 	Short: i18n.T(i18n.Msg.Tunnel.DeleteAllShort),
 	Args:  cobra.NoArgs,
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
-		client := sdk.NewClient()
+		client, err := sdk.NewClient()
+		if err != nil {
+			return err
+		}
 		if err := client.DeleteAllTunnels(context.Background()); err != nil {
 			return err
 		}
@@ -200,7 +218,10 @@ var tokenCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		client := sdk.NewClient()
+		client, err := sdk.NewClient()
+		if err != nil {
+			return err
+		}
 		result, err := client.IssueToken(context.Background(), tunnelID, tunnelScope)
 		if err != nil {
 			return err
@@ -222,7 +243,10 @@ var setCmd = &cobra.Command{
 		if err := validateTunnelIDLocal(args[0]); err != nil {
 			return err
 		}
-		client := sdk.NewClient()
+		client, err := sdk.NewClient()
+		if err != nil {
+			return err
+		}
 		if _, err := client.ShowTunnel(context.Background(), args[0]); err != nil {
 			if code, ok := devbridge.IsAPIError(err); ok && code == TunnelNotFoundCode {
 				return fmt.Errorf("%s: %s", i18n.T(i18n.Msg.Tunnel.TunnelNotFound), args[0])

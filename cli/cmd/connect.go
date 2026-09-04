@@ -90,7 +90,10 @@ func resolveHostConfig(cmd *cobra.Command, args []string) (tunnelID string, port
 	}
 
 	if hostAPIKey == "" {
-		client := sdk.NewClient()
+		client, err := sdk.NewClient()
+		if err != nil {
+			return "", nil, "", err
+		}
 		tokenResult, err := client.IssueToken(context.Background(), tunnelID, "host")
 		if err != nil {
 			return "", nil, "", fmt.Errorf("Failed to get host token: %w", err)
@@ -101,7 +104,10 @@ func resolveHostConfig(cmd *cobra.Command, args []string) (tunnelID string, port
 }
 
 func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelID string, ports []int, err error) {
-	client := sdk.NewClient()
+	client, err := sdk.NewClient()
+	if err != nil {
+		return "", nil, err
+	}
 
 	if len(args) > 0 && args[0] != "" {
 
@@ -180,7 +186,10 @@ var hostCmd = &cobra.Command{
 		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 		defer stop()
 
-		client := sdk.NewClient()
+		client, err := sdk.NewClient()
+		if err != nil {
+			return err
+		}
 		return client.Host(ctx, devbridge.HostConfig{
 			TunnelID: tunnelID,
 			Ports:    ports,
@@ -209,7 +218,10 @@ func resolveConnectConfig(args []string) (tunnelID string, ports []int, jwtToken
 		return
 	}
 
-	client := sdk.NewClient()
+	client, err := sdk.NewClient()
+	if err != nil {
+		return "", nil, "", err
+	}
 	portsResult, err := client.ListPorts(context.Background(), tunnelID)
 	if err != nil {
 		return "", nil, "", fmt.Errorf("Failed to list ports: %w", err)
@@ -260,7 +272,10 @@ var connectCmd = &cobra.Command{
 		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 		defer stop()
 
-		client := sdk.NewClient()
+		client, err := sdk.NewClient()
+		if err != nil {
+			return err
+		}
 		return client.Connect(ctx, devbridge.ConnectConfig{
 			TunnelID: tunnelID,
 			Ports:    ports,

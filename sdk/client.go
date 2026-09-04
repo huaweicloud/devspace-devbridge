@@ -40,50 +40,68 @@ var (
 	tunnelNameRegexp = regexp.MustCompile(`^[\x{4e00}-\x{9fa5}A-Za-z0-9]([\x{4e00}-\x{9fa5}A-Za-z0-9-]{0,62}[\x{4e00}-\x{9fa5}A-Za-z0-9])?$`)
 )
 
-// Option 配置选项函数，用于 NewClient
-type Option func(*Client)
+// Config holds the SDK client configuration. A zero Config is valid —
+// missing fields fall back to environment variables and sensible defaults.
+type Config struct {
+	// APIKey authenticates REST API requests (X-API-Key header).
+	// Defaults to HW_API_KEY environment variable.
+	APIKey string
 
-// WithAPIKey 设置 API Key
-func WithAPIKey(key string) Option {
-	return func(c *Client) {
-		c.apiKey = key
-	}
+	// APIBaseURL is the REST API base URL.
+	// Defaults to DefaultAPIBaseURL.
+	APIBaseURL string
+
+	// GatewayAddr is the WebSocket gateway address (host:port).
+	// Defaults to DefaultGatewayAddr.
+	GatewayAddr string
+
+	// GatewayHost is the WebSocket gateway SNI host.
+	// Defaults to DefaultGatewayHost.
+	GatewayHost string
+
+	// ClusterID is the cluster ID for tunnel creation.
+	// Defaults to DefaultClusterID.
+	ClusterID string
+
+	// HTTPClient optionally overrides the HTTP client.
+	// If nil, a default client with 30s timeout is used.
+	HTTPClient *http.Client
+
+	// Logger is the structured logger.
+	// Defaults to slog.Default().
+	Logger *slog.Logger
 }
 
-// WithAPIBaseURL 自定义 REST API 地址
-func WithAPIBaseURL(url string) Option {
-	return func(c *Client) {
-		c.apiBaseURL = url
+// resolve returns a copy with defaults and env-var fallbacks applied.
+func (cfg Config) resolve() Config {
+	out := cfg
+	if out.APIBaseURL == "" {
+		out.APIBaseURL = DefaultAPIBaseURL
 	}
-}
-
-// WithGateway 自定义 WebSocket 网关地址和 SNI host
-func WithGateway(addr, host string) Option {
-	return func(c *Client) {
-		c.gatewayAddr = addr
-		c.gatewayHost = host
+	if out.GatewayAddr == "" {
+		out.GatewayAddr = DefaultGatewayAddr
 	}
-}
-
-// WithClusterID 自定义集群 ID
-func WithClusterID(id string) Option {
-	return func(c *Client) {
-		c.clusterID = id
+	if out.GatewayHost == "" {
+		out.GatewayHost = DefaultGatewayHost
 	}
-}
-
-// WithHTTPClient 自定义 HTTP 客户端（用于测试或自定义 TLS）
-func WithHTTPClient(hc *http.Client) Option {
-	return func(c *Client) {
-		c.httpClient = hc
+	if out.ClusterID == "" {
+		out.ClusterID = DefaultClusterID
 	}
-}
-
-// WithLogger 自定义 logger
-func WithLogger(logger *slog.Logger) Option {
-	return func(c *Client) {
-		c.logger = logger
+	if out.APIKey == "" {
+		out.APIKey = os.Getenv("HW_API_KEY")
 	}
+	if out.Logger == nil {
+		out.Logger = slog.Default()
+	}
+	if out.HTTPClient == nil {
+		out.HTTPClient = &http.Client{
+			Timeout: 30 * time.Second,
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
+		}
+	}
+	return out
 }
 
 // Client DevBridge SDK 客户端
@@ -97,44 +115,31 @@ type Client struct {
 	logger      *slog.Logger // 日志
 }
 
-// NewClient 创建 SDK 客户端
+// NewClient creates a new SDK client from the given Config.
+// A zero Config is valid; APIKey falls back to HW_API_KEY env var,
+// and other fields fall back to sensible defaults.
 //
 // 最少只需要 API Key：
 //
-//	client := devbridge.NewClient(devbridge.WithAPIKey("your-api-key"))
+//	client, err := devbridge.NewClient(devbridge.Config{
+//	    APIKey: "your-api-key",
+//	})
 //
 // 也会自动读取 HW_API_KEY 环境变量：
 //
 //	os.Setenv("HW_API_KEY", "your-key")
-//	client := devbridge.NewClient()
-func NewClient(opts ...Option) *Client {
-	c := &Client{
-		apiBaseURL:  DefaultAPIBaseURL,
-		gatewayAddr: DefaultGatewayAddr,
-		gatewayHost: DefaultGatewayHost,
-		clusterID:   DefaultClusterID,
-		logger:      slog.Default(),
-	}
-	for _, opt := range opts {
-		opt(c)
-	}
-
-	// 从环境变量读取 API Key（如果未显式设置）
-	if c.apiKey == "" {
-		c.apiKey = os.Getenv("HW_API_KEY")
-	}
-
-	// 默认 HTTP 客户端
-	if c.httpClient == nil {
-		c.httpClient = &http.Client{
-			Timeout: 30 * time.Second,
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			},
-		}
-	}
-
-	return c
+//	client, err := devbridge.NewClient(devbridge.Config{})
+func NewClient(cfg Config) (*Client, error) {
+	resolved := cfg.resolve()
+	return &Client{
+		apiKey:      resolved.APIKey,
+		apiBaseURL:  resolved.APIBaseURL,
+		gatewayAddr: resolved.GatewayAddr,
+		gatewayHost: resolved.GatewayHost,
+		clusterID:   resolved.ClusterID,
+		httpClient:  resolved.HTTPClient,
+		logger:      resolved.Logger,
+	}, nil
 }
 
 // ──────────────────────────────────────────────────────────────

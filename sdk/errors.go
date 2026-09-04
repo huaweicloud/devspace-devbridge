@@ -11,7 +11,7 @@ import (
 // ──────────────────────────────────────────────────────────────
 
 // ErrMissingAPIKey 缺少 API Key
-var ErrMissingAPIKey = errors.New("missing API key: set it via NewClient(WithAPIKey) or HW_API_KEY env var")
+var ErrMissingAPIKey = errors.New("missing API key: set it via Config.APIKey or HW_API_KEY env var")
 
 // ErrTunnelNotFound 隧道不存在
 var ErrTunnelNotFound = errors.New("tunnel not found")

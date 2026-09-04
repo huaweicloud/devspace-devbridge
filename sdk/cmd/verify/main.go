@@ -65,15 +65,21 @@ func main() {
 	keepTunnel := os.Getenv("KEEP_TUNNEL") == "1"
 
 	// 构建 SDK 客户端
-	opts := []sdk.Option{sdk.WithAPIKey(apiKey), sdk.WithLogger(logger)}
+	cfg := sdk.Config{
+		APIKey: apiKey,
+		Logger: logger,
+	}
 	if url := os.Getenv("API_BASE_URL"); url != "" {
-		opts = append(opts, sdk.WithAPIBaseURL(url))
+		cfg.APIBaseURL = url
 	}
 	if addr := os.Getenv("GATEWAY_ADDR"); addr != "" {
-		host := os.Getenv("GATEWAY_HOST")
-		opts = append(opts, sdk.WithGateway(addr, host))
+		cfg.GatewayAddr = addr
+		cfg.GatewayHost = os.Getenv("GATEWAY_HOST")
 	}
-	client := sdk.NewClient(opts...)
+	client, err := sdk.NewClient(cfg)
+	if err != nil {
+		failf("创建 SDK 客户端失败: %v", err)
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

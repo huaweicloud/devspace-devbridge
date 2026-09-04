@@ -33,7 +33,10 @@ import (
 
 func main() {
     ctx := context.Background()
-    client := devbridge.NewClient(devbridge.WithAPIKey("your-api-key"))
+    client, err := devbridge.NewClient(devbridge.Config{APIKey: "your-api-key"})
+    if err != nil {
+        log.Fatal(err)
+    }
 
     // 1. 创建隧道
     tunnel, err := client.CreateTunnel(ctx, "my-tunnel", "开发联调", nil)
@@ -67,7 +70,10 @@ func main() {
 ### 仅 Host 托管
 
 ```go
-client := devbridge.NewClient(devbridge.WithAPIKey("your-api-key"))
+client, err := devbridge.NewClient(devbridge.Config{APIKey: "your-api-key"})
+    if err != nil {
+        log.Fatal(err)
+    }
 
 // 阻塞运行，Ctrl+C / cancel context 停止
 client.Host(ctx, devbridge.HostConfig{
@@ -79,7 +85,10 @@ client.Host(ctx, devbridge.HostConfig{
 ### 仅 Connect 连接
 
 ```go
-client := devbridge.NewClient(devbridge.WithAPIKey("your-api-key"))
+client, err := devbridge.NewClient(devbridge.Config{APIKey: "your-api-key"})
+    if err != nil {
+        log.Fatal(err)
+    }
 
 // 阻塞运行，连接后 localhost:8080 → 远端
 client.Connect(ctx, devbridge.ConnectConfig{
@@ -91,7 +100,10 @@ client.Connect(ctx, devbridge.ConnectConfig{
 ### 使用 JWT 令牌（跳过 API 调用）
 
 ```go
-client := devbridge.NewClient()
+client, err := devbridge.NewClient(devbridge.Config{})
+    if err != nil {
+        log.Fatal(err)
+    }
 
 // 签发 Host 令牌
 token, _ := client.IssueToken(ctx, "aaaadysa", "host")
@@ -108,13 +120,17 @@ client.Host(ctx, devbridge.HostConfig{
 ### 客户端配置
 
 ```go
-client := devbridge.NewClient(
-    devbridge.WithAPIKey("your-key"),           // API Key
-    devbridge.WithAPIBaseURL("custom-url"),      // 自定义 API 地址
-    devbridge.WithGateway("addr:443", "host"),   // 自定义网关
-    devbridge.WithClusterID("custom-cluster"),   // 自定义集群
-    devbridge.WithLogger(logger),                // 自定义 logger
-)
+client, err := devbridge.NewClient(devbridge.Config{
+    APIKey:      "your-key",            // API Key
+    APIBaseURL:  "custom-url",          // 自定义 API 地址
+    GatewayAddr: "addr:443",            // 自定义网关地址
+    GatewayHost: "host",                // 自定义网关 SNI host
+    ClusterID:   "custom-cluster",      // 自定义集群
+    Logger:      logger,                // 自定义 logger
+})
+if err != nil {
+    log.Fatal(err)
+}
 ```
 
 API Key 也可通过环境变量 `HW_API_KEY` 设置。

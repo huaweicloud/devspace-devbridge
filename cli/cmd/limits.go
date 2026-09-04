@@ -16,7 +16,10 @@ var limitsCmd = &cobra.Command{
 	Short: i18n.T(i18n.Msg.Limits.LimitsShort),
 	Args:  cobra.NoArgs,
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
-		client := sdk.NewClient()
+		client, err := sdk.NewClient()
+		if err != nil {
+			return err
+		}
 		result, err := client.GetLimits(context.Background())
 		if err != nil {
 			return err

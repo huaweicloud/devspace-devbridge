@@ -16,15 +16,16 @@ var ServerHost = "cn-north-4-bridge.myhuaweicloud.com"
 //
 // 读取顺序：override API Key → 环境变量 → keyring/config 存储。
 // API base URL 和网关地址从 CLI 配置和 ldflags 注入值获取。
-func NewClient() *devbridge.Client {
-	opts := []devbridge.Option{
-		devbridge.WithAPIBaseURL(config.DefaultServerDomain + "/open-api-inner/v1/relay-controller"),
-		devbridge.WithGateway(ServerAddr, ServerHost),
+func NewClient() (*devbridge.Client, error) {
+	cfg := devbridge.Config{
+		APIBaseURL:  config.DefaultServerDomain + "/open-api-inner/v1/relay-controller",
+		GatewayAddr: ServerAddr,
+		GatewayHost: ServerHost,
 	}
 
 	if cred := auth.ReadValidAPIKey(); cred != nil && cred.APIKey != "" {
-		opts = append(opts, devbridge.WithAPIKey(cred.APIKey))
+		cfg.APIKey = cred.APIKey
 	}
 
-	return devbridge.NewClient(opts...)
+	return devbridge.NewClient(cfg)
 }
