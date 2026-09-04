@@ -59,10 +59,6 @@ type Config struct {
 	// Defaults to DefaultGatewayHost.
 	GatewayHost string
 
-	// ClusterID is the cluster ID for tunnel creation.
-	// Defaults to DefaultClusterID.
-	ClusterID string
-
 	// HTTPClient optionally overrides the HTTP client.
 	// If nil, a default client with 30s timeout is used.
 	HTTPClient *http.Client
@@ -83,9 +79,6 @@ func (cfg Config) resolve() Config {
 	}
 	if out.GatewayHost == "" {
 		out.GatewayHost = DefaultGatewayHost
-	}
-	if out.ClusterID == "" {
-		out.ClusterID = DefaultClusterID
 	}
 	if out.APIKey == "" {
 		out.APIKey = os.Getenv("HW_API_KEY")
@@ -110,7 +103,6 @@ type Client struct {
 	apiBaseURL  string       // REST API 基础地址
 	gatewayAddr string       // WebSocket 网关地址（host:port）
 	gatewayHost string       // WebSocket 网关 SNI host
-	clusterID   string       // 集群 ID
 	httpClient  *http.Client // HTTP 客户端
 	logger      *slog.Logger // 日志
 }
@@ -136,7 +128,6 @@ func NewClient(cfg Config) (*Client, error) {
 		apiBaseURL:  resolved.APIBaseURL,
 		gatewayAddr: resolved.GatewayAddr,
 		gatewayHost: resolved.GatewayHost,
-		clusterID:   resolved.ClusterID,
 		httpClient:  resolved.HTTPClient,
 		logger:      resolved.Logger,
 	}, nil

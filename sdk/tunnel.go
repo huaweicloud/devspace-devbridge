@@ -22,7 +22,7 @@ func (c *Client) CreateTunnel(ctx context.Context, name, description string, exp
 	req := createTunnelRequest{
 		Name:        name,
 		Description: description,
-		ClusterID:   c.clusterID,
+		ClusterID:   DefaultClusterID,
 	}
 	if expiration != nil {
 		if *expiration < 1 || *expiration > 720 {
