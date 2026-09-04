@@ -62,10 +62,6 @@ type Config struct {
 	// HTTPClient optionally overrides the HTTP client.
 	// If nil, a default client with 30s timeout is used.
 	HTTPClient *http.Client
-
-	// Logger is the structured logger.
-	// Defaults to slog.Default().
-	Logger *slog.Logger
 }
 
 // resolve returns a copy with defaults and env-var fallbacks applied.
@@ -82,9 +78,6 @@ func (cfg Config) resolve() Config {
 	}
 	if out.APIKey == "" {
 		out.APIKey = os.Getenv("HW_API_KEY")
-	}
-	if out.Logger == nil {
-		out.Logger = slog.Default()
 	}
 	if out.HTTPClient == nil {
 		out.HTTPClient = &http.Client{
@@ -129,7 +122,7 @@ func NewClient(cfg Config) (*Client, error) {
 		gatewayAddr: resolved.GatewayAddr,
 		gatewayHost: resolved.GatewayHost,
 		httpClient:  resolved.HTTPClient,
-		logger:      resolved.Logger,
+		logger:      slog.Default(),
 	}, nil
 }
 

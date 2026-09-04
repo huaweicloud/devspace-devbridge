@@ -125,7 +125,6 @@ client, err := devbridge.NewClient(devbridge.Config{
     APIBaseURL:  "custom-url",          // 自定义 API 地址
     GatewayAddr: "addr:443",            // 自定义网关地址
     GatewayHost: "host",                // 自定义网关 SNI host
-    Logger:      logger,                // 自定义 logger
 })
 if err != nil {
     log.Fatal(err)

@@ -67,7 +67,6 @@ func main() {
 	// 构建 SDK 客户端
 	cfg := sdk.Config{
 		APIKey: apiKey,
-		Logger: logger,
 	}
 	if url := os.Getenv("API_BASE_URL"); url != "" {
 		cfg.APIBaseURL = url
