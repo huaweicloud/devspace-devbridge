@@ -119,7 +119,7 @@ devbridge auth login --api-key "$HW_API_KEY"
 
 ## 相关内容
 
-- [CLI 命令参考](./cli.md)
+- [CLI 命令参考](../reference/cli.md)
 - [安装 DevBridge CLI](../guide/install.md)
 - [登录与凭证](../guide/authentication.md)
-- [问题排查](./troubleshooting.md)
+- [问题排查](../reference/troubleshooting.md)

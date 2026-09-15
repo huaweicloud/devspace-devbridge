@@ -113,4 +113,13 @@ func init() {
 
 	Msg.Ping.PingShort = Message{ZH: "测试到服务器的连通性", EN: "Test connectivity to the server"}
 	Msg.Ping.URIInvalid = Message{ZH: "URI 无效", EN: "Invalid URI"}
+
+	Msg.Config.ConfigCommands = Message{ZH: "配置命令", EN: "Configuration commands"}
+	Msg.Config.GetShort = Message{ZH: "查看网关配置", EN: "Show gateway configuration"}
+	Msg.Config.SetShort = Message{ZH: "设置网关配置", EN: "Set gateway configuration"}
+	Msg.Config.UnsetShort = Message{ZH: "清空网关配置（恢复编译时默认值）", EN: "Clear gateway configuration (restore build defaults)"}
+	Msg.Config.GatewayAddr = Message{ZH: "网关地址", EN: "Gateway Address"}
+	Msg.Config.GatewayHost = Message{ZH: "网关SNI域名", EN: "Gateway SNI Host"}
+	Msg.Config.SetSuccess = Message{ZH: "配置已保存", EN: "Configuration saved"}
+	Msg.Config.NothingToSet = Message{ZH: "没有可设置的项，请用 --gateway-addr / --gateway-host", EN: "Nothing to set, use --gateway-addr / --gateway-host"}
 }

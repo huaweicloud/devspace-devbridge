@@ -1,0 +1,62 @@
+# =============================================================================
+# Build and Verify DevBridge Go SDK
+#
+# SDK 的"发布"方式：打 tag 推送到 origin（如 sdk/v0.1.0），
+# Go module proxy（proxy.golang.org / goproxy.cn）会自动收录该版本。
+# 本 workflow 负责在 tag 推送和日常变更时校验 SDK 可编译、可测试。
+#
+# 触发:
+#   pull_request          修改 sdk/** 时自动校验
+#   push (branches)       develop/master 分支 sdk/** 变更时校验
+#   push (tags sdk/v*)    SDK 发版 tag 推送时做发布前校验
+#   workflow_dispatch     手动触发
+#
+# 注意:
+#   - SDK 位于子目录，发版 tag 必须带 sdk/ 前缀（如 sdk/v0.1.0）
+#   - tag 一旦推送不可移动或删除（Go module proxy 永久缓存）
+# =============================================================================
+name: Build SDK
+
+on:
+  pull_request:
+    branches: [develop, main, master]
+    paths:
+      - "sdk/**"
+      - ".github/workflows/build-sdk.yml"
+  push:
+    branches: [develop, main, master]
+    paths:
+      - "sdk/**"
+      - ".github/workflows/build-sdk.yml"
+    tags:
+      - "sdk/v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # 用 go.mod 声明的版本（最低承诺的 Go 版本）做校验
+      - name: Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: sdk/go.mod
+          cache-dependency-path: sdk/go.sum
+
+      - name: Build
+        working-directory: sdk
+        run: go build ./...
+
+      - name: Vet
+        working-directory: sdk
+        run: go vet ./...
+
+      - name: Test
+        working-directory: sdk
+        run: go test ./...

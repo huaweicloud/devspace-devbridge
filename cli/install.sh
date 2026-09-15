@@ -136,7 +136,7 @@ Examples:
     # GitCode one-click:
     curl -fsSL https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/latest/install.sh | bash
     # OBS one-click:
-    curl -fsSL https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install.sh | bash
+    curl -fsSL https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/releases/download/latest/install.sh | bash
     # Explicit version / mirror:
     bash install.sh -v 1.0.0
     bash install.sh -u https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/<version> -v 1.0.0

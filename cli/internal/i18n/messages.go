@@ -9,6 +9,7 @@ type Messages struct {
 	Limits LimitsMessages
 	Echo   EchoMessages
 	Ping   PingMessages
+	Config ConfigMessages
 }
 
 type AuthMessages struct {
@@ -138,6 +139,17 @@ type EchoMessages struct {
 type PingMessages struct {
 	PingShort  Message
 	URIInvalid Message
+}
+
+type ConfigMessages struct {
+	ConfigCommands Message
+	GetShort       Message
+	SetShort       Message
+	UnsetShort     Message
+	GatewayAddr    Message
+	GatewayHost    Message
+	SetSuccess     Message
+	NothingToSet   Message
 }
 
 var Msg Messages

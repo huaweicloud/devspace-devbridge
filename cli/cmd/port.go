@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
-	"huawei.com/devbridge/internal/api"
 	"huawei.com/devbridge/internal/i18n"
+	"huawei.com/devbridge/internal/sdk"
 
 	"github.com/spf13/cobra"
 )
@@ -60,7 +61,11 @@ var portCreateCmd = &cobra.Command{
 		if err := validateProtocolLocal(portProtocol); err != nil {
 			return err
 		}
-		if err := api.CreatePort(tunnelID, portNumber, portProtocol, resolveAllowAnon(cmd)); err != nil {
+		client, err := sdk.NewClient()
+		if err != nil {
+			return err
+		}
+		if err := client.CreatePort(context.Background(), tunnelID, portNumber, portProtocol, resolveAllowAnon(cmd)); err != nil {
 			return fmt.Errorf("Failed to add port %d: %w", portNumber, err)
 		}
 		fmt.Println(i18n.T(i18n.Msg.Port.PortCreated))
@@ -77,7 +82,11 @@ var portListCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		ports, err := api.ListPorts(tunnelID)
+		client, err := sdk.NewClient()
+		if err != nil {
+			return err
+		}
+		ports, err := client.ListPorts(context.Background(), tunnelID)
 		if err != nil {
 			return err
 		}
@@ -114,7 +123,11 @@ var portShowCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		result, err := api.ShowPort(tunnelID, portNumber)
+		client, err := sdk.NewClient()
+		if err != nil {
+			return err
+		}
+		result, err := client.ShowPort(context.Background(), tunnelID, portNumber)
 		if err != nil {
 			return err
 		}
@@ -137,7 +150,11 @@ var portUpdateCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		if err := api.UpdatePort(tunnelID, portNumber, resolveAllowAnon(cmd)); err != nil {
+		client, err := sdk.NewClient()
+		if err != nil {
+			return err
+		}
+		if err := client.UpdatePort(context.Background(), tunnelID, portNumber, resolveAllowAnon(cmd)); err != nil {
 			return err
 		}
 		fmt.Println(i18n.T(i18n.Msg.Port.PortUpdated))
@@ -154,7 +171,11 @@ var portDeleteCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		if err := api.DeletePort(tunnelID, portNumber); err != nil {
+		client, err := sdk.NewClient()
+		if err != nil {
+			return err
+		}
+		if err := client.DeletePort(context.Background(), tunnelID, portNumber); err != nil {
 			return fmt.Errorf("Failed to delete port %d: %w", portNumber, err)
 		}
 		fmt.Printf("Port %d removed from tunnel %s.\n", portNumber, tunnelID)

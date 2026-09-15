@@ -107,7 +107,7 @@ Examples:
     # GitCode one-click:
     irm https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/latest/install.ps1 | iex
     # OBS/CDN one-click:
-    irm https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install.ps1 | iex
+    irm https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/releases/download/latest/install.ps1 | iex
     # Explicit version / mirror:
     .\install.ps1 -Version 1.0.0
     .\install.ps1 -Url https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/<version> -Version 1.0.0

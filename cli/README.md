@@ -262,8 +262,8 @@ make build VERSION=1.0.0 SERVER_DOMAIN=https://xxx LOGIN_URL=https://xxx GATEWAY
 | `huawei.com/devbridge/cmd.version` | 版本号 |
 | `huawei.com/devbridge/internal/auth.LoginURL` | SSO 登录页面 URL |
 | `huawei.com/devbridge/internal/config.DefaultServerDomain` | API 服务域名 |
-| `huawei.com/devbridge/internal/connect.ServerAddr` | 网关地址（host:port） |
-| `huawei.com/devbridge/internal/connect.ServerHost` | 集群域名（用于拼接 `{tunnelId}.{clusterId}` SNI） |
+| `huawei.com/devbridge/internal/config.ServerAddr` | 网关地址（host:port） |
+| `huawei.com/devbridge/internal/config.ServerHost` | 集群域名（用于拼接 `{tunnelId}.{clusterId}` SNI） |
 
 ### CI/CD 构建
 
