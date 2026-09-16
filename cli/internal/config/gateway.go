@@ -27,3 +27,10 @@ func ResolveGatewayHost() string {
 	}
 	return ServerHost
 }
+
+// ResolveTLSSkipVerify returns whether to skip TLS certificate verification
+// for the WebSocket gateway connection. Reads from the config file only;
+// unset defaults to false (verify).
+func ResolveTLSSkipVerify() bool {
+	return LoadTLSSkipVerify()
+}

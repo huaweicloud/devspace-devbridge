@@ -6,6 +6,7 @@ package cmd
 
 import (
 	"fmt"
+	"strconv"
 
 	"huawei.com/devbridge/internal/config"
 	"huawei.com/devbridge/internal/i18n"
@@ -14,8 +15,9 @@ import (
 )
 
 var (
-	cfgGatewayAddr string
-	cfgGatewayHost string
+	cfgGatewayAddr   string
+	cfgGatewayHost   string
+	cfgTLSSkipVerify bool
 )
 
 var configCmd = &cobra.Command{
@@ -31,10 +33,12 @@ var configGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		gatewayAddr := config.LoadGatewayAddr()
 		gatewayHost := config.LoadGatewayHost()
+		tlsSkipVerify := config.LoadTLSSkipVerify()
 
 		printKV([][2]string{
 			{i18n.T(i18n.Msg.Config.GatewayAddr), gatewayAddr},
 			{i18n.T(i18n.Msg.Config.GatewayHost), gatewayHost},
+			{"Skip TLS verification", strconv.FormatBool(tlsSkipVerify)},
 		})
 	},
 }
@@ -54,6 +58,12 @@ var configSetCmd = &cobra.Command{
 		}
 		if cfgGatewayHost != "" {
 			if err := config.StoreGatewayHost(cfgGatewayHost); err != nil {
+				return err
+			}
+			changed = true
+		}
+		if cmd.Flags().Changed("tls-skip-verify") {
+			if err := config.StoreTLSSkipVerify(cfgTLSSkipVerify); err != nil {
 				return err
 			}
 			changed = true
@@ -78,6 +88,9 @@ var configUnsetCmd = &cobra.Command{
 		if err := config.DeleteGatewayHost(); err != nil {
 			return err
 		}
+		if err := config.DeleteTLSSkipVerify(); err != nil {
+			return err
+		}
 		fmt.Println(i18n.T(i18n.Msg.Config.SetSuccess))
 		return nil
 	}),
@@ -86,6 +99,7 @@ var configUnsetCmd = &cobra.Command{
 func init() {
 	configSetCmd.Flags().StringVar(&cfgGatewayAddr, "gateway-addr", "", "网关地址（host:port）")
 	configSetCmd.Flags().StringVar(&cfgGatewayHost, "gateway-host", "", "网关 SNI 域名")
+	configSetCmd.Flags().BoolVar(&cfgTLSSkipVerify, "tls-skip-verify", false, "跳过网关 TLS 证书校验（true/false）")
 	configCmd.AddCommand(configGetCmd, configSetCmd, configUnsetCmd)
 	RootCmd.AddCommand(configCmd)
 }

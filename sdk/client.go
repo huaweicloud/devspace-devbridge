@@ -53,6 +53,12 @@ type Config struct {
 	// Defaults to DefaultGatewayHost.
 	GatewayHost string
 
+	// InsecureSkipVerify disables TLS certificate verification for the
+	// WebSocket connection to the gateway. Defaults to false (verify).
+	// Enable only for gateways whose certificate does not cover the tunnel
+	// domain (e.g. multi-level domains beyond a single-segment wildcard).
+	InsecureSkipVerify bool
+
 	// StatusWriter receives user-facing status lines (connection progress,
 	// hosted ports, forwarding info). Defaults to os.Stdout; set it to
 	// io.Discard to silence these outputs.
@@ -82,12 +88,13 @@ func (cfg Config) resolve() Config {
 
 // Devbridge DevBridge SDK 客户端
 type Devbridge struct {
-	apiKey       string
-	gatewayAddr  string
-	gatewayHost  string
-	logger       *slog.Logger
-	statusWriter io.Writer
-	api          *httpclient.Client
+	apiKey             string
+	gatewayAddr        string
+	gatewayHost        string
+	insecureSkipVerify bool
+	logger             *slog.Logger
+	statusWriter       io.Writer
+	api                *httpclient.Client
 }
 
 // New creates a new SDK client from the given Config.
@@ -96,12 +103,13 @@ type Devbridge struct {
 func New(cfg Config) *Devbridge {
 	resolved := cfg.resolve()
 	return &Devbridge{
-		apiKey:       resolved.APIKey,
-		gatewayAddr:  resolved.GatewayAddr,
-		gatewayHost:  resolved.GatewayHost,
-		logger:       slog.Default(),
-		statusWriter: resolved.StatusWriter,
-		api:          httpclient.New(resolved.APIKey, resolved.APIBaseURL, slog.Default()),
+		apiKey:             resolved.APIKey,
+		gatewayAddr:        resolved.GatewayAddr,
+		gatewayHost:        resolved.GatewayHost,
+		insecureSkipVerify: resolved.InsecureSkipVerify,
+		logger:             slog.Default(),
+		statusWriter:       resolved.StatusWriter,
+		api:                httpclient.New(resolved.APIKey, resolved.APIBaseURL, slog.Default()),
 	}
 }
 

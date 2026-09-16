@@ -72,9 +72,10 @@ func (d *Devbridge) getWSHTTPClient(sniHost string) *http.Client {
 	return &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				MinVersion: tls.VersionTLS12,
-				MaxVersion: tls.VersionTLS13,
-				ServerName: sniHost,
+				MinVersion:         tls.VersionTLS12,
+				MaxVersion:         tls.VersionTLS13,
+				ServerName:         sniHost,
+				InsecureSkipVerify: d.insecureSkipVerify,
 			},
 			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 				return dialer.DialContext(ctx, network, d.gatewayAddr)

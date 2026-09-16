@@ -15,10 +15,11 @@ import (
 // API base URL and gateway address come from CLI config and ldflags-injected values.
 func NewClient(apiKey string) *devbridge.Devbridge {
 	cfg := devbridge.Config{
-		APIBaseURL:  DefaultServerDomain + "/open-api-inner/v1/relay-controller",
-		GatewayAddr: ResolveGatewayAddr(),
-		GatewayHost: ResolveGatewayHost(),
-		APIKey:      apiKey,
+		APIBaseURL:         DefaultServerDomain + "/open-api-inner/v1/relay-controller",
+		GatewayAddr:        ResolveGatewayAddr(),
+		GatewayHost:        ResolveGatewayHost(),
+		InsecureSkipVerify: ResolveTLSSkipVerify(),
+		APIKey:             apiKey,
 	}
 
 	return devbridge.New(cfg)
