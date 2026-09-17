@@ -135,7 +135,7 @@ client := sdk.New(sdk.Config{
 	APIBaseURL:  "custom-url", // 自定义 REST API 地址
 	GatewayAddr: "addr:443",   // 自定义网关地址
 	GatewayHost: "host",       // 自定义网关 SNI host
-	StatusWriter: io.Discard,  // 状态输出目的地，默认 os.Stdout，io.Discard 表示静音
+	OutputWriter: io.Discard,  // 状态输出目的地，默认 os.Stdout，io.Discard 表示静音
 })
 ```
 

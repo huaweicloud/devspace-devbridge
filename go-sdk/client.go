@@ -7,9 +7,11 @@
 package sdk
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
 	"os"
 	"regexp"
 
@@ -18,9 +20,9 @@ import (
 
 const (
 	DefaultAPIBaseURL  = "https://bridge.developer.myhuaweicloud.com/open-api-inner/v1/relay-controller"
-	DefaultGatewayAddr = "gateway.devbridge-s2.hwtunnel.com:443"
-	DefaultGatewayHost = "devbridge-s2.hwtunnel.com"
-	DefaultClusterID   = "devbridge-s2"
+	DefaultGatewayAddr = "gateway.cn-north-4-bridge.myhuaweicloud.com:443" //"gateway.devbridge-s2.hwtunnel.com:443"
+	DefaultGatewayHost = "cn-north-4-bridge.myhuaweicloud.com"             //"devbridge-s2.hwtunnel.com"
+	DefaultClusterID   = "cn-north-4-bridge"
 )
 
 var (
@@ -53,16 +55,10 @@ type Config struct {
 	// Defaults to DefaultGatewayHost.
 	GatewayHost string
 
-	// InsecureSkipVerify disables TLS certificate verification for the
-	// WebSocket connection to the gateway. Defaults to false (verify).
-	// Enable only for gateways whose certificate does not cover the tunnel
-	// domain (e.g. multi-level domains beyond a single-segment wildcard).
-	InsecureSkipVerify bool
-
-	// StatusWriter receives user-facing status lines (connection progress,
+	// OutputWriter receives user-facing output (connection progress,
 	// hosted ports, forwarding info). Defaults to os.Stdout; set it to
 	// io.Discard to silence these outputs.
-	StatusWriter io.Writer
+	OutputWriter io.Writer
 }
 
 // resolve returns a copy with defaults and env-var fallbacks applied.
@@ -80,50 +76,78 @@ func (cfg Config) resolve() Config {
 	if out.APIKey == "" {
 		out.APIKey = os.Getenv("HW_API_KEY")
 	}
-	if out.StatusWriter == nil {
-		out.StatusWriter = os.Stdout
+	if out.OutputWriter == nil {
+		out.OutputWriter = os.Stdout
 	}
 	return out
 }
 
 // Devbridge is the DevBridge SDK client.
 type Devbridge struct {
-	apiKey             string
-	gatewayAddr        string
-	gatewayHost        string
-	insecureSkipVerify bool
-	logger             *slog.Logger
-	statusWriter       io.Writer
-	api                *httpclient.Client
+	apiKey          string
+	gatewayAddr     string
+	gatewayHost     string
+	logger          *slog.Logger
+	outputWriter    io.Writer
+	api             *httpclient.Client
+	tlsSessionCache tls.ClientSessionCache
 }
 
 // New creates a new SDK client from the given Config.
 // A zero Config is valid; APIKey falls back to HW_API_KEY env var,
 // and other fields fall back to sensible defaults.
+//
+// As part of initialization it starts a background DNS lookup for the gateway
+// address to warm the OS resolver cache, and installs a shared TLS session
+// cache so reconnects reuse TLS session tickets instead of re-negotiating
+// from scratch.
 func New(cfg Config) *Devbridge {
 	resolved := cfg.resolve()
-	return &Devbridge{
-		apiKey:             resolved.APIKey,
-		gatewayAddr:        resolved.GatewayAddr,
-		gatewayHost:        resolved.GatewayHost,
-		insecureSkipVerify: resolved.InsecureSkipVerify,
-		logger:             slog.Default(),
-		statusWriter:       resolved.StatusWriter,
-		api:                httpclient.New(resolved.APIKey, resolved.APIBaseURL, slog.Default()),
+	d := &Devbridge{
+		apiKey:          resolved.APIKey,
+		gatewayAddr:     resolved.GatewayAddr,
+		gatewayHost:     resolved.GatewayHost,
+		logger:          slog.Default(),
+		outputWriter:    resolved.OutputWriter,
+		api:             httpclient.New(resolved.APIKey, resolved.APIBaseURL, slog.Default()),
+		tlsSessionCache: tls.NewLRUClientSessionCache(32),
 	}
+	go warmDNS(d.gatewayAddr)
+	return d
+}
+
+// warmDNS primes the OS DNS resolver cache for the gateway address so the
+// first WebSocket dial does not pay the full resolution cost. Best-effort:
+// failures are ignored and the dial falls back to its own resolution.
+func warmDNS(gatewayAddr string) {
+	host, _, err := net.SplitHostPort(gatewayAddr)
+	if err != nil {
+		host = gatewayAddr
+	}
+	if net.ParseIP(host) != nil {
+		return
+	}
+	_, _ = net.LookupHost(host)
 }
 
 func (d *Devbridge) statusf(format string, args ...any) {
-	fmt.Fprintf(d.statusWriter, format, args...)
+	fmt.Fprintf(d.outputWriter, format, args...)
 }
 
 func (d *Devbridge) statusln(args ...any) {
-	fmt.Fprintln(d.statusWriter, args...)
+	fmt.Fprintln(d.outputWriter, args...)
 }
 
 func validateTunnelID(id string) error {
 	if !tunnelIDRegexp.MatchString(id) {
 		return fmt.Errorf("%w: %q (only lowercase letters and digits 2-7 allowed, length must be 8)", ErrInvalidTunnelID, id)
+	}
+	return nil
+}
+
+func validateTunnelName(name string) error {
+	if !tunnelNameRegexp.MatchString(name) {
+		return fmt.Errorf("%w: got %q", ErrInvalidTunnelName, name)
 	}
 	return nil
 }

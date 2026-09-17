@@ -25,6 +25,13 @@ const (
 	subprotocolDevBridge = "devbridge-v1"
 	relayChannelType     = "relay"
 
+	// Application close codes (RFC 6455 private range 4000-4999) sent by the
+	// gateway to signal business errors. Keep the numeric values in sync with
+	// the relay-gateway side.
+	closeCodeQuotaExceeded  websocket.StatusCode = 4001
+	closeCodeTunnelNotFound websocket.StatusCode = 4002
+	closeCodeDuplicateHost  websocket.StatusCode = 4003
+
 	// ANSI color codes for user-facing terminal output
 	colorCyan   = "\033[36m"
 	colorYellow = "\033[33m"
@@ -74,7 +81,7 @@ func (d *Devbridge) getWSHTTPClient(sniHost string) *http.Client {
 				MinVersion:         tls.VersionTLS12,
 				MaxVersion:         tls.VersionTLS13,
 				ServerName:         sniHost,
-				InsecureSkipVerify: d.insecureSkipVerify,
+				ClientSessionCache: d.tlsSessionCache,
 			},
 			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 				return dialer.DialContext(ctx, network, d.gatewayAddr)
@@ -102,6 +109,7 @@ func (d *Devbridge) dialWithRetry(ctx context.Context, url string, opts *websock
 
 		// 409 Conflict: this tunnel already has a host
 		if resp != nil && resp.StatusCode == http.StatusConflict {
+			_ = resp.Body.Close()
 			return nil, ErrDuplicateHost
 		}
 
@@ -164,18 +172,21 @@ func sshTraceFunc(logger *slog.Logger) ssh.TraceFunc {
 	}
 }
 
-// parseSSHCloseError extracts a business error from an SSH close error.
+// parseSSHCloseError extracts a typed business error from a WebSocket close
+// error. The gateway signals business errors via application close codes
+// (4000-4999) so the reason text is never parsed.
 func parseSSHCloseError(err error) error {
 	var ce websocket.CloseError
-	if errors.As(err, &ce) && ce.Code == websocket.StatusPolicyViolation {
-		switch ce.Reason {
-		case "account quota exceeded":
-			return ErrQuotaExceeded
-		case "tunnel not found":
-			return ErrTunnelNotFound
-		default:
-			return ErrDuplicateHost
-		}
+	if !errors.As(err, &ce) {
+		return err
+	}
+	switch ce.Code {
+	case closeCodeQuotaExceeded:
+		return ErrQuotaExceeded
+	case closeCodeTunnelNotFound:
+		return ErrTunnelNotFound
+	case closeCodeDuplicateHost:
+		return ErrDuplicateHost
 	}
 	return err
 }

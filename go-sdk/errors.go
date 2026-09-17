@@ -20,6 +20,8 @@ var ErrQuotaExceeded = errors.New("account quota exceeded")
 
 var ErrInvalidTunnelID = errors.New("invalid tunnel id")
 
+var ErrInvalidTunnelName = errors.New("invalid tunnel name: only Chinese characters, letters, digits, hyphens, length 1-64")
+
 var ErrInvalidTunnelDescription = errors.New("invalid tunnel description: only Chinese characters, letters, digits, length 0-64")
 
 var ErrInvalidPort = errors.New("invalid port number: must be 1-65535")

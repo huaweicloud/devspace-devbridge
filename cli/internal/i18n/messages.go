@@ -35,6 +35,7 @@ type TunnelMessages struct {
 	TunnelDeletedAll      Message
 	TunnelNotFound        Message
 	TunnelDescInvalid     Message
+	TunnelNameInvalid     Message
 	TunnelListEmpty       Message
 	ListShort             Message
 	CreateShort           Message

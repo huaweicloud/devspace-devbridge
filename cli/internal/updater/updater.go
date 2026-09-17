@@ -181,7 +181,7 @@ func isNewerRaw(oldV, newV string) bool {
 }
 
 // Check performs a version check, using cache when available.
-func Check(currentVersion string) *CheckResult {
+func Check() *CheckResult {
 	// Try cache first
 	if cached := loadCache(); cached != nil {
 		return cached
@@ -206,22 +206,6 @@ func Check(currentVersion string) *CheckResult {
 	}
 	saveCache(result)
 	return result
-}
-
-// CheckSync runs the version check synchronously and returns the result.
-// Used by the `version` command and PersistentPreRun.
-func CheckSync(currentVersion string) *CheckResult {
-	return Check(currentVersion)
-}
-
-// ForceCheck bypasses the cache and performs a fresh check.
-func ForceCheck(currentVersion string) *CheckResult {
-	// Delete cache
-	path, err := cachePath()
-	if err == nil {
-		_ = os.Remove(path)
-	}
-	return Check(currentVersion)
 }
 
 // InstallCommand returns the one-liner install commands for the current platform.

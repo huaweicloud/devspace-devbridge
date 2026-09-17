@@ -11,8 +11,8 @@ import (
 
 // CreateTunnel creates a tunnel; a nil expiration uses the default 72-hour validity.
 func (d *Devbridge) CreateTunnel(ctx context.Context, name, description string, expiration *int) (*Tunnel, error) {
-	if !tunnelNameRegexp.MatchString(name) {
-		return nil, fmt.Errorf("invalid tunnel name: %q", name)
+	if err := validateTunnelName(name); err != nil {
+		return nil, err
 	}
 	if err := validateTunnelDescription(description); err != nil {
 		return nil, err
@@ -66,8 +66,8 @@ func (d *Devbridge) UpdateTunnel(ctx context.Context, tunnelID string, name, des
 
 	req := updateTunnelRequest{}
 	if name != nil {
-		if !tunnelNameRegexp.MatchString(*name) {
-			return fmt.Errorf("invalid tunnel name: %q", *name)
+		if err := validateTunnelName(*name); err != nil {
+			return err
 		}
 		req.Name = name
 	}

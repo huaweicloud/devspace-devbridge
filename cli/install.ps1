@@ -22,7 +22,7 @@ function Install-DevBridge {
     $Script:CONFIG_DIR = Join-Path $HOME ".huawei\devbridge"
     $Script:DEFAULT_ARTIFACT_URL = "https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge"
     if ($Script:DEFAULT_ARTIFACT_URL -match '^__.*__$') {
-        $Script:DEFAULT_ARTIFACT_URL = "https://obs-test-hd-space-cdn-sharedata-north7.obs.cn-north-7.ulanqab.huawei.com/space/devbridge"
+        $Script:DEFAULT_ARTIFACT_URL = "https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge"
     }
     $Script:DEFAULT_VERSION = "0.1.13-release"
     if ($Script:DEFAULT_VERSION -match '^__.*__$') {
@@ -107,7 +107,7 @@ Examples:
     # GitCode one-click:
     irm https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/latest/install.ps1 | iex
     # OBS/CDN one-click:
-    irm https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/releases/download/latest/install.ps1 | iex
+    irm https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install.ps1 | iex
     # Explicit version / mirror:
     .\install.ps1 -Version 1.0.0
     .\install.ps1 -Url https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/<version> -Version 1.0.0

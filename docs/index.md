@@ -5,17 +5,6 @@ description: DevBridge 开发隧道的入口：五分钟上手、核心概念与
 
 # DevBridge 开发隧道
 
-::: danger 【开发者隧道服务升级通知】
-DevBridge 隧道域名将于 **2026 年 9 月 16 日（本周三）晚间 10 点后**切换：
-
-- 原域名 `*.cn-north-4-bridge.myhuaweicloud.com` 变更为 `*.devbridge-s2.hwtunnel.com`；
-- 切换后，旧版本端侧将无法连接，原域名下创建的隧道也会失效；
-- 新隧道访问地址格式为：`https://{隧道ID}-{端口}.devbridge-s2.hwtunnel.com`。
-
-为避免影响正常使用，请在变更后及时升级到最新版客户端，并重新创建隧道。如有疑问请在
-[DevBridge 团队 Issues](https://github.com/huaweicloud/devspace-devbridge/issues) 反馈。
-:::
-
 <p class="lead">使用 DevBridge 将本地开发服务安全地开放给远程设备，无需公网入站端口，并控制端口的访问方式。</p>
 
 ## 从这里开始

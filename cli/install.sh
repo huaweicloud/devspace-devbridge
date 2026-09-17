@@ -58,7 +58,7 @@ INSTALL_DIR="$HOME/.huawei/bin"
 CONFIG_DIR="$HOME/.huawei/devbridge"
 DEFAULT_ARTIFACT_URL="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge"
 if [[ "${DEFAULT_ARTIFACT_URL}" == __*__ ]]; then
-    DEFAULT_ARTIFACT_URL="https://obs-test-hd-space-cdn-sharedata-north7.obs.cn-north-7.ulanqab.huawei.com/space/devbridge"
+    DEFAULT_ARTIFACT_URL="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge"
 fi
 DEFAULT_VERSION="0.1.13-release"
 if [[ "${DEFAULT_VERSION}" == __*__ ]]; then
@@ -136,7 +136,7 @@ Examples:
     # GitCode one-click:
     curl -fsSL https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/latest/install.sh | bash
     # OBS one-click:
-    curl -fsSL https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/releases/download/latest/install.sh | bash
+    curl -fsSL https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install.sh | bash
     # Explicit version / mirror:
     bash install.sh -v 1.0.0
     bash install.sh -u https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/<version> -v 1.0.0

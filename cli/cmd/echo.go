@@ -43,6 +43,9 @@ var pingCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
 		uri := args[0]
+		if pingInterval <= 0 {
+			return fmt.Errorf("interval must be positive, got %d ms", pingInterval)
+		}
 		interval := time.Duration(pingInterval) * time.Millisecond
 
 		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

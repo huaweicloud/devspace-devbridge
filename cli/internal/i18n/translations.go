@@ -33,6 +33,7 @@ func init() {
 	Msg.Tunnel.TunnelDeletedAll = Message{ZH: "所有隧道已删除", EN: "All tunnels deleted"}
 	Msg.Tunnel.TunnelNotFound = Message{ZH: "隧道不存在", EN: "Tunnel not found"}
 	Msg.Tunnel.TunnelDescInvalid = Message{ZH: "隧道描述无效: 仅中文、字母、数字，长度0-64", EN: "Invalid tunnel description: only Chinese characters, digits, letters, length 0-64"}
+	Msg.Tunnel.TunnelNameInvalid = Message{ZH: "隧道名称无效: 仅中文、字母、数字、连字符（不可开头/结尾），长度1-64", EN: "Invalid tunnel name: only Chinese characters, letters, digits, hyphens (not at start/end), length 1-64"}
 	Msg.Tunnel.TunnelListEmpty = Message{ZH: "没有隧道", EN: "No tunnels found."}
 	Msg.Tunnel.ListShort = Message{ZH: "列出所有隧道", EN: "List all tunnels"}
 	Msg.Tunnel.CreateShort = Message{ZH: "创建新隧道", EN: "Create a new tunnel"}

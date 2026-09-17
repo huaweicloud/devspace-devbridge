@@ -31,6 +31,7 @@ type HostConfig struct {
 }
 
 type relayPortMessage struct {
+	Type  string   `json:"@type"`
 	Ports []uint16 `json:"ports"`
 }
 
@@ -92,11 +93,11 @@ func (d *Devbridge) Host(ctx context.Context, cfg HostConfig) error {
 			return nil
 		}
 		if errors.Is(err, ErrQuotaExceeded) || errors.Is(err, ErrTunnelNotFound) {
-			d.logger.Error("connection rejected by gateway", "tunnelID", cfg.TunnelID, "err", err)
+			d.logger.Debug("connection rejected by gateway", "tunnelID", cfg.TunnelID, "err", err)
 			return err
 		}
 		if errors.Is(err, ErrDuplicateHost) && !everConnected {
-			d.logger.Error("duplicate host, tunnel already has a listener", "tunnelID", cfg.TunnelID)
+			d.logger.Debug("duplicate host, tunnel already has a listener", "tunnelID", cfg.TunnelID)
 			return err
 		}
 		if connected {
@@ -106,7 +107,7 @@ func (d *Devbridge) Host(ctx context.Context, cfg HostConfig) error {
 			consecutiveFailures++
 		}
 		if consecutiveFailures >= maxReconnectAttempts {
-			d.logger.Error("reconnect exhausted", "maxAttempts", maxReconnectAttempts, "err", err)
+			d.logger.Debug("reconnect exhausted", "maxAttempts", maxReconnectAttempts, "err", err)
 			return fmt.Errorf("reconnect failed after %d attempts: %w", maxReconnectAttempts, err)
 		}
 
@@ -237,14 +238,18 @@ func (d *Devbridge) startHostAcceptLoop(ctx context.Context, outerSession *ssh.C
 		switch channel.ChannelType {
 		case relayChannelType:
 			if !pn.received.Load() {
-				if len(ports) == 0 {
-					pn.ports = readPortNotification(channel)
-				} else {
-					readPortNotification(channel)
+				// 第一个 relay channel 按协议是网关的端口通知（RelayRequest）。
+				// 但以防协议演进，用内容校验而非位置约定：解析出 RelayRequest 才当通知消费，
+				// 否则视为转发请求走正常转发，避免"无条件吞掉第一个非通知 channel"。
+				notifPorts, isNotif := readPortNotification(channel)
+				if isNotif {
+					if len(ports) == 0 {
+						pn.ports = notifPorts
+					}
+					pn.received.Store(true)
+					close(pn.ready)
+					continue
 				}
-				pn.received.Store(true)
-				close(pn.ready)
-				continue
 			}
 
 			effectivePorts := ports
@@ -259,22 +264,36 @@ func (d *Devbridge) startHostAcceptLoop(ctx context.Context, outerSession *ssh.C
 	}
 }
 
-func readPortNotification(channel *ssh.Channel) []int {
+// readPortNotification reads one relay channel and reports whether it is the gateway's
+// port notification (RelayRequest). It returns false when the payload is not a valid
+// RelayRequest message, so the caller must treat the channel as a data-forwarding
+// channel instead of consuming/discarding it.
+func readPortNotification(channel *ssh.Channel) ([]int, bool) {
 	stream := ssh.NewStream(channel)
 	buf := make([]byte, 4096)
 	n, err := stream.Read(buf)
 	if err != nil {
-		return nil
+		return nil, false
 	}
+	return parsePortNotification(buf[:n])
+}
+
+// parsePortNotification parses a gateway port-notification payload.
+// A valid notification is a RelayRequest message (@type="RelayRequest"); anything
+// else (garbage, empty, or a different message type) is not a port notification.
+func parsePortNotification(data []byte) ([]int, bool) {
 	var msg relayPortMessage
-	if err := json.Unmarshal(buf[:n], &msg); err != nil {
-		return nil
+	if err := json.Unmarshal(data, &msg); err != nil {
+		return nil, false
+	}
+	if msg.Type != "RelayRequest" {
+		return nil, false
 	}
 	ports := make([]int, len(msg.Ports))
 	for i, p := range msg.Ports {
 		ports[i] = int(p)
 	}
-	return ports
+	return ports, true
 }
 
 func (d *Devbridge) handleRelayChannel(ctx context.Context, channel *ssh.Channel, tunnelID string, ports []int) {

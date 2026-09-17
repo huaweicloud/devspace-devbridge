@@ -45,6 +45,9 @@ curl -fsSL https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/downlo
 
 # 从 GitCode Release 安装指定版本
 curl -fsSL https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/v1.0.0/install.sh | bash
+
+# 从 OBS 安装最新版本
+curl -fsSL https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install.sh | bash
 ```
 
 **一键安装（Windows PowerShell）：**
@@ -58,6 +61,9 @@ irm https://github.com/huaweicloud/devspace-devbridge/releases/download/v1.0.0/i
 
 # 从 GitCode Release 安装最新版本
 irm https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/latest/install.ps1 | iex
+
+# 从 OBS 安装最新版本
+irm https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install.ps1 | iex
 ```
 
 安装脚本会自动检测平台、下载对应二进制、校验 SHA256、安装到 `~/.huawei/bin/` 并配置 PATH。

@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	authCheckPath = "/open-api-inner/v1/relay-controller/auth/check"
+	authCheckPath = config.RelayControllerPath + "/auth/check"
 	headerXAPIKey = "X-API-Key"
 )
 

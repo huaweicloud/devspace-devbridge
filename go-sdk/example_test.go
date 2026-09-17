@@ -161,7 +161,9 @@ func ExampleDevbridge_tunnelManagement() {
 
 	// Get tunnel details
 	detail, _ := client.ShowTunnel(ctx, tunnel.ID)
-	fmt.Printf("端口数: %d\n", detail.Status.HostConnectionCount)
+	if detail.Status != nil {
+		fmt.Printf("端口数: %d\n", detail.Status.HostConnectionCount)
+	}
 
 	// Update the tunnel
 	newName := "renamed-tunnel"

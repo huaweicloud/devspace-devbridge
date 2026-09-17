@@ -28,7 +28,7 @@ curl -fsSL https://github.com/huaweicloud/devspace-devbridge/releases/latest/dow
 curl -fsSL https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/latest/install.sh | bash
 
 # OBS 渠道
-curl -fsSL https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/releases/download/latest/install.sh | bash
+curl -fsSL https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install.sh | bash
 ```
 
 ### PowerShell
@@ -43,7 +43,7 @@ irm https://github.com/huaweicloud/devspace-devbridge/releases/latest/download/i
 irm https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/latest/install.ps1 | iex
 
 # OBS 渠道
-irm https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/releases/download/latest/install.ps1 | iex
+irm https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install.ps1 | iex
 ```
 
 标准安装会安装当前发布版本并使用默认目录，不需要指定版本或下载源。

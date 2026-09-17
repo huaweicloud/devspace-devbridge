@@ -22,7 +22,7 @@
 - 端口管理：创建、查询、更新、删除
 - 令牌签发：Host / Connect
 - Host 托管与 Connect 连接：自动重连、`OnReady` 就绪回调
-- 状态输出可配置：`Config.StatusWriter`（默认 os.Stdout，可静音）
+- 状态输出可配置：`Config.OutputWriter`（默认 os.Stdout，可静音）
 - 单元测试覆盖配置校验逻辑
 
 ### Changed

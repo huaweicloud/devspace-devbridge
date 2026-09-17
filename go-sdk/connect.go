@@ -62,7 +62,7 @@ func (d *Devbridge) Connect(ctx context.Context, cfg ConnectConfig) error {
 	sniHost := cfg.TunnelID + "." + d.gatewayHost
 	wsURL := "wss://" + sniHost + "/"
 
-	factory := newListenerFactory(len(cfg.Ports), cfg.LocalIP, d.statusWriter, d.logger)
+	factory := newListenerFactory(len(cfg.Ports), cfg.LocalIP, d.outputWriter, d.logger)
 
 	const maxReconnectAttempts = 5
 	const baseReconnectDelay = 3 * time.Second
@@ -75,7 +75,7 @@ func (d *Devbridge) Connect(ctx context.Context, cfg ConnectConfig) error {
 			return nil
 		}
 		if errors.Is(err, ErrQuotaExceeded) || errors.Is(err, ErrTunnelNotFound) {
-			d.logger.Error("connection rejected by gateway", "tunnelID", cfg.TunnelID, "err", err)
+			d.logger.Debug("connection rejected by gateway", "tunnelID", cfg.TunnelID, "err", err)
 			return err
 		}
 		if connected {
@@ -84,7 +84,7 @@ func (d *Devbridge) Connect(ctx context.Context, cfg ConnectConfig) error {
 			consecutiveFailures++
 		}
 		if consecutiveFailures >= maxReconnectAttempts {
-			d.logger.Error("reconnect exhausted", "maxAttempts", maxReconnectAttempts, "err", err)
+			d.logger.Debug("reconnect exhausted", "maxAttempts", maxReconnectAttempts, "err", err)
 			return fmt.Errorf("reconnect failed after %d attempts: %w", maxReconnectAttempts, err)
 		}
 
@@ -179,17 +179,17 @@ type listenerFactory struct {
 	expectedCount      int
 	allReceived        chan struct{}
 	localIP            string
-	statusWriter       io.Writer
+	outputWriter       io.Writer
 	logger             *slog.Logger
 }
 
-func newListenerFactory(expectedCount int, localIP string, statusWriter io.Writer, logger *slog.Logger) *listenerFactory {
+func newListenerFactory(expectedCount int, localIP string, outputWriter io.Writer, logger *slog.Logger) *listenerFactory {
 	return &listenerFactory{
 		expectedCount: expectedCount,
 		allReceived:   make(chan struct{}),
 		portOverrides: make(map[int]int),
 		localIP:       localIP,
-		statusWriter:  statusWriter,
+		outputWriter:  outputWriter,
 		logger:        logger,
 	}
 }
@@ -260,7 +260,7 @@ func (f *listenerFactory) printForwardings() {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	for _, msg := range f.pendingForwardings {
-		fmt.Fprint(f.statusWriter, msg)
+		fmt.Fprint(f.outputWriter, msg)
 	}
 }
 

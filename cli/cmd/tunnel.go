@@ -71,6 +71,9 @@ var createCmd = &cobra.Command{
 		client := newSDKClient()
 		result, err := client.CreateTunnel(context.Background(), args[0], tunnelDescription, exp)
 		if err != nil {
+			if errors.Is(err, devbridge.ErrInvalidTunnelName) {
+				return errors.New(i18n.T(i18n.Msg.Tunnel.TunnelNameInvalid))
+			}
 			if errors.Is(err, devbridge.ErrInvalidTunnelDescription) {
 				return errors.New(i18n.T(i18n.Msg.Tunnel.TunnelDescInvalid))
 			}
@@ -141,6 +144,9 @@ var updateCmd = &cobra.Command{
 		}
 		client := newSDKClient()
 		if err := client.UpdateTunnel(context.Background(), tunnelID, name, desc, exp); err != nil {
+			if errors.Is(err, devbridge.ErrInvalidTunnelName) {
+				return errors.New(i18n.T(i18n.Msg.Tunnel.TunnelNameInvalid))
+			}
 			if errors.Is(err, devbridge.ErrInvalidTunnelDescription) {
 				return errors.New(i18n.T(i18n.Msg.Tunnel.TunnelDescInvalid))
 			}
