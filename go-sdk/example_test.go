@@ -10,35 +10,35 @@ import (
 	"log"
 	"time"
 
-	"github.com/huaweicloud/devspace-devbridge/sdk"
+	"github.com/huaweicloud/devspace-devbridge/go-sdk"
 )
 
 // ──────────────────────────────────────────────────────────────
-// 示例 1：完整流程 — 创建隧道 → 添加端口 → Host 托管 → Connect 连接
+// Example 1: full workflow - create tunnel, add port, host, then connect
 // ──────────────────────────────────────────────────────────────
 
 func ExampleDevbridge_fullWorkflow() {
 	ctx := context.Background()
 
-	// 创建客户端（API Key 也可通过 HW_API_KEY 环境变量设置）
+	// Create the client (the API key can also be set via the HW_API_KEY env var)
 	client := sdk.New(sdk.Config{APIKey: "your-api-key"})
 
-	// 1. 创建隧道
+	// 1. Create a tunnel
 	tunnel, err := client.CreateTunnel(ctx, "my-dev-tunnel", "开发联调环境", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("隧道已创建: %s\n", tunnel.ID)
 
-	// 2. 添加端口
+	// 2. Add a port
 	allowAnon := true
 	if err := client.CreatePort(ctx, tunnel.ID, 8080, "http", &allowAnon); err != nil {
 		log.Fatal(err)
 	}
 
-	// 3. Host 托管（在服务所在设备运行）
+	// 3. Host: run on the device where the service lives
 	//
-	// 这会阻塞，通常在单独的 goroutine 中运行：
+	// This blocks, so it usually runs in a separate goroutine:
 	hostCtx, hostCancel := context.WithCancel(context.Background())
 	go func() {
 		if err := client.Host(hostCtx, sdk.HostConfig{
@@ -49,11 +49,11 @@ func ExampleDevbridge_fullWorkflow() {
 		}
 	}()
 
-	time.Sleep(2 * time.Second) // 等待 Host 就绪
+	time.Sleep(2 * time.Second) // wait for Host to be ready
 
-	// 4. Connect 连接（在访问设备运行）
+	// 4. Connect: run on the accessing device
 	//
-	// 连接成功后，在访问设备上 http://localhost:8080 即可访问远端服务
+	// After connecting, http://localhost:8080 on the accessing device reaches the remote service
 	connectCtx, connectCancel := context.WithCancel(context.Background())
 	go func() {
 		if err := client.Connect(connectCtx, sdk.ConnectConfig{
@@ -66,20 +66,20 @@ func ExampleDevbridge_fullWorkflow() {
 
 	time.Sleep(5 * time.Second)
 
-	// 5. 清理
+	// 5. Cleanup
 	connectCancel()
 	hostCancel()
 	client.DeleteTunnel(ctx, tunnel.ID)
 }
 
 // ──────────────────────────────────────────────────────────────
-// 示例 2：使用已有隧道 Host 托管
+// Example 2: host an existing tunnel
 // ──────────────────────────────────────────────────────────────
 
 func ExampleDevbridge_host() {
 	client := sdk.New(sdk.Config{APIKey: "your-api-key"})
 
-	// 查询隧道端口
+	// List the tunnel's ports
 	ports, err := client.ListPorts(context.Background(), "aaaadysa")
 	if err != nil {
 		log.Fatal(err)
@@ -90,7 +90,7 @@ func ExampleDevbridge_host() {
 		portList[i] = p.Port
 	}
 
-	// 启动 Host（阻塞）
+	// Start the host (blocks)
 	err = client.Host(context.Background(), sdk.HostConfig{
 		TunnelID: "aaaadysa",
 		Ports:    portList,
@@ -101,19 +101,19 @@ func ExampleDevbridge_host() {
 }
 
 // ──────────────────────────────────────────────────────────────
-// 示例 3：使用 JWT 令牌（跳过 API 调用）
+// Example 3: use a JWT token (skip API calls)
 // ──────────────────────────────────────────────────────────────
 
 func ExampleDevbridge_hostWithToken() {
 	client := sdk.New(sdk.Config{})
 
-	// 先签发 Host 令牌
+	// Issue a host token first
 	token, err := client.IssueToken(context.Background(), "aaaadysa", "host")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// 用令牌启动 Host，不再调用 REST API
+	// Start the host with the token, without calling the REST API
 	err = client.Host(context.Background(), sdk.HostConfig{
 		TunnelID: "aaaadysa",
 		JWTToken: token.Token,
@@ -124,14 +124,14 @@ func ExampleDevbridge_hostWithToken() {
 }
 
 // ──────────────────────────────────────────────────────────────
-// 示例 4：Connect 连接并访问远端服务
+// Example 4: connect and reach a remote service
 // ──────────────────────────────────────────────────────────────
 
 func ExampleDevbridge_connect() {
 	client := sdk.New(sdk.Config{APIKey: "your-api-key"})
 
-	// 连接隧道，在本地建立端口映射
-	// 连接成功后，http://localhost:8080 → 远端 Host 的 8080 端口
+	// Connect to the tunnel and set up local port mappings
+	// After connecting, http://localhost:8080 -> port 8080 of the remote host
 	err := client.Connect(context.Background(), sdk.ConnectConfig{
 		TunnelID: "aaaadysa",
 		Ports:    []int{8080},
@@ -142,31 +142,31 @@ func ExampleDevbridge_connect() {
 }
 
 // ──────────────────────────────────────────────────────────────
-// 示例 5：隧道管理
+// Example 5: tunnel management
 // ──────────────────────────────────────────────────────────────
 
 func ExampleDevbridge_tunnelManagement() {
 	ctx := context.Background()
 	client := sdk.New(sdk.Config{APIKey: "your-api-key"})
 
-	// 创建隧道，有效期 24 小时
+	// Create a tunnel with 24-hour validity
 	exp := 24
 	tunnel, _ := client.CreateTunnel(ctx, "my-tunnel", "描述", &exp)
 
-	// 查询隧道列表
+	// List tunnels
 	tunnels, _ := client.ListTunnels(ctx)
 	for _, t := range tunnels {
 		fmt.Printf("%s: %s\n", t.ID, t.Name)
 	}
 
-	// 查询隧道详情
+	// Get tunnel details
 	detail, _ := client.ShowTunnel(ctx, tunnel.ID)
 	fmt.Printf("端口数: %d\n", detail.Status.HostConnectionCount)
 
-	// 更新隧道
+	// Update the tunnel
 	newName := "renamed-tunnel"
 	client.UpdateTunnel(ctx, tunnel.ID, &newName, nil, nil)
 
-	// 删除隧道
+	// Delete the tunnel
 	client.DeleteTunnel(ctx, tunnel.ID)
 }

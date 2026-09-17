@@ -20,29 +20,30 @@ import (
 	"github.com/microsoft/dev-tunnels-ssh/src/go/tcp"
 )
 
-// ConnectConfig Connect 连接配置
+// ConnectConfig is the configuration for connecting to a tunnel.
 type ConnectConfig struct {
-	TunnelID string // 隧道 ID
-	Ports    []int  // 端口列表（为空时从 Host 端通过 SSH 下发）
-	JWTToken string // JWT 令牌（与 APIKey 二选一）
-	APIKey   string // API Key（与 JWTToken 二选一）
-	LocalIP  string // 本地监听地址，默认 127.0.0.1
+	TunnelID string // tunnel ID
+	Ports    []int  // ports to forward (empty means delivered by the host via SSH)
+	JWTToken string // JWT token (mutually exclusive with APIKey)
+	APIKey   string // API key (mutually exclusive with JWTToken)
+	LocalIP  string // local listen address, defaults to 127.0.0.1
 
-	// OnReady 在会话就绪（本地端口映射建立）后调用，参数为本次建立的映射列表。
-	// 每次连接或重连成功都会触发一次。可为 nil。
+	// OnReady is called once the session is ready (local port mappings established), with the list of mappings.
+	// It fires once per established connection or reconnect. May be nil.
 	OnReady func(forwardings []Forwarding)
 }
 
-// Forwarding 端口转发映射信息
+// Forwarding describes a port forwarding mapping.
 type Forwarding struct {
-	LocalPort  int    // 本地端口
-	RemotePort int    // 远端端口
-	LocalIP    string // 本地监听地址
+	LocalPort  int    // local port
+	RemotePort int    // remote port
+	LocalIP    string // local listen address
 }
 
-// Connect 启动 Connect 连接服务。
+// Connect starts the Connect connection service.
 //
-// 这是一个阻塞方法，在 ctx 被取消或连接彻底断开时返回；网络短暂中断会自动重连。
+// This is a blocking call that returns when ctx is canceled or the connection is fully lost;
+// brief network interruptions are reconnected automatically.
 func (d *Devbridge) Connect(ctx context.Context, cfg ConnectConfig) error {
 	if err := validateTunnelID(cfg.TunnelID); err != nil {
 		return err
@@ -51,7 +52,7 @@ func (d *Devbridge) Connect(ctx context.Context, cfg ConnectConfig) error {
 		cfg.LocalIP = "127.0.0.1"
 	}
 
-	// 认证回退：cfg 未显式指定时，使用 Devbridge 实例上的 API Key
+	// Auth fallback: use the Devbridge instance's API key when cfg does not specify one.
 	apiKey := cfg.APIKey
 	if apiKey == "" && cfg.JWTToken == "" {
 		apiKey = d.apiKey
@@ -71,9 +72,6 @@ func (d *Devbridge) Connect(ctx context.Context, cfg ConnectConfig) error {
 	for consecutiveFailures < maxReconnectAttempts {
 		connected, err := d.runConnectSession(ctx, wsURL, sniHost, header, subprotocols, cfg.TunnelID, cfg.Ports, factory, cfg.OnReady)
 		if ctx.Err() != nil {
-			return nil
-		}
-		if err == nil {
 			return nil
 		}
 		if errors.Is(err, ErrQuotaExceeded) || errors.Is(err, ErrTunnelNotFound) {
@@ -139,8 +137,8 @@ func (d *Devbridge) runConnectSession(ctx context.Context, wsURL string, sniHost
 
 	d.statusf("Connected to tunnel: %s\n", tunnelID)
 
-	// 过滤"所有端口"哨兵值（-1）。这种隧道只能通过 URL 访问任意端口，
-	// connect 端无需为 -1 建立本地监听。
+	// Filter out the "all ports" sentinel value (-1). Such a tunnel can only be reached by URL for any port,
+	// so the connect side does not need to create a local listener for -1.
 	realPorts := filterForwardPorts(ports)
 
 	if len(realPorts) > 0 {
@@ -196,7 +194,7 @@ func newListenerFactory(expectedCount int, localIP string, statusWriter io.Write
 	}
 }
 
-// CreateTCPListener 实现 tcp.ListenerFactory 接口
+// CreateTCPListener implements the tcp.ListenerFactory interface.
 func (f *listenerFactory) CreateTCPListener(
 	remotePort int,
 	localIPAddress string,
@@ -224,7 +222,7 @@ func (f *listenerFactory) CreateTCPListener(
 	return listener, nil
 }
 
-// listenOnRandomPortLocked 本地端口被占用时，换一个随机端口。调用方需持有 f.mu。
+// listenOnRandomPortLocked switches to a random port when the local port is in use. The caller must hold f.mu.
 func (f *listenerFactory) listenOnRandomPortLocked(remotePort, originalPort int) (net.Listener, error) {
 	listener, err := net.Listen("tcp", net.JoinHostPort(f.localIP, "0"))
 	if err != nil {
@@ -238,7 +236,7 @@ func (f *listenerFactory) listenOnRandomPortLocked(remotePort, originalPort int)
 	return listener, nil
 }
 
-// recordForwarding 记录一条端口映射并唤醒等待者。调用方需持有 f.mu。
+// recordForwarding records a port mapping and wakes waiters. The caller must hold f.mu.
 func (f *listenerFactory) recordForwarding(localPort, remotePort int, msg string) {
 	f.forwardings = append(f.forwardings, Forwarding{LocalPort: localPort, RemotePort: remotePort, LocalIP: f.localIP})
 	f.pendingForwardings = append(f.pendingForwardings, msg)
@@ -251,7 +249,7 @@ func (f *listenerFactory) recordForwarding(localPort, remotePort int, msg string
 	}
 }
 
-// snapshotForwardings 返回当前已建立的端口映射副本
+// snapshotForwardings returns a copy of the currently established port mappings.
 func (f *listenerFactory) snapshotForwardings() []Forwarding {
 	f.mu.Lock()
 	defer f.mu.Unlock()

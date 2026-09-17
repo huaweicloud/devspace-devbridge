@@ -4,7 +4,6 @@ type Messages struct {
 	Auth   AuthMessages
 	Tunnel TunnelMessages
 	Port   PortMessages
-	API    APIMessages
 	Common CommonMessages
 	Limits LimitsMessages
 	Echo   EchoMessages
@@ -29,16 +28,13 @@ type AuthMessages struct {
 
 type TunnelMessages struct {
 	TunnelID              Message
-	TunnelName            Message
 	TunnelExpiration      Message
 	PortCount             Message
 	TunnelUpdated         Message
 	TunnelDeleted         Message
 	TunnelDeletedAll      Message
 	TunnelNotFound        Message
-	TunnelNameInvalid     Message
 	TunnelDescInvalid     Message
-	TunnelExpInvalid      Message
 	TunnelListEmpty       Message
 	ListShort             Message
 	CreateShort           Message
@@ -73,8 +69,6 @@ type PortMessages struct {
 	AllowAnonymous   Message
 	PortCreated      Message
 	PortUpdated      Message
-	PortInvalid      Message
-	ProtocolInvalid  Message
 	PortListEmpty    Message
 	Port             Message
 	TunnelID         Message
@@ -89,13 +83,6 @@ type PortMessages struct {
 	FlagProtocol     Message
 	FlagAllowAnon    Message
 	FlagDenyAnon     Message
-}
-
-type APIMessages struct {
-	ServerError     Message
-	Unauthorized    Message
-	InvalidResponse Message
-	APIKeyExpired   Message
 }
 
 type CommonMessages struct {
@@ -137,8 +124,7 @@ type EchoMessages struct {
 }
 
 type PingMessages struct {
-	PingShort  Message
-	URIInvalid Message
+	PingShort Message
 }
 
 type ConfigMessages struct {

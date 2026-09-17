@@ -2,8 +2,8 @@
  * Copyright (c) Huawei Technologies Co., Ltd. 2026-2027. All rights reserved.
  */
 
-// Package sdk 提供 DevBridge 隧道服务的 Go 客户端：
-// 隧道与端口的 REST API 管理，以及 Host 托管与 Connect 连接能力。
+// Package sdk provides a Go client for the DevBridge tunnel service:
+// REST API management for tunnels and ports, plus Host hosting and Connect connection capabilities.
 package sdk
 
 import (
@@ -13,7 +13,7 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/huaweicloud/devspace-devbridge/sdk/internal/httpclient"
+	"github.com/huaweicloud/devspace-devbridge/go-sdk/internal/httpclient"
 )
 
 const (
@@ -29,9 +29,9 @@ var (
 	tunnelDescRegexp = regexp.MustCompile(`^[\x{4e00}-\x{9fa5}A-Za-z0-9]{0,64}$`)
 )
 
-// AllPortsSentinel 表示"所有端口"的哨兵值，对应后端存储的 -1。
-// 它只对 visitor URL 访问有意义（网关按 SNI 动态路由任意端口），
-// host/connect 的 SSH 主动端口转发不应转发该值。
+// AllPortsSentinel is the "all ports" sentinel value, corresponding to -1 in the backend.
+// It only matters for visitor URL access (the gateway routes any port by SNI);
+// host/connect SSH port forwarding must not forward this value.
 const AllPortsSentinel = -1
 
 // Config holds the SDK client configuration. A zero Config is valid —
@@ -86,7 +86,7 @@ func (cfg Config) resolve() Config {
 	return out
 }
 
-// Devbridge DevBridge SDK 客户端
+// Devbridge is the DevBridge SDK client.
 type Devbridge struct {
 	apiKey             string
 	gatewayAddr        string
@@ -123,7 +123,7 @@ func (d *Devbridge) statusln(args ...any) {
 
 func validateTunnelID(id string) error {
 	if !tunnelIDRegexp.MatchString(id) {
-		return fmt.Errorf("%w: got %q", ErrInvalidTunnelID, id)
+		return fmt.Errorf("%w: %q (only lowercase letters and digits 2-7 allowed, length must be 8)", ErrInvalidTunnelID, id)
 	}
 	return nil
 }
@@ -145,9 +145,9 @@ func validatePortNumber(port int) error {
 	return nil
 }
 
-// filterForwardPorts 过滤掉"所有端口"哨兵值，返回仅包含真实端口（1-65535）的列表。
-// host/connect 的 SSH 端口转发不应转发 -1（哨兵值对应 uint32 的 4294967295，
-// 不是合法监听端口），它只对 visitor URL 访问有意义。
+// filterForwardPorts filters out the "all ports" sentinel value and returns only real ports (1-65535).
+// host/connect SSH port forwarding must not forward -1 (the sentinel maps to uint32 4294967295,
+// which is not a valid listening port); it only matters for visitor URL access.
 func filterForwardPorts(ports []int) []int {
 	out := make([]int, 0, len(ports))
 	for _, p := range ports {

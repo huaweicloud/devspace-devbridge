@@ -27,7 +27,7 @@
 
 ### Changed
 
-- 模块路径：`github.com/huaweicloud/devspace-devbridge/sdk`
+- 模块路径：`github.com/huaweicloud/devspace-devbridge/go-sdk`
 - 隧道描述校验：仅允许中文、字母、数字，长度 0-64
 - README 全面更新：配置说明、错误处理、示例与许可信息
 

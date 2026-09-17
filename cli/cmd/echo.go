@@ -32,11 +32,7 @@ var echoCmd = &cobra.Command{
 		if cmd.Flags().Changed("port") && (echoPort < 1 || echoPort > 65535) {
 			return fmt.Errorf("Invalid port number %d (Port must be between 1 and 65535)", echoPort)
 		}
-		addr := echoInterface
-		if addr == "" {
-			addr = "127.0.0.1"
-		}
-		listenAddr := fmt.Sprintf("%s:%d", addr, echoPort)
+		listenAddr := fmt.Sprintf("%s:%d", echoInterface, echoPort)
 		return runHTTPEcho(listenAddr)
 	}),
 }

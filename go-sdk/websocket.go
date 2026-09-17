@@ -25,17 +25,17 @@ const (
 	subprotocolDevBridge = "devbridge-v1"
 	relayChannelType     = "relay"
 
-	// ANSI 颜色码，用于用户可见的终端输出
+	// ANSI color codes for user-facing terminal output
 	colorCyan   = "\033[36m"
 	colorYellow = "\033[33m"
 	colorReset  = "\033[0m"
 )
 
-// buildWSHeader 构建 WebSocket 握手头
+// buildWSHeader builds the WebSocket handshake header.
 //
-// 认证方式二选一：
-//   - JWT 令牌：通过 Sec-WebSocket-Protocol 传递
-//   - API Key：通过 X-API-Key 头传递
+// Authentication is exclusive:
+//   - JWT: passed via Sec-WebSocket-Protocol
+//   - API Key: passed via the X-API-Key header
 func buildWSHeader(jwtToken, apiKey string) (http.Header, []string) {
 	header := http.Header{}
 	subprotocols := []string{subprotocolDevBridge}
@@ -43,13 +43,12 @@ func buildWSHeader(jwtToken, apiKey string) (http.Header, []string) {
 		header.Set("X-API-Key", apiKey)
 	}
 	if jwtToken != "" {
-		header.Set("Sec-WebSocket-Protocol", subprotocolDevBridge+", "+jwtToken)
 		subprotocols = append(subprotocols, jwtToken)
 	}
 	return header, subprotocols
 }
 
-// dialWebSocket 建立 WebSocket 连接，转换为 net.Conn，带重试
+// dialWebSocket establishes a WebSocket connection, converts it to a net.Conn, and retries with backoff.
 func (d *Devbridge) dialWebSocket(ctx context.Context, wsURL, sniHost string, header http.Header, subprotocols []string, maxRetries int) (net.Conn, error) {
 	dialCtx, dialCancel := context.WithTimeout(ctx, 30*time.Second)
 	defer dialCancel()
@@ -65,8 +64,8 @@ func (d *Devbridge) dialWebSocket(ctx context.Context, wsURL, sniHost string, he
 	return websocket.NetConn(ctx, conn, websocket.MessageBinary), nil
 }
 
-// getWSHTTPClient 创建用于 WebSocket 握手的 HTTP 客户端
-// 关键：DialContext 被替换为拨号到网关地址，TLS SNI 设为 sniHost
+// getWSHTTPClient returns the HTTP client used for the WebSocket handshake.
+// Key detail: DialContext is overridden to dial the gateway address, with TLS SNI set to sniHost.
 func (d *Devbridge) getWSHTTPClient(sniHost string) *http.Client {
 	dialer := &net.Dialer{}
 	return &http.Client{
@@ -84,7 +83,7 @@ func (d *Devbridge) getWSHTTPClient(sniHost string) *http.Client {
 	}
 }
 
-// dialWithRetry 带指数退避重试的 WebSocket 拨号
+// dialWithRetry dials the WebSocket with exponential backoff and retries.
 func (d *Devbridge) dialWithRetry(ctx context.Context, url string, opts *websocket.DialOptions, maxRetries int) (*websocket.Conn, error) {
 	const baseDelay = 1 * time.Second
 	const maxDelay = 30 * time.Second
@@ -101,12 +100,12 @@ func (d *Devbridge) dialWithRetry(ctx context.Context, url string, opts *websock
 		}
 		lastErr = err
 
-		// 409 Conflict: 该隧道已有 Host
+		// 409 Conflict: this tunnel already has a host
 		if resp != nil && resp.StatusCode == http.StatusConflict {
 			return nil, ErrDuplicateHost
 		}
 
-		// 429 Too Many Requests: 被限流
+		// 429 Too Many Requests: rate limited
 		if resp != nil && resp.StatusCode == http.StatusTooManyRequests {
 			body, _ := io.ReadAll(resp.Body)
 			_ = resp.Body.Close()
@@ -123,7 +122,7 @@ func (d *Devbridge) dialWithRetry(ctx context.Context, url string, opts *websock
 			break
 		}
 
-		// 指数退避 + 随机抖动
+		// exponential backoff + random jitter
 		delay := baseDelay * time.Duration(1<<uint(attempt))
 		if delay > maxDelay {
 			delay = maxDelay
@@ -142,7 +141,7 @@ func (d *Devbridge) dialWithRetry(ctx context.Context, url string, opts *websock
 	return nil, fmt.Errorf("websocket dial failed after %d retries: %w", maxRetries, lastErr)
 }
 
-// sshTraceFunc SSH 协议层日志
+// sshTraceFunc returns the SSH protocol layer trace function.
 func sshTraceFunc(logger *slog.Logger) ssh.TraceFunc {
 	if logger == nil {
 		return nil
@@ -165,7 +164,7 @@ func sshTraceFunc(logger *slog.Logger) ssh.TraceFunc {
 	}
 }
 
-// parseSSHCloseError 从 SSH 关闭错误中提取业务错误
+// parseSSHCloseError extracts a business error from an SSH close error.
 func parseSSHCloseError(err error) error {
 	var ce websocket.CloseError
 	if errors.As(err, &ce) && ce.Code == websocket.StatusPolicyViolation {

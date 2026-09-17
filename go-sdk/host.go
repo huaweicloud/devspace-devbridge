@@ -18,15 +18,15 @@ import (
 	"github.com/microsoft/dev-tunnels-ssh/src/go/tcp"
 )
 
-// HostConfig Host 托管配置
+// HostConfig is the configuration for hosting a tunnel.
 type HostConfig struct {
-	TunnelID string // 隧道 ID
-	Ports    []int  // 本地端口列表（为空时从网关下发）
-	JWTToken string // JWT 令牌（与 APIKey 二选一）
-	APIKey   string // API Key（与 JWTToken 二选一）
+	TunnelID string // tunnel ID
+	Ports    []int  // local ports to forward (empty means issued by the gateway)
+	JWTToken string // JWT token (mutually exclusive with APIKey)
+	APIKey   string // API key (mutually exclusive with JWTToken)
 
-	// OnReady 在会话就绪（端口开始转发）后调用，参数为本次托管的端口列表。
-	// 每次连接或重连成功都会触发一次。可为 nil。
+	// OnReady is called once the session is ready (ports start forwarding), with the list of hosted ports.
+	// It fires once per established connection or reconnect. May be nil.
 	OnReady func(ports []int)
 }
 
@@ -40,8 +40,8 @@ var (
 	hostKeyErr        error
 )
 
-// ensureHostKey 生成进程内唯一的 SSH host key。
-// 生成失败会缓存错误并在后续每次调用返回，避免在会话层静默使用 nil key。
+// ensureHostKey generates a process-wide SSH host key.
+// If generation fails, the error is cached and returned on subsequent calls, avoiding silent use of a nil key.
 func ensureHostKey() error {
 	hostKeyOnce.Do(func() {
 		persistentHostKey, hostKeyErr = ssh.GenerateKeyPair(ssh.AlgoPKEcdsaSha2P256)
@@ -49,15 +49,16 @@ func ensureHostKey() error {
 	return hostKeyErr
 }
 
-// Host 启动 Host 托管服务。
+// Host starts the Host hosting service.
 //
-// 这是一个阻塞方法，在 ctx 被取消或连接彻底断开时返回；网络短暂中断会自动重连。
+// This is a blocking call that returns when ctx is canceled or the connection is fully lost;
+// brief network interruptions are reconnected automatically.
 //
-// 工作流程：
-//  1. WebSocket 连到 wss://<tunnelId>.<gatewayHost>/<tunnelId>
-//  2. 在 WebSocket 上建立 SSH 会话
-//  3. 接受 relay channel，为每个 channel 创建内层 SSH 会话
-//  4. 通过端口转发把流量从远端转到本地端口
+// Workflow:
+//  1. Connect WebSocket to wss://<tunnelId>.<gatewayHost>/<tunnelId>
+//  2. Establish an SSH session over the WebSocket
+//  3. Accept relay channels and create an inner SSH session for each
+//  4. Forward traffic from the remote side to the local port
 func (d *Devbridge) Host(ctx context.Context, cfg HostConfig) error {
 	if err := ensureHostKey(); err != nil {
 		return fmt.Errorf("generate host key: %w", err)
@@ -66,7 +67,7 @@ func (d *Devbridge) Host(ctx context.Context, cfg HostConfig) error {
 		return err
 	}
 
-	// 认证回退：cfg 未显式指定时，使用 Devbridge 实例上的 API Key
+	// Auth fallback: use the Devbridge instance's API key when cfg does not specify one.
 	apiKey := cfg.APIKey
 	if apiKey == "" && cfg.JWTToken == "" {
 		apiKey = d.apiKey
@@ -97,9 +98,6 @@ func (d *Devbridge) Host(ctx context.Context, cfg HostConfig) error {
 		if errors.Is(err, ErrDuplicateHost) && !everConnected {
 			d.logger.Error("duplicate host, tunnel already has a listener", "tunnelID", cfg.TunnelID)
 			return err
-		}
-		if err == nil {
-			return nil
 		}
 		if connected {
 			consecutiveFailures = 0
@@ -187,8 +185,8 @@ func (d *Devbridge) runHostSession(ctx context.Context, wsURL string, sniHost st
 		printPorts = pn.ports
 	}
 
-	// 过滤掉"所有端口"哨兵值：它只对 visitor URL 访问有意义，
-	// host 端不需要为 -1 发起本地端口转发。
+	// Filter out the "all ports" sentinel value: it only matters for visitor URL access,
+	// and host does not need to start a local port forward for -1.
 	realPorts := filterForwardPorts(printPorts)
 	if len(realPorts) == 0 && len(printPorts) > 0 {
 		d.statusln("All ports mode: this tunnel accepts any port via URL")
@@ -294,7 +292,7 @@ func (d *Devbridge) handleRelayChannel(ctx context.Context, channel *ssh.Channel
 
 	pfs := tcp.GetPortForwardingService(&innerSession.Session)
 	if pfs != nil && len(ports) > 0 {
-		// 过滤"所有端口"哨兵值（-1），不被转发（不是合法监听端口）。
+		// Filter out the "all ports" sentinel value (-1): it is not a valid listening port and should not be forwarded.
 		for _, port := range filterForwardPorts(ports) {
 			if _, err := pfs.ForwardFromRemotePort(ctx, "127.0.0.1", port, "127.0.0.1", port); err != nil {
 				d.logger.Error("forward port failed", "port", port, "err", err)

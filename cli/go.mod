@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/cli/browser v1.3.0
-	github.com/huaweicloud/devspace-devbridge/sdk v0.0.0
+	github.com/huaweicloud/devspace-devbridge/go-sdk v0.0.0
 	github.com/spf13/cobra v1.9.1
 	github.com/zalando/go-keyring v0.2.6
 	gopkg.in/yaml.v3 v3.0.1
@@ -23,4 +23,4 @@ require (
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
 
-replace github.com/huaweicloud/devspace-devbridge/sdk => ../sdk
+replace github.com/huaweicloud/devspace-devbridge/go-sdk => ../go-sdk

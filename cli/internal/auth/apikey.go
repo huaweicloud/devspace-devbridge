@@ -5,13 +5,6 @@ import (
 	"log/slog"
 )
 
-func maskSecret(s string) string {
-	if len(s) <= 8 {
-		return "****"
-	}
-	return s[:4] + "****" + s[len(s)-4:]
-}
-
 var overrideAPIKey string
 
 // SetOverrideAPIKey 设置命令行传入的 API Key，使后续 API 调用直接使用该 key.
@@ -23,7 +16,7 @@ func ReadValidAPIKey() *Credential {
 	cred := readValidAPIKey()
 	if cred != nil && slog.Default().Enabled(context.Background(), slog.LevelDebug) {
 		slog.Debug("read valid API key",
-			"apiKey", maskSecret(cred.APIKey),
+			"apiKey", maskAPIKey(cred.APIKey),
 		)
 	}
 	return cred

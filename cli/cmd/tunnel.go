@@ -4,12 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strconv"
 
+	devbridge "github.com/huaweicloud/devspace-devbridge/go-sdk"
 	"huawei.com/devbridge/internal/config"
 	"huawei.com/devbridge/internal/i18n"
-	devbridge "github.com/huaweicloud/devspace-devbridge/sdk"
 
 	"github.com/spf13/cobra"
 )
@@ -17,21 +16,12 @@ import (
 // TunnelNotFoundCode 与服务端约定的"隧道不存在"错误码。
 const TunnelNotFoundCode = "10002"
 
-var tunnelIDPattern = regexp.MustCompile(`^[a-z2-7]{8}$`)
-
 var (
 	tunnelDescription string
 	tunnelExpiration  int
 	tunnelName        string
 	tunnelScope       string
 )
-
-func validateTunnelIDLocal(id string) error {
-	if !tunnelIDPattern.MatchString(id) {
-		return fmt.Errorf("invalid tunnel id: %q (only lowercase letters and digits 2-7 allowed, length must be 8)", id)
-	}
-	return nil
-}
 
 var listCmd = &cobra.Command{
 	Use:   "list",
@@ -225,9 +215,6 @@ var setCmd = &cobra.Command{
 	Short: i18n.T(i18n.Msg.Tunnel.SetShort),
 	Args:  cobra.ExactArgs(1),
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
-		if err := validateTunnelIDLocal(args[0]); err != nil {
-			return err
-		}
 		client := newSDKClient()
 		if _, err := client.ShowTunnel(context.Background(), args[0]); err != nil {
 			if code, ok := devbridge.IsAPIError(err); ok && code == TunnelNotFoundCode {

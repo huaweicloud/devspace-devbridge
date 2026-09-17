@@ -30,6 +30,8 @@ func validateProtocolLocal(protocol string) error {
 	return nil
 }
 
+// resolveAllowAnon resolves --allow-anonymous / --deny-anonymous.
+// It returns nil when neither flag is set, meaning "leave unchanged".
 func resolveAllowAnon(cmd *cobra.Command) *bool {
 	if cmd.Flags().Changed("allow-anonymous") {
 		v := true
@@ -39,8 +41,7 @@ func resolveAllowAnon(cmd *cobra.Command) *bool {
 		v := false
 		return &v
 	}
-	v := false
-	return &v
+	return nil
 }
 
 var portCmd = &cobra.Command{
@@ -60,8 +61,13 @@ var portCreateCmd = &cobra.Command{
 		if err := validateProtocolLocal(portProtocol); err != nil {
 			return err
 		}
+		allowAnon := resolveAllowAnon(cmd)
+		if allowAnon == nil {
+			deny := false
+			allowAnon = &deny
+		}
 		client := newSDKClient()
-		if err := client.CreatePort(context.Background(), tunnelID, portNumber, portProtocol, resolveAllowAnon(cmd)); err != nil {
+		if err := client.CreatePort(context.Background(), tunnelID, portNumber, portProtocol, allowAnon); err != nil {
 			return fmt.Errorf("Failed to add port %d: %w", portNumber, err)
 		}
 		fmt.Println(i18n.T(i18n.Msg.Port.PortCreated))

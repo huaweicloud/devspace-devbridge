@@ -35,4 +35,3 @@ func T(msg Message) string {
 	}
 	return msg.EN
 }
-

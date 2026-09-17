@@ -8,10 +8,10 @@ import (
 	"syscall"
 	"time"
 
+	devbridge "github.com/huaweicloud/devspace-devbridge/go-sdk"
 	"github.com/spf13/cobra"
 	"huawei.com/devbridge/internal/auth"
 	"huawei.com/devbridge/internal/config"
-	devbridge "github.com/huaweicloud/devspace-devbridge/sdk"
 )
 
 var hostPorts []int
@@ -21,10 +21,6 @@ var connectToken string
 var hostToken string
 var hostAPIKey string
 var connectAPIKey string
-
-func portsToInt(ports []int) []int {
-	return ports
-}
 
 func portResultsToInt(results []devbridge.Port) []int {
 	ports := make([]int, len(results))
@@ -39,10 +35,11 @@ func validatePorts(ports []int) error {
 		return fmt.Errorf("at least one port must be specified via -p/--ports")
 	}
 	for _, p := range ports {
-		if p == 0 || p > 65535 {
-			if p != -1 {
-				return fmt.Errorf("invalid port number: %d (valid range: 1-65535, or -1 for all ports)", p)
-			}
+		if p == -1 {
+			continue
+		}
+		if p < 1 || p > 65535 {
+			return fmt.Errorf("invalid port number: %d (valid range: 1-65535, or -1 for all ports)", p)
 		}
 	}
 	return nil
@@ -58,9 +55,6 @@ func resolveHostConfig(cmd *cobra.Command, args []string) (tunnelID string, port
 			return "", nil, "", fmt.Errorf("tunnelID is required when using --token")
 		}
 		tunnelID = args[0]
-		if err := validateTunnelIDLocal(tunnelID); err != nil {
-			return "", nil, "", err
-		}
 		if cmd.Flags().Changed("ports") {
 			fmt.Println("Note: --ports is ignored in --token mode, ports will be fetched from gateway")
 		}
@@ -90,9 +84,6 @@ func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelID string,
 	if len(args) > 0 && args[0] != "" {
 
 		tunnelID = args[0]
-		if err := validateTunnelIDLocal(tunnelID); err != nil {
-			return "", nil, err
-		}
 		portsResult, err := client.ListPorts(context.Background(), tunnelID)
 		if err != nil {
 			return "", nil, fmt.Errorf("Failed to list ports: %w", err)
@@ -125,7 +116,7 @@ func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelID string,
 	if err := validatePorts(hostPorts); err != nil {
 		return "", nil, err
 	}
-	ports = portsToInt(hostPorts)
+	ports = hostPorts
 
 	slog.Debug("Creating new tunnel", "ports", ports)
 	var exp *int
@@ -183,10 +174,6 @@ func resolveConnectConfig(args []string) (tunnelID string, ports []int, jwtToken
 	if err != nil {
 		return "", nil, "", err
 	}
-	if err := validateTunnelIDLocal(tunnelID); err != nil {
-		return "", nil, "", err
-	}
-
 	if connectToken != "" {
 
 		jwtToken = connectToken

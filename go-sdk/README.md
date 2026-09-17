@@ -17,7 +17,7 @@ DevBridge 是华为云的开发隧道服务，通过中继连接 Host（本地�
 要求 Go 1.22 及以上版本。
 
 ```bash
-go get github.com/huaweicloud/devspace-devbridge/sdk@v0.1.0
+go get github.com/huaweicloud/devspace-devbridge/go-sdk@v0.1.0
 ```
 
 ## 快速开始
@@ -31,7 +31,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/huaweicloud/devspace-devbridge/sdk"
+	"github.com/huaweicloud/devspace-devbridge/go-sdk"
 )
 
 func main() {
@@ -125,7 +125,7 @@ err = client.Host(ctx, sdk.HostConfig{
 
 ## API 参考
 
-完整的类型与方法文档见 [pkg.go.dev](https://pkg.go.dev/github.com/huaweicloud/devspace-devbridge/sdk)。
+完整的类型与方法文档见 [pkg.go.dev](https://pkg.go.dev/github.com/huaweicloud/devspace-devbridge/go-sdk)。
 
 ### 客户端配置
 

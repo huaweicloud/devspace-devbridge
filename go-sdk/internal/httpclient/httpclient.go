@@ -2,10 +2,10 @@
  * Copyright (c) Huawei Technologies Co., Ltd. 2026-2027. All rights reserved.
  */
 
-// Package httpclient 实现 DevBridge REST API 的底层 HTTP 通信。
+// Package httpclient implements the low-level HTTP communication for the DevBridge REST API.
 //
-// 仅供 SDK 根包使用（Go internal 机制，外部无法导入），负责：
-// 请求构造与认证头、错误状态码处理、业务错误解析、请求/响应日志。
+// It is only for the SDK root package (Go internal mechanism, not importable externally), and handles:
+// request construction and auth headers, error status codes, business error parsing, and request/response logging.
 package httpclient
 
 import (
@@ -26,17 +26,17 @@ const (
 	headerJSON        = "application/json"
 )
 
-// APIError 表示服务端返回的业务错误
+// APIError represents a business error returned by the server.
 type APIError struct {
-	Code    string // 错误码，如 "HD.98320078"
-	Message string // 错误描述
+	Code    string // error code, e.g. "HD.98320078"
+	Message string // error description
 }
 
 func (e *APIError) Error() string {
 	return fmt.Sprintf("error code: %s, error message: %s", e.Code, e.Message)
 }
 
-// errorBody 是另一种错误格式（部分接口使用）
+// errorBody is an alternative error format (used by some endpoints).
 type errorBody struct {
 	Error struct {
 		Code    string `json:"code"`
@@ -45,7 +45,7 @@ type errorBody struct {
 	} `json:"error"`
 }
 
-// Client 发送 REST API 请求
+// Client sends REST API requests.
 type Client struct {
 	APIKey  string
 	BaseURL string
@@ -53,7 +53,7 @@ type Client struct {
 	Logger  *slog.Logger
 }
 
-// New 创建 HTTP 客户端，logger 为 nil 时使用默认值
+// New creates an HTTP client, using the default logger when logger is nil.
 func New(apiKey, baseURL string, logger *slog.Logger) *Client {
 	if logger == nil {
 		logger = slog.Default()
@@ -87,7 +87,7 @@ func (c *Client) Delete(ctx context.Context, path string, result any) error {
 	return c.Do(ctx, http.MethodDelete, path, nil, result)
 }
 
-// Do 发送 HTTP 请求并处理响应
+// Do sends an HTTP request and handles the response.
 func (c *Client) Do(ctx context.Context, method, path string, body, result any) error {
 	var bodyBytes []byte
 	hasBody := method == http.MethodPost || method == http.MethodPut
@@ -171,7 +171,7 @@ func (c *Client) logResponse(resp *http.Response, body []byte, elapsed time.Dura
 	}
 }
 
-// parseAPIError 尝试从响应体解析 {error: {code, message}} 格式的业务错误。
+// parseAPIError tries to parse a business error of the form {error: {code, message}} from the response body.
 func parseAPIError(body []byte) *APIError {
 	var eb errorBody
 	if json.Unmarshal(body, &eb) == nil && eb.Error.Code != "" {

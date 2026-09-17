@@ -10,8 +10,8 @@ import (
 
 type PingResult struct {
 	StatusText string
-	Latency   time.Duration
-	Err       error
+	Latency    time.Duration
+	Err        error
 }
 
 func PingURI(rawURI string, timeout time.Duration) *PingResult {

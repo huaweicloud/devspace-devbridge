@@ -4,26 +4,26 @@
 
 package sdk
 
-// Tunnel 隧道
+// Tunnel represents a tunnel.
 type Tunnel struct {
-	ID               string `json:"tunnelId"` // 8 位小写 Base32
+	ID               string `json:"tunnelId"` // 8-char lowercase Base32
 	Name             string `json:"name"`
 	Description      string `json:"description"`
-	ExpirationHours  int    `json:"expirationHours"`  // 有效期（小时）
-	TunnelExpiration uint32 `json:"tunnelExpiration"` // 过期时间（Unix 秒）
+	ExpirationHours  int    `json:"expirationHours"`  // validity in hours
+	TunnelExpiration uint32 `json:"tunnelExpiration"` // expiration time (Unix seconds)
 	PortCount        int    `json:"portCount"`
 }
 
-// TunnelDetail 隧道详情（含状态）
+// TunnelDetail represents tunnel details including status.
 type TunnelDetail struct {
 	Name             string        `json:"name"`
 	ID               string        `json:"tunnelId"`
-	TunnelExpiration uint32        `json:"tunnelExpiration"` // Unix 秒
+	TunnelExpiration uint32        `json:"tunnelExpiration"` // Unix seconds
 	Description      string        `json:"description"`
 	Status           *TunnelStatus `json:"status,omitempty"`
 }
 
-// TunnelStatus 隧道运行状态
+// TunnelStatus represents the runtime status of a tunnel.
 type TunnelStatus struct {
 	ClientConnectionCount int   `json:"clientConnectionCount"`
 	HostConnectionCount   int   `json:"hostConnectionCount"`
@@ -31,7 +31,7 @@ type TunnelStatus struct {
 	TotalDownloadBytes    int64 `json:"totalDownloadBytes"`
 }
 
-// Port 端口配置
+// Port represents a port configuration.
 type Port struct {
 	TunnelID       string `json:"tunnelId"`
 	Port           int    `json:"port"`
@@ -39,14 +39,14 @@ type Port struct {
 	AllowAnonymous bool   `json:"allowAnonymous"`
 }
 
-// TunnelToken 隧道令牌
+// TunnelToken represents a tunnel token.
 type TunnelToken struct {
 	TunnelID string `json:"tunnelId"`
-	Scope    string `json:"scope"` // host 或 connect
+	Scope    string `json:"scope"` // "host" or "connect"
 	Token    string `json:"token"` // JWT
 }
 
-// Limits 配额
+// Limits represents the quota.
 type Limits struct {
 	ResetAt                          int64 `json:"resetAt"`
 	QuotaBytes                       int64 `json:"quotaBytes"`

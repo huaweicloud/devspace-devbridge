@@ -5,7 +5,7 @@
 package config
 
 import (
-	devbridge "github.com/huaweicloud/devspace-devbridge/sdk"
+	devbridge "github.com/huaweicloud/devspace-devbridge/go-sdk"
 )
 
 // NewClient creates an SDK client from the CLI configuration.

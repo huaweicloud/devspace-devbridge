@@ -26,28 +26,6 @@ type UserInfo struct {
 	UserID   string `json:"user_id"   yaml:"user_id"`
 }
 
-type legacyCredential struct {
-	APIKey string `json:"api_key"`
-	Access string `json:"access"`
-}
-
-func (c *Credential) UnmarshalJSON(data []byte) error {
-	type alias Credential
-	if err := json.Unmarshal(data, (*alias)(c)); err == nil && c.APIKey != "" {
-		return nil
-	}
-	var old legacyCredential
-	if err := json.Unmarshal(data, &old); err != nil {
-		return err
-	}
-	if old.APIKey != "" {
-		c.APIKey = old.APIKey
-	} else {
-		c.APIKey = old.Access
-	}
-	return nil
-}
-
 type callbackResponse struct {
 	APIKey   string `json:"apiKey"`
 	UserName string `json:"userName"`
