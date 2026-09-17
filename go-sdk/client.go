@@ -22,8 +22,12 @@ const (
 	DefaultAPIBaseURL  = "https://bridge.developer.myhuaweicloud.com/open-api-inner/v1/relay-controller"
 	DefaultGatewayAddr = "gateway.cn-north-4-bridge.myhuaweicloud.com:443" //"gateway.devbridge-s2.hwtunnel.com:443"
 	DefaultGatewayHost = "cn-north-4-bridge.myhuaweicloud.com"             //"devbridge-s2.hwtunnel.com"
-	DefaultClusterID   = "cn-north-4-bridge"
 )
+
+// DefaultClusterID is the cluster used when creating new tunnels.
+// It is a var (not const) so builds can override it via ldflags
+// (-X github.com/huaweicloud/devspace-devbridge/go-sdk.DefaultClusterID=...).
+var DefaultClusterID = "cn-north-4-bridge"
 
 var (
 	tunnelIDRegexp   = regexp.MustCompile(`^[a-z2-7]{8}$`)

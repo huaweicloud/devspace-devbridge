@@ -97,7 +97,7 @@ func (d *Devbridge) Host(ctx context.Context, cfg HostConfig) error {
 			return err
 		}
 		if errors.Is(err, ErrDuplicateHost) && !everConnected {
-			d.logger.Debug("duplicate host, tunnel already has a listener", "tunnelID", cfg.TunnelID)
+			d.logger.Error("duplicate host, tunnel already has a listener", "tunnelID", cfg.TunnelID)
 			return err
 		}
 		if connected {
@@ -158,6 +158,23 @@ func (d *Devbridge) runHostSession(ctx context.Context, wsURL string, sniHost st
 		default:
 		}
 	}
+
+	// 诊断：捕获底层会话关闭原因，区分"网关主动掐断"（DisconnectByApplication）
+	// 与"网络断开/keepalive 超时"（DisconnectConnectionLost）。
+	var (
+		closedArgsMu sync.Mutex
+		closedArgs   *ssh.SessionClosedEventArgs
+	)
+	outerSession.OnClosed = func(args *ssh.SessionClosedEventArgs) {
+		closedArgsMu.Lock()
+		closedArgs = args
+		closedArgsMu.Unlock()
+		d.logger.Warn("host: session closed (diagnostic)",
+			"tunnelID", tunnelID,
+			"reason", args.Reason,
+			"message", args.Message,
+			"err", args.Err)
+	}
 	outerSession.OnKeepAliveFailed = func(count int) {
 		if count >= 5 {
 			d.logger.Error("keepalive failed 5 times, forcing reconnect", "tunnelID", tunnelID)
@@ -175,8 +192,10 @@ func (d *Devbridge) runHostSession(ctx context.Context, wsURL string, sniHost st
 		case <-time.After(5 * time.Second):
 			d.logger.Warn("timeout waiting for port notification from gateway")
 		case <-disconnected:
+			d.logDiagnosticClose(tunnelID, &closedArgsMu, &closedArgs)
 			return true, fmt.Errorf("disconnected")
 		case <-outerSession.Session.Done():
+			d.logDiagnosticClose(tunnelID, &closedArgsMu, &closedArgs)
 			return true, fmt.Errorf("session closed")
 		}
 	}
@@ -209,13 +228,32 @@ func (d *Devbridge) runHostSession(ctx context.Context, wsURL string, sniHost st
 	for {
 		select {
 		case <-disconnected:
+			d.logDiagnosticClose(tunnelID, &closedArgsMu, &closedArgs)
 			return true, fmt.Errorf("disconnected")
 		case <-outerSession.Session.Done():
+			d.logDiagnosticClose(tunnelID, &closedArgsMu, &closedArgs)
 			return true, fmt.Errorf("session closed")
 		case <-ctx.Done():
 			return true, nil
 		}
 	}
+}
+
+// logDiagnosticClose 打印 host 连接丢失时的底层关闭原因（诊断用）。
+// reason=DisconnectByApplication 说明对端(网关)主动关；DisconnectConnectionLost 说明网络层断开。
+func (d *Devbridge) logDiagnosticClose(tunnelID string, mu *sync.Mutex, args **ssh.SessionClosedEventArgs) {
+	mu.Lock()
+	a := *args
+	mu.Unlock()
+	if a == nil {
+		d.logger.Error("host connection lost (no close event captured)", "tunnelID", tunnelID)
+		return
+	}
+	d.logger.Error("host connection lost",
+		"tunnelID", tunnelID,
+		"reason", a.Reason,
+		"message", a.Message,
+		"err", a.Err)
 }
 
 type portNotifier struct {
