@@ -9,7 +9,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var DefaultServerDomain = "https://relay-dev-local.tailb4159e.ts.net:8443"
+var DefaultServerDomain = "https://bridge.developer.myhuaweicloud.com"
+
+// RelayControllerPath is the REST API path prefix for the relay controller.
+const RelayControllerPath = "/open-api-inner/v1/relay-controller"
 
 var errKeyNotFound = errors.New("key not found")
 

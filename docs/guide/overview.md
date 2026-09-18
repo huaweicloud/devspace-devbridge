@@ -9,6 +9,15 @@ description: 了解 DevBridge 隧道、端口、Host 和 Connect 的关系。
 
 开发隧道适合远程联调、共享开发中的 Web 页面、接收 Webhook，以及从另一台设备访问本地服务。
 
+## 视频介绍
+
+<VideoPlayer
+  src="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/video/promotion-video.mp4"
+  poster="/images/videos/promotion-video.png"
+  title="DevBridge 推广视频"
+  :caption="false"
+/>
+
 ## 工作方式
 
 一次完整连接包含以下部分：
@@ -28,6 +37,7 @@ Host 和 Connect 都主动连接 DevBridge，因此 Host 所在设备通常不�
 | 集群         | 隧道所在的隔离和路由范围。                         |
 | 端口         | 隧道允许转发的端口，范围为 `1` 到 `65535`。        |
 | 协议         | 端口的应用协议，可以是 `http`、`https` 或 `auto`。 |
+| 有效期       | 隧道保持有效的时间窗口，过期后不可继续使用。       |
 | Host         | 托管本地服务的一端。                               |
 | Connect      | 访问远程服务的一端。                               |
 | Host 令牌    | 只允许建立 Host 连接的短期凭证。                   |
@@ -52,18 +62,6 @@ Host 和 Connect 都主动连接 DevBridge，因此 Host 所在设备通常不�
 端口是否允许匿名访问由端口策略决定。管理后台、调试端点和包含用户数据的服务应使用
 `--deny-anonymous`。
 
-## 有效期
-
-创建隧道时可以用 `-e` 指定有效期小时数：
-
-```bash
-devbridge create frontend -e 24
-```
-
-默认规格为 72 小时，最大为 720 小时。有效期表示允许的非活动窗口；配置发生有效变更时，当前到期时间会向后刷新。
-
-过期隧道不会出现在有效隧道列表中，也不能继续签发令牌或操作端口。系统会在保留期后清理过期数据。
-
 ## 使用边界
 
 开发隧道面向开发和测试工作流。使用时仍需遵守以下边界：
@@ -76,6 +74,5 @@ devbridge create frontend -e 24
 
 ## 下一步
 
-- [创建并托管第一条隧道](../index.md)
-- [管理隧道](./tunnels.md)
-- [管理端口](./ports.md)
+- [安装 DevBridge CLI](./install.md)
+- [创建并托管第一条隧道](./quickstart.md)（已完成安装可直达）

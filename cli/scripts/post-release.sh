@@ -47,11 +47,13 @@ ls -la "${GITCODE_DIR}"/
 
 # ---- 上传到 GitCode Release ----
 # upload-gitcode-release.sh 会重新烤制 install 脚本，将下载源指向 GitCode 地址
+# Release 显示名称: 0.1.0-release → cli-release-0.1.0
+DISPLAY_NAME="cli-release-$(echo "${VERSION}" | sed 's/-release$//')"
 "${SCRIPT_DIR}/upload-gitcode-release.sh" \
     -t "${GITCODE_TOKEN}" \
     -o CloudDeveloperDepartment \
     -r devbrige \
     -v "${VERSION}" \
     -d "${GITCODE_DIR}" \
-    -n "${VERSION}" \
+    -n "${DISPLAY_NAME}" \
     -b "DevBridge CLI ${VERSION} - 同步自 GitHub Release"

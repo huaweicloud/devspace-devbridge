@@ -58,7 +58,7 @@ INSTALL_DIR="$HOME/.huawei/bin"
 CONFIG_DIR="$HOME/.huawei/devbridge"
 DEFAULT_ARTIFACT_URL="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge"
 if [[ "${DEFAULT_ARTIFACT_URL}" == __*__ ]]; then
-    DEFAULT_ARTIFACT_URL="https://obs-test-hd-space-cdn-sharedata-north7.obs.cn-north-7.ulanqab.huawei.com/space/devbridge"
+    DEFAULT_ARTIFACT_URL="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge"
 fi
 DEFAULT_VERSION="0.1.13-release"
 if [[ "${DEFAULT_VERSION}" == __*__ ]]; then

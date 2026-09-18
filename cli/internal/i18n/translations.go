@@ -26,16 +26,14 @@ func init() {
 	Msg.Auth.LoggedInHuaweiCloud = Message{ZH: "已登录 (华为云 IAM)", EN: "Logged in (Huawei Cloud IAM)"}
 
 	Msg.Tunnel.TunnelID = Message{ZH: "隧道ID", EN: "Tunnel ID"}
-	Msg.Tunnel.TunnelName = Message{ZH: "隧道名称", EN: "Tunnel Name"}
 	Msg.Tunnel.TunnelExpiration = Message{ZH: "隧道过期时间", EN: "Tunnel Expiration"}
 	Msg.Tunnel.PortCount = Message{ZH: "端口数", EN: "Port Count"}
 	Msg.Tunnel.TunnelUpdated = Message{ZH: "隧道更新成功", EN: "Tunnel updated successfully"}
 	Msg.Tunnel.TunnelDeleted = Message{ZH: "隧道删除成功", EN: "Tunnel deleted successfully"}
 	Msg.Tunnel.TunnelDeletedAll = Message{ZH: "所有隧道已删除", EN: "All tunnels deleted"}
 	Msg.Tunnel.TunnelNotFound = Message{ZH: "隧道不存在", EN: "Tunnel not found"}
-	Msg.Tunnel.TunnelNameInvalid = Message{ZH: "隧道名称格式无效: 仅中文、字母、数字、连字符(连字符不能在首尾)，长度1-64", EN: "Invalid tunnel name: only Chinese characters, digits, letters, hyphens allowed (hyphens cannot be at the beginning or end), length 1-64"}
 	Msg.Tunnel.TunnelDescInvalid = Message{ZH: "隧道描述无效: 仅中文、字母、数字，长度0-64", EN: "Invalid tunnel description: only Chinese characters, digits, letters, length 0-64"}
-	Msg.Tunnel.TunnelExpInvalid = Message{ZH: "过期时间无效 (1-720小时)", EN: "Invalid expiration (1-720 hours)"}
+	Msg.Tunnel.TunnelNameInvalid = Message{ZH: "隧道名称无效: 仅中文、字母、数字、连字符（不可开头/结尾），长度1-64", EN: "Invalid tunnel name: only Chinese characters, letters, digits, hyphens (not at start/end), length 1-64"}
 	Msg.Tunnel.TunnelListEmpty = Message{ZH: "没有隧道", EN: "No tunnels found."}
 	Msg.Tunnel.ListShort = Message{ZH: "列出所有隧道", EN: "List all tunnels"}
 	Msg.Tunnel.CreateShort = Message{ZH: "创建新隧道", EN: "Create a new tunnel"}
@@ -68,8 +66,6 @@ func init() {
 	Msg.Port.AllowAnonymous = Message{ZH: "允许匿名", EN: "Allow Anonymous"}
 	Msg.Port.PortCreated = Message{ZH: "端口创建成功", EN: "Port created successfully"}
 	Msg.Port.PortUpdated = Message{ZH: "端口更新成功", EN: "Port updated successfully"}
-	Msg.Port.PortInvalid = Message{ZH: "端口必须为 1 到 65535 之间", EN: "port must be between 1 and 65535"}
-	Msg.Port.ProtocolInvalid = Message{ZH: "协议无效 (http, https, auto)", EN: "Invalid protocol (http, https, auto)"}
 	Msg.Port.PortListEmpty = Message{ZH: "该隧道没有绑定端口", EN: "No ports bound to this tunnel."}
 	Msg.Port.Port = Message{ZH: "端口", EN: "Port"}
 	Msg.Port.TunnelID = Message{ZH: "隧道ID", EN: "Tunnel ID"}
@@ -84,11 +80,6 @@ func init() {
 	Msg.Port.FlagProtocol = Message{ZH: "端口协议 (选项: http/https/auto)", EN: "Port protocol (options: http/https/auto)"}
 	Msg.Port.FlagAllowAnon = Message{ZH: "允许匿名客户端访问", EN: "Allow anonymous client access"}
 	Msg.Port.FlagDenyAnon = Message{ZH: "禁止匿名客户端访问", EN: "Deny anonymous client access"}
-
-	Msg.API.ServerError = Message{ZH: "服务器错误", EN: "Server error"}
-	Msg.API.Unauthorized = Message{ZH: "未授权", EN: "Unauthorized"}
-	Msg.API.InvalidResponse = Message{ZH: "无效响应", EN: "Invalid response"}
-	Msg.API.APIKeyExpired = Message{ZH: "API Key 已过期，请重新登录", EN: "API key expired, please login again"}
 
 	Msg.Limits.LimitsShort = Message{ZH: "查看限制和余额", EN: "View limits and balance"}
 	Msg.Limits.ActiveTunnels = Message{ZH: "活跃隧道数", EN: "Active Tunnels"}
@@ -112,5 +103,13 @@ func init() {
 	Msg.Echo.Headers = Message{ZH: "请求头", EN: "Headers"}
 
 	Msg.Ping.PingShort = Message{ZH: "测试到服务器的连通性", EN: "Test connectivity to the server"}
-	Msg.Ping.URIInvalid = Message{ZH: "URI 无效", EN: "Invalid URI"}
+
+	Msg.Config.ConfigCommands = Message{ZH: "配置命令", EN: "Configuration commands"}
+	Msg.Config.GetShort = Message{ZH: "查看网关配置", EN: "Show gateway configuration"}
+	Msg.Config.SetShort = Message{ZH: "设置网关配置", EN: "Set gateway configuration"}
+	Msg.Config.UnsetShort = Message{ZH: "清空网关配置（恢复编译时默认值）", EN: "Clear gateway configuration (restore build defaults)"}
+	Msg.Config.GatewayAddr = Message{ZH: "网关地址", EN: "Gateway Address"}
+	Msg.Config.GatewayHost = Message{ZH: "网关SNI域名", EN: "Gateway SNI Host"}
+	Msg.Config.SetSuccess = Message{ZH: "配置已保存", EN: "Configuration saved"}
+	Msg.Config.NothingToSet = Message{ZH: "没有可设置的项，请用 --gateway-addr / --gateway-host", EN: "Nothing to set, use --gateway-addr / --gateway-host"}
 }
