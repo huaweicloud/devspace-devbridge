@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"os"
 
-	"huawei.com/devbridge/internal/api"
 	"huawei.com/devbridge/internal/i18n"
 	"huawei.com/devbridge/internal/updater"
 
@@ -21,7 +20,6 @@ var RootCmd = &cobra.Command{
 	Short: i18n.T(i18n.Msg.Common.VersionInfo),
 	Long:  i18n.T(i18n.Msg.Common.VersionInfo),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		api.InitClient("")
 		level := slog.LevelInfo
 		if verbose {
 			level = slog.LevelDebug

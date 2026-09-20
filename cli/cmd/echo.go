@@ -32,11 +32,7 @@ var echoCmd = &cobra.Command{
 		if cmd.Flags().Changed("port") && (echoPort < 1 || echoPort > 65535) {
 			return fmt.Errorf("Invalid port number %d (Port must be between 1 and 65535)", echoPort)
 		}
-		addr := echoInterface
-		if addr == "" {
-			addr = "127.0.0.1"
-		}
-		listenAddr := fmt.Sprintf("%s:%d", addr, echoPort)
+		listenAddr := fmt.Sprintf("%s:%d", echoInterface, echoPort)
 		return runHTTPEcho(listenAddr)
 	}),
 }
@@ -47,6 +43,9 @@ var pingCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
 		uri := args[0]
+		if pingInterval <= 0 {
+			return fmt.Errorf("interval must be positive, got %d ms", pingInterval)
+		}
 		interval := time.Duration(pingInterval) * time.Millisecond
 
 		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

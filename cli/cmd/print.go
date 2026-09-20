@@ -60,11 +60,11 @@ func printTable(headers []string, rows [][]string) {
 }
 
 func formatTunnelExpiration(tunnelExpiration int64) string {
-	if tunnelExpiration >= 24 {
-		days := tunnelExpiration / 24
-		return fmt.Sprintf("%d %s", days, i18n.T(i18n.Msg.Common.Days))
+	hours := float64(tunnelExpiration)
+	if hours >= 24 {
+		return formatRemaining(hours/24, i18n.T(i18n.Msg.Common.Days))
 	}
-	return fmt.Sprintf("%d %s", tunnelExpiration, i18n.T(i18n.Msg.Common.Hours))
+	return formatRemaining(hours, i18n.T(i18n.Msg.Common.Hours))
 }
 
 func formatTunnelRemaining(expireAt int64) string {

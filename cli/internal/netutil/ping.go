@@ -1,7 +1,6 @@
 package netutil
 
 import (
-	"crypto/tls"
 	"errors"
 	"net"
 	"net/http"
@@ -10,8 +9,8 @@ import (
 
 type PingResult struct {
 	StatusText string
-	Latency   time.Duration
-	Err       error
+	Latency    time.Duration
+	Err        error
 }
 
 func PingURI(rawURI string, timeout time.Duration) *PingResult {
@@ -19,8 +18,7 @@ func PingURI(rawURI string, timeout time.Duration) *PingResult {
 	start := time.Now()
 
 	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		Proxy:           http.ProxyFromEnvironment,
+		Proxy: http.ProxyFromEnvironment,
 	}
 	client := &http.Client{
 		Transport: transport,

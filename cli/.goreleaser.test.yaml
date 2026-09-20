@@ -46,8 +46,8 @@ builds:
       - -X huawei.com/devbridge/cmd.version={{ .Version }}
       - -X huawei.com/devbridge/internal/auth.LoginURL=https://devstation.ulanqab.huawei.com
       - -X huawei.com/devbridge/internal/config.DefaultServerDomain=https://100.85.118.163:8443
-      - -X huawei.com/devbridge/internal/connect.ServerAddr=100.85.117.75:443
-      - -X huawei.com/devbridge/internal/connect.ServerHost=cn-north-4-bridge.myhuaweicloud.com
+      - -X huawei.com/devbridge/internal/config.ServerAddr=100.85.117.75:443
+      - -X huawei.com/devbridge/internal/config.ServerHost=devbridge-s2.hwtunnel.com
     flags:
       - -trimpath
     buildmode: pie
@@ -77,4 +77,4 @@ release:
     - glob: ./dist-extra/install.ps1
   draft: false
   prerelease: false
-  name_template: "{{ .Tag }}"
+  name_template: "cli-release-{{ .Version | replace \"-release\" \"\" }}"

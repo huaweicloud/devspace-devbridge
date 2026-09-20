@@ -84,7 +84,7 @@ devbridge --help
 
 不要把 `~/.huawei/devbridge` 提交到代码仓库，也不要在不同用户之间复制该目录。设备迁移时，应在新设备重新登录。
 
-有关目录内容和默认隧道状态，请参阅[本地配置与目录](../reference/configuration.md)。
+有关登录凭证的存储机制和安全原则，请参阅[登录与凭证](./authentication.md)。
 
 ## 下一步
 

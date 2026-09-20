@@ -7,11 +7,24 @@ import (
 	"huawei.com/devbridge/internal/auth"
 	"huawei.com/devbridge/internal/config"
 	"huawei.com/devbridge/internal/i18n"
+	devbridge "github.com/huaweicloud/devspace-devbridge/go-sdk"
 
 	"github.com/spf13/cobra"
 )
 
 var hcLoginAPIKey string
+
+// newSDKClient resolves the API key from the CLI auth system and assembles an
+// SDK client. The API key is resolved in the cmd layer so that the config
+// package does not need to depend on the auth package (which would introduce
+// an import cycle).
+func newSDKClient() *devbridge.Devbridge {
+	var apiKey string
+	if cred := auth.ReadValidAPIKey(); cred != nil {
+		apiKey = cred.APIKey
+	}
+	return config.NewClient(apiKey)
+}
 
 var authCmd = &cobra.Command{
 	Use:   "auth",
@@ -26,7 +39,7 @@ var loginCmd = &cobra.Command{
 
 		if hcLoginAPIKey == "" {
 			if cred := auth.ReadValidAPIKey(); cred != nil {
-				if _, err := auth.VerifyAPIKey(cred.APIKey); err == nil {
+				if err := auth.VerifyAPIKey(cred.APIKey); err == nil {
 					fmt.Println(i18n.T(i18n.Msg.Auth.LoginSuccess))
 					return nil
 				}
@@ -37,7 +50,7 @@ var loginCmd = &cobra.Command{
 			return err
 		}
 
-		if _, err := auth.VerifyAPIKey(cred.APIKey); err != nil {
+		if err := auth.VerifyAPIKey(cred.APIKey); err != nil {
 			return fmt.Errorf("login failed: %w", err)
 		}
 		if err := auth.StoreCredential(auth.CredentialName, &cred, userInfo); err != nil {
@@ -75,7 +88,7 @@ var statusCmd = &cobra.Command{
 			return nil
 		}
 
-		if _, err := auth.VerifyAPIKey(cred.APIKey); err != nil {
+		if err := auth.VerifyAPIKey(cred.APIKey); err != nil {
 			fmt.Printf("%s: %v\n", i18n.T(i18n.Msg.Auth.NotLoggedIn), err)
 			return nil
 		}

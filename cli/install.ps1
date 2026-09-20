@@ -22,7 +22,7 @@ function Install-DevBridge {
     $Script:CONFIG_DIR = Join-Path $HOME ".huawei\devbridge"
     $Script:DEFAULT_ARTIFACT_URL = "https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge"
     if ($Script:DEFAULT_ARTIFACT_URL -match '^__.*__$') {
-        $Script:DEFAULT_ARTIFACT_URL = "https://obs-test-hd-space-cdn-sharedata-north7.obs.cn-north-7.ulanqab.huawei.com/space/devbridge"
+        $Script:DEFAULT_ARTIFACT_URL = "https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge"
     }
     $Script:DEFAULT_VERSION = "0.1.13-release"
     if ($Script:DEFAULT_VERSION -match '^__.*__$') {

@@ -1,9 +1,10 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 
-	"huawei.com/devbridge/internal/api"
+	devbridge "github.com/huaweicloud/devspace-devbridge/go-sdk"
 	"huawei.com/devbridge/internal/i18n"
 
 	"github.com/spf13/cobra"
@@ -14,7 +15,8 @@ var limitsCmd = &cobra.Command{
 	Short: i18n.T(i18n.Msg.Limits.LimitsShort),
 	Args:  cobra.NoArgs,
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
-		result, err := api.GetLimits()
+		client := newSDKClient()
+		result, err := client.GetLimits(context.Background())
 		if err != nil {
 			return err
 		}
@@ -23,7 +25,7 @@ var limitsCmd = &cobra.Command{
 	}),
 }
 
-func printLimitsDetail(l *api.LimitsResult) {
+func printLimitsDetail(l *devbridge.Limits) {
 	current := l.QuotaBytes - l.RemainingBytes
 	currentStr := formatBytes(current)
 	if l.QuotaBytes > 0 {

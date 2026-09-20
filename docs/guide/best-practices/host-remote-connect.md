@@ -13,6 +13,7 @@ description: 在本地托管服务后，从远端通过 Connect 建立连接并�
   src="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/video/devops-best-practice.mp4"
   poster="/images/videos/devops-best-practice-video.png"
   title="DevOps 最佳实践演示"
+  :caption="false"
 />
 
 ## 场景说明

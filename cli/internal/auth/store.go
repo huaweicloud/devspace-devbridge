@@ -31,9 +31,9 @@ func decodeCredential(blob string) (*Credential, bool) {
 func StoreCredential(name string, cred *Credential, userInfo *UserInfo) error {
 	blob := encodeCredential(cred)
 
-	cfg, _ := config.Load()
-	if cfg == nil {
-		cfg = make(map[string]any)
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
 	}
 
 	if err := keyring.Set(name, "Credentials", blob); err == nil {

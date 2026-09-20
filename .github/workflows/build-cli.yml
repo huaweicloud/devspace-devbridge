@@ -202,4 +202,6 @@ jobs:
             cli/dist/checksums.txt
             cli/dist-extra/install.sh
             cli/dist-extra/install.ps1
+            cli/dist-extra/obs/install.sh
+            cli/dist-extra/obs/install.ps1
           if-no-files-found: warn

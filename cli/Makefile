@@ -2,14 +2,14 @@
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 SERVER_DOMAIN ?= http://relay-dev-local.tailb4159e.ts.net:8443
 LOGIN_URL ?= https://devstation.ulanqab.huawei.com
-GATEWAY_ADDR ?= 100.95.181.191:4433
-CLUSTER_DOMAIN ?= cn-north-4-bridge.myhuaweicloud.com
+GATEWAY_ADDR ?= gateway.devbridge-s2.hwtunnel.com
+CLUSTER_DOMAIN ?= devbridge-s2.hwtunnel.com
 
 LDFLAGS = -X huawei.com/devbridge/cmd.version=$(VERSION) \
           -X huawei.com/devbridge/internal/auth.LoginURL=$(LOGIN_URL) \
           -X huawei.com/devbridge/internal/config.DefaultServerDomain=$(SERVER_DOMAIN) \
-          -X huawei.com/devbridge/internal/connect.ServerAddr=$(GATEWAY_ADDR) \
-          -X huawei.com/devbridge/internal/connect.ServerHost=$(CLUSTER_DOMAIN)
+          -X huawei.com/devbridge/internal/config.ServerAddr=$(GATEWAY_ADDR) \
+          -X huawei.com/devbridge/internal/config.ServerHost=$(CLUSTER_DOMAIN)
 
 GOFLAGS = -ldflags "-s -w $(LDFLAGS)" -buildmode=pie -trimpath
 CGO_FLAG = CGO_ENABLED=0
@@ -30,9 +30,9 @@ build-test: LOGIN_URL := https://devstation.ulanqab.huawei.com
 build-test: build
 
 build-prod: VERSION := prod
-build-prod: SERVER_DOMAIN := https://devstation.myhuaweicloud.com
+build-prod: SERVER_DOMAIN := https://bridge.developer.myhuaweicloud.com
 build-prod: LOGIN_URL := https://devstation.connect.huaweicloud.com
-build-prod: GATEWAY_ADDR := gateway.cn-north-4-bridge.myhuaweicloud.com:443
+build-prod: GATEWAY_ADDR := gateway.devbridge-s2.hwtunnel.com:443
 build-prod: build
 
 # 跨平台构建: 产物名含版本号（与 install.sh 对齐: devbridge_{OS}_{Arch}_{Version}）
