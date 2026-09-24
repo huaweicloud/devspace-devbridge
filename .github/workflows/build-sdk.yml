@@ -1,30 +1,25 @@
 # =============================================================================
-# Build and verify the DevBridge Go SDK.
+# Build and release the DevBridge Go SDK.
 #
-# Release is a plain tag push (e.g. go-sdk/v0.1.0); the Go module proxy
-# (proxy.golang.org / goproxy.cn) indexes it automatically. This workflow only
-# verifies the SDK builds, vets, and tests cleanly.
+# Release is a git tag (e.g. go-sdk/v0.1.0); the Go module proxy indexes it
+# automatically. This workflow:
+#   - verifies the SDK builds, vets, and tests cleanly;
+#   - on a manual dispatch with a version, creates the tag on GitHub;
+#   - mirrors the tag to the GitCode mirror repo devbrige.
 #
 # Triggers:
 #   pull_request          PR touching go-sdk/**
 #   push (branches)       develop/master changes under go-sdk/**
-#   push (tags go-sdk/v*) SDK release tag
-#   workflow_dispatch     manual
+#   push (tags go-sdk/v*) SDK release tag (build + mirror to GitCode)
+#   workflow_dispatch     manual (optional: create tag + mirror to GitCode)
 #
 # Notes:
 #   - The SDK lives in a subdirectory; release tags must use the go-sdk/ prefix.
 #   - Tags are immutable once pushed (the module proxy caches them forever).
-#
-# GitCode source archive (publish-gitcode job):
-#   Packs go-sdk/ source into a tar.gz + checksums.txt and uploads it to a
-#   GitCode Release via cli/scripts/upload-gitcode-release.sh, as a manual
-#   download mirror alongside the Go module proxy.
-#   Requires:
-#     secrets.GITCODE_TOKEN   GitCode token (upload skipped when unset)
-#     vars.GITCODE_SDK_OWNER  GitCode owner (default CloudDeveloperDepartment)
-#     vars.GITCODE_SDK_REPO   GitCode repo (default devbridge-go-sdk; keep it
-#                             separate from the CLI repo to avoid tag clashes)
-#   GitCode tag = version without the go-sdk/ prefix (go-sdk/v0.2.1 → v0.2.1).
+#   - Requires the repo's Actions "Workflow permissions" to allow read/write
+#     (needed for the GITHUB_TOKEN tag push).
+#   - GitCode token comes from inputs.gitcode_token (manual) or
+#     secrets.GITCODE_TOKEN; skipped when neither is set.
 # =============================================================================
 name: Build SDK
 
@@ -44,12 +39,16 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: '手动测试发布时的版本号（如 v0.2.0-test.1，留空则跳过发布）'
+        description: '版本号（如 go-sdk/v0.1.0，留空则仅构建）'
+        required: false
+        default: ''
+      gitcode_token:
+        description: 'GitCode 令牌（留空则跳过 GitCode tag 同步）'
         required: false
         default: ''
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -77,48 +76,50 @@ jobs:
         working-directory: go-sdk
         run: go test ./...
 
-  # On SDK release, archive the source to GitCode as a manual download mirror.
-  publish-gitcode:
+  # Create the release tag on GitHub (manual dispatch only) and mirror it to
+  # GitCode. On a tag push the tag already exists, so only the mirror step runs.
+  release:
     runs-on: ubuntu-latest
     needs: build
     if: startsWith(github.ref, 'refs/tags/go-sdk/') || (github.event_name == 'workflow_dispatch' && inputs.version != '')
     permissions:
-      contents: read
-    env:
-      GITCODE_TOKEN: ${{ secrets.GITCODE_TOKEN }}
-      GITCODE_SDK_OWNER: ${{ vars.GITCODE_SDK_OWNER }}
-      GITCODE_SDK_REPO: ${{ vars.GITCODE_SDK_REPO }}
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
-      - name: Package SDK source
+      - name: Determine tag
+        id: tag
         run: |
-          # tag: go-sdk/v0.2.1 -> v0.2.1 ; manual dispatch uses inputs.version
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            SDK_VERSION="${{ inputs.version }}"
+            echo "tag=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
           else
-            SDK_VERSION="${GITHUB_REF_NAME#go-sdk/}"
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
           fi
-          echo "SDK_VERSION=${SDK_VERSION}" >> "$GITHUB_ENV"
-          mkdir -p dist
-          git archive --format=tar.gz --prefix="devbridge-go-sdk-${SDK_VERSION}/" \
-            --output="dist/devbridge-go-sdk-${SDK_VERSION}.tar.gz" HEAD:go-sdk
-          (cd dist && sha256sum *.tar.gz > checksums.txt)
-          echo "打包产物:"
-          ls -la dist
 
-      - name: Upload to GitCode Release
+      # Manual dispatch only: create the tag on GitHub. A tag pushed via
+      # GITHUB_TOKEN does not re-trigger this workflow.
+      - name: Create tag on GitHub
+        if: github.event_name == 'workflow_dispatch'
         run: |
-          if [ -z "${GITCODE_TOKEN:-}" ]; then
-            echo "⚠️  未配置 GITCODE_TOKEN，跳过 GitCode 上传"
+          git tag "${{ steps.tag.outputs.tag }}" HEAD
+          git push origin "refs/tags/${{ steps.tag.outputs.tag }}"
+          echo "created tag ${{ steps.tag.outputs.tag }} on GitHub"
+
+      - name: Mirror tag to GitCode
+        env:
+          GITCODE_TOKEN_INPUT: ${{ inputs.gitcode_token }}
+          GITCODE_TOKEN_SECRET: ${{ secrets.GITCODE_TOKEN }}
+        run: |
+          TOKEN="${GITCODE_TOKEN_INPUT:-${GITCODE_TOKEN_SECRET:-}}"
+          if [ -z "$TOKEN" ]; then
+            echo "GITCODE_TOKEN not set, skipping GitCode tag sync"
             exit 0
           fi
-          ./cli/scripts/upload-gitcode-release.sh \
-            -t "$GITCODE_TOKEN" \
-            -o "${GITCODE_SDK_OWNER:-CloudDeveloperDepartment}" \
-            -r "${GITCODE_SDK_REPO:-devbridge-go-sdk}" \
-            -v "$SDK_VERSION" \
-            -d ./dist \
-            -n "devbridge-go-sdk ${SDK_VERSION}" \
-            -b "DevBridge Go SDK ${SDK_VERSION} - 源码同步自 GitHub Release"
+          TAG="${{ steps.tag.outputs.tag }}"
+          git tag "${TAG}" HEAD
+          git push "https://oauth2:${TOKEN}@gitcode.com/CloudDeveloperDepartment/devbrige.git" \
+            "refs/tags/${TAG}:refs/tags/${TAG}"
+          echo "synced tag ${TAG} to GitCode"
