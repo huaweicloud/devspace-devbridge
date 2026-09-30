@@ -1,6 +1,22 @@
+---
+title: 更新日志
+description: DevBridge 文档站点的变更内容。
+---
+
 # 更新日志
 
 本文件记录 DevBridge 文档站点的变更内容。
+
+## 2026-09-21
+
+### 端侧变更
+
+#### 变更
+
+##### 集群与网关
+
+- 生产构建的网关地址、SNI 域名与集群标识从 `cn-north-4-bridge.myhuaweicloud.com` 切换为 `devbridge-s2.hwtunnel.com`。
+- 新增可注入的集群标识 `ClusterID`（默认 `devbridge-s2`），创建隧道时随请求下发，支持通过 ldflags 注入。
 
 ## 2026-08-31
 
@@ -33,6 +49,16 @@
 - 移除 `list` 和 `port list` 命令的 `-j` / JSON 输出参数。
 - 移除 `--huaweicloud` flag 和 `loginType` 参数。
 - 移除开发用自签名证书。
+
+### 服务端变更
+
+#### 新增
+
+##### API Key 管理
+
+- 新增 API Key 创建、查看和删除功能。
+- API Key 按 DevBridge、DevBox 使用场景区分，每个场景最多可创建 20 个。
+- API Key 完整值仅在创建时展示，列表显示脱敏值和最近使用时间；删除后立即失效。
 
 ### 构建与发布
 

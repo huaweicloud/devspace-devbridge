@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 # =============================================================================
-# install.sh - DevBridge CLI 一键安装脚本 (Bash)
+# install.sh - DevBridge CLI one-click install script (Bash)
 #
-# 从 Release 下载对应平台的二进制并安装到 ~/.huawei/bin/。
-# CI 构建时会用 sed 把 DEFAULT_VERSION 和 DEFAULT_ARTIFACT_URL 替换为实际值，
-# 因此用户无需传任何参数即可安装。
+# Downloads the platform binary from the Release and installs it to ~/.huawei/bin/.
+# CI replaces DEFAULT_VERSION and DEFAULT_ARTIFACT_URL via sed at bake time, so
+# users can install without passing any arguments.
 #
-# 产物命名规范：
+# Artifact naming:
 #   Linux/Darwin: devbridge_{OS}_{Arch}_{Version}
 #   Windows:      devbridge_{OS}_{Arch}_{Version}.exe
 #
-# 支持平台：Linux/Darwin/Windows x amd64/arm64
+# Supported platforms: Linux/Darwin/Windows x amd64/arm64
 #
-# 用法：
-#   curl -fsSL <release-url>/install.sh | bash                          # 安装默认版本
-#   curl -fsSL <release-url>/install.sh | bash -s -- -v 1.0.0           # 指定版本
-#   curl -fsSL <release-url>/install.sh | bash -s -- -u <other-url>     # 换源
+# Usage:
+#   curl -fsSL <release-url>/install.sh | bash                          # install default version
+#   curl -fsSL <release-url>/install.sh | bash -s -- -v 1.0.0           # specific version
+#   curl -fsSL <release-url>/install.sh | bash -s -- -u <other-url>     # alternate mirror
 # =============================================================================
 
 if [ -z "$BASH_VERSION" ]; then
@@ -39,7 +39,7 @@ on_error() {
 trap 'on_error ${LINENO}' ERR
 
 # ---------------------------------------------------------------------------
-# 终端输出颜色
+# Terminal output colors
 # ---------------------------------------------------------------------------
 MUTED='\033[0;2m'
 RED='\033[0;31m'
@@ -50,7 +50,7 @@ BLUE='\033[1;34m'
 NC='\033[0m'
 
 # ---------------------------------------------------------------------------
-# 全局配置
+# Global configuration
 # ---------------------------------------------------------------------------
 APP_NAME=devbridge
 APP_DISPLAY_NAME="DevBridge"
@@ -58,7 +58,7 @@ INSTALL_DIR="$HOME/.huawei/bin"
 CONFIG_DIR="$HOME/.huawei/devbridge"
 DEFAULT_ARTIFACT_URL="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge"
 if [[ "${DEFAULT_ARTIFACT_URL}" == __*__ ]]; then
-    DEFAULT_ARTIFACT_URL="https://obs-test-hd-space-cdn-sharedata-north7.obs.cn-north-7.ulanqab.huawei.com/space/devbridge"
+    DEFAULT_ARTIFACT_URL="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge"
 fi
 DEFAULT_VERSION="0.1.13-release"
 if [[ "${DEFAULT_VERSION}" == __*__ ]]; then
@@ -72,7 +72,7 @@ CURL_CMD="curl"
 _cleanup_tmp_dirs=()
 
 # ---------------------------------------------------------------------------
-# 日志函数
+# Log helpers
 # ---------------------------------------------------------------------------
 info()    { echo -e "${GREEN}[INFO]${NC}  $*" >&2; }
 warn()    { echo -e "${YELLOW}[WARN]${NC}  $*" >&2; }
@@ -80,7 +80,7 @@ error()   { echo -e "${RED}[ERROR]${NC} $*" >&2; exit 1; }
 step()    { echo -e "${MUTED}$*${NC}" >&2; }
 verbose()  { echo -e "${BLUE}[STEP]${NC} $*" >&2; }
 
-# compute_sha256 - 计算文件 SHA256 哈希，无可用工具时返回空
+# compute_sha256 - compute the file SHA256 hash; returns empty when no tool is available
 compute_sha256() {
     if command -v sha256sum &>/dev/null; then
         sha256sum "$1" | awk '{print $1}'
@@ -89,7 +89,7 @@ compute_sha256() {
     fi
 }
 
-# get_rc_file - 获取当前 shell 的 rc 文件路径
+# get_rc_file - return the current shell's rc file path
 get_rc_file() {
     if [[ -n "${ZSH_VERSION:-}" ]]; then
         echo "$HOME/.zshrc"
@@ -101,7 +101,7 @@ get_rc_file() {
 }
 
 # ---------------------------------------------------------------------------
-# 欢迎横幅
+# Welcome banner
 # ---------------------------------------------------------------------------
 welcome() {
     echo
@@ -174,7 +174,7 @@ parse_args() {
 }
 
 # ---------------------------------------------------------------------------
-# detect_platform - 检测操作系统和 CPU 架构
+# detect_platform - detect the OS and CPU architecture
 # ---------------------------------------------------------------------------
 detect_platform() {
     local os arch
@@ -200,7 +200,7 @@ detect_platform() {
 }
 
 # ---------------------------------------------------------------------------
-# check_platform - 校验平台组合是否支持
+# check_platform - verify the platform combination is supported
 # ---------------------------------------------------------------------------
 check_platform() {
     local supported="Linux_amd64 Linux_arm64 Darwin_amd64 Darwin_arm64 Windows_amd64 Windows_arm64"
@@ -216,28 +216,28 @@ check_platform() {
 }
 
 # ---------------------------------------------------------------------------
-# get_binary_name - 获取远程产物 tar.gz 包名
+# get_binary_name - get the remote artifact tar.gz package name
 # ---------------------------------------------------------------------------
 get_binary_name() {
     echo "${APP_NAME}_${GOOS}_${ARCH}_${VERSION}${EXE_SUFFIX}.tar.gz"
 }
 
 # ---------------------------------------------------------------------------
-# get_binary_name_inside - 获取 tar 包内的二进制文件名（不含 .tar.gz 后缀）
+# get_binary_name_inside - get the binary filename inside the tar (without the .tar.gz suffix)
 # ---------------------------------------------------------------------------
 get_binary_name_inside() {
     echo "${APP_NAME}_${GOOS}_${ARCH}_${VERSION}${EXE_SUFFIX}"
 }
 
 # ---------------------------------------------------------------------------
-# get_binary_path - 获取已安装二进制文件的路径
+# get_binary_path - get the installed binary path
 # ---------------------------------------------------------------------------
 get_binary_path() {
     echo "${INSTALL_DIR}/${APP_NAME}${EXE_SUFFIX}"
 }
 
 # ---------------------------------------------------------------------------
-# http_get - 统一下载函数（curl 优先，wget 回退）
+# http_get - unified download helper (curl first, wget fallback)
 # ---------------------------------------------------------------------------
 http_get() {
     local url="$1" output="$2" besteffort="${3:-}"
@@ -264,7 +264,7 @@ http_get() {
 }
 
 # ---------------------------------------------------------------------------
-# check_existing_install - 检查是否已安装
+# check_existing_install - check whether it is already installed
 # ---------------------------------------------------------------------------
 check_existing_install() {
     local binary_path
@@ -293,10 +293,10 @@ check_existing_install() {
 }
 
 # ---------------------------------------------------------------------------
-# check_remote_hash - 比较本地已安装版本与目标版本
+# check_remote_hash - compare the installed version with the target version.
 #
-# GoReleaser 产物: checksums.txt 在 Release 根目录，tar.gz 内只有二进制。
-# 改为直接比较已安装二进制的 version 输出与目标版本号。
+# GoReleaser artifacts: checksums.txt is at the Release root, the tar.gz only holds
+# the binary. Compare the installed binary's version output with the target instead.
 # ---------------------------------------------------------------------------
 check_remote_hash() {
     local binary_path="$1"
@@ -311,7 +311,7 @@ check_remote_hash() {
 }
 
 # ---------------------------------------------------------------------------
-# prompt_clean_old_data - 提示清理旧配置数据
+# prompt_clean_old_data - prompt to clean old config data
 # ---------------------------------------------------------------------------
 prompt_clean_old_data() {
     [[ "${SILENT_MODE}" == true ]] && return 0
@@ -331,10 +331,10 @@ prompt_clean_old_data() {
 }
 
 # ---------------------------------------------------------------------------
-# download_binary - 从远程下载 tar.gz 包并解压
+# download_binary - download and extract the tar.gz package from the remote.
 #
-# 下载源：显式 -u 优先，否则用 DEFAULT_ARTIFACT_URL（各渠道烤制时写入自己的地址）
-# 返回解压后的二进制文件路径（checksums.txt 也在同目录下，供 verify_checksum 使用）
+# Source: explicit -u wins, otherwise DEFAULT_ARTIFACT_URL (baked per channel).
+# Returns the extracted binary path (checksums.txt is alongside, for verify_checksum).
 # ---------------------------------------------------------------------------
 download_binary() {
     local url="$1" output_dir="$2"
@@ -348,7 +348,7 @@ download_binary() {
     verbose "Downloading ${remote_url} ..."
     http_get "${remote_url}" "${local_tarball}"
 
-    # 下载 checksums.txt（GoReleaser 生成的校验汇总文件，besteffort: 旧 Release 可能没有）
+    # Download checksums.txt (GoReleaser checksum file; best-effort: old Releases may lack it)
     local checksums_url="${mirror}/checksums.txt"
     verbose "Downloading ${checksums_url} ..."
     http_get "${checksums_url}" "${output_dir}/checksums.txt" besteffort
@@ -362,11 +362,11 @@ download_binary() {
 }
 
 # ---------------------------------------------------------------------------
-# verify_checksum - 校验二进制文件的 SHA256 哈希值
+# verify_checksum - verify the SHA256 hash of the binary
 # ---------------------------------------------------------------------------
 verify_checksum() {
     local binary_file="$1"
-    # GoReleaser 产物: checksums.txt 在 Release 根目录，校验对象是 tar.gz 而非裸二进制
+    # GoReleaser artifacts: checksums.txt is at the Release root; the tar.gz is the checksum target
     local tarball_file="${binary_file}.tar.gz"
     local checksums_file
     checksums_file="$(dirname "${binary_file}")/checksums.txt"
@@ -393,7 +393,7 @@ verify_checksum() {
         return 0
     fi
 
-    # checksums.txt 格式: <hash>  <filename>，查找 tar.gz 对应的 hash
+    # checksums.txt format: <hash>  <filename>; find the hash matching the tar.gz
     local tarball_basename
     tarball_basename=$(basename "${tarball_file}")
     local remote_hash
@@ -408,7 +408,7 @@ verify_checksum() {
 }
 
 # ---------------------------------------------------------------------------
-# install_binary - 安装二进制文件到 INSTALL_DIR
+# install_binary - install the binary into INSTALL_DIR
 # ---------------------------------------------------------------------------
 install_binary() {
     local binary_file="$1"
@@ -425,7 +425,7 @@ install_binary() {
 }
 
 # ---------------------------------------------------------------------------
-# add_to_path - 将安装目录添加到 PATH
+# add_to_path - add the install directory to PATH
 # ---------------------------------------------------------------------------
 add_to_path() {
     local bin_path="${INSTALL_DIR}"
@@ -453,7 +453,7 @@ add_to_path() {
 }
 
 # ---------------------------------------------------------------------------
-# verify_installation - 验证安装结果
+# verify_installation - verify the installation
 # ---------------------------------------------------------------------------
 verify_installation() {
     local binary_path
@@ -469,7 +469,7 @@ verify_installation() {
 }
 
 # ---------------------------------------------------------------------------
-# show_post_install_notice - 安装后提示
+# show_post_install_notice - show the post-install notice
 # ---------------------------------------------------------------------------
 show_post_install_notice() {
     local rc_file
@@ -485,7 +485,7 @@ show_post_install_notice() {
 }
 
 # ---------------------------------------------------------------------------
-# main - 主入口
+# main - entrypoint
 # ---------------------------------------------------------------------------
 main() {
     parse_args "$@"

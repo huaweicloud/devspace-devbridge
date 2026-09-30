@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
-	"huawei.com/devbridge/internal/api"
 	"huawei.com/devbridge/internal/i18n"
 
 	"github.com/spf13/cobra"
@@ -25,11 +25,13 @@ var validProtocols = map[string]bool{
 
 func validateProtocolLocal(protocol string) error {
 	if !validProtocols[protocol] {
-		return fmt.Errorf("Protocol must be one of http, https, auto, got: %s", protocol)
+		return fmt.Errorf(i18n.T(i18n.Msg.Port.InvalidProtocol), protocol)
 	}
 	return nil
 }
 
+// resolveAllowAnon resolves --allow-anonymous / --deny-anonymous.
+// It returns nil when neither flag is set, meaning "leave unchanged".
 func resolveAllowAnon(cmd *cobra.Command) *bool {
 	if cmd.Flags().Changed("allow-anonymous") {
 		v := true
@@ -39,8 +41,7 @@ func resolveAllowAnon(cmd *cobra.Command) *bool {
 		v := false
 		return &v
 	}
-	v := false
-	return &v
+	return nil
 }
 
 var portCmd = &cobra.Command{
@@ -60,8 +61,14 @@ var portCreateCmd = &cobra.Command{
 		if err := validateProtocolLocal(portProtocol); err != nil {
 			return err
 		}
-		if err := api.CreatePort(tunnelID, portNumber, portProtocol, resolveAllowAnon(cmd)); err != nil {
-			return fmt.Errorf("Failed to add port %d: %w", portNumber, err)
+		allowAnon := resolveAllowAnon(cmd)
+		if allowAnon == nil {
+			deny := false
+			allowAnon = &deny
+		}
+		client := newSDKClient()
+		if err := client.CreatePort(context.Background(), tunnelID, portNumber, portProtocol, allowAnon); err != nil {
+			return fmt.Errorf(i18n.T(i18n.Msg.Port.AddFailed), portNumber, err)
 		}
 		fmt.Println(i18n.T(i18n.Msg.Port.PortCreated))
 		return nil
@@ -77,7 +84,8 @@ var portListCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		ports, err := api.ListPorts(tunnelID)
+		client := newSDKClient()
+		ports, err := client.ListPorts(context.Background(), tunnelID)
 		if err != nil {
 			return err
 		}
@@ -94,7 +102,7 @@ var portListCmd = &cobra.Command{
 		var rows [][]string
 		for _, p := range ports {
 			rows = append(rows, []string{
-				strconv.Itoa(int(p.Port)),
+				strconv.Itoa(p.Port),
 				p.Protocol,
 				strconv.FormatBool(p.AllowAnonymous),
 				p.TunnelID,
@@ -114,13 +122,14 @@ var portShowCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		result, err := api.ShowPort(tunnelID, portNumber)
+		client := newSDKClient()
+		result, err := client.ShowPort(context.Background(), tunnelID, portNumber)
 		if err != nil {
 			return err
 		}
 		printKV([][2]string{
 			{i18n.T(i18n.Msg.Tunnel.TunnelID), result.TunnelID},
-			{i18n.T(i18n.Msg.Port.Port), strconv.Itoa(int(result.Port))},
+			{i18n.T(i18n.Msg.Port.Port), strconv.Itoa(result.Port)},
 			{i18n.T(i18n.Msg.Port.Protocol), result.Protocol},
 			{i18n.T(i18n.Msg.Port.AllowAnonymous), strconv.FormatBool(result.AllowAnonymous)},
 		})
@@ -137,7 +146,8 @@ var portUpdateCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		if err := api.UpdatePort(tunnelID, portNumber, resolveAllowAnon(cmd)); err != nil {
+		client := newSDKClient()
+		if err := client.UpdatePort(context.Background(), tunnelID, portNumber, resolveAllowAnon(cmd)); err != nil {
 			return err
 		}
 		fmt.Println(i18n.T(i18n.Msg.Port.PortUpdated))
@@ -154,10 +164,11 @@ var portDeleteCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		if err := api.DeletePort(tunnelID, portNumber); err != nil {
-			return fmt.Errorf("Failed to delete port %d: %w", portNumber, err)
+		client := newSDKClient()
+		if err := client.DeletePort(context.Background(), tunnelID, portNumber); err != nil {
+			return fmt.Errorf(i18n.T(i18n.Msg.Port.DeleteFailed), portNumber, err)
 		}
-		fmt.Printf("Port %d removed from tunnel %s.\n", portNumber, tunnelID)
+		fmt.Printf(i18n.T(i18n.Msg.Port.DeleteSuccess), portNumber, tunnelID)
 		return nil
 	}),
 }

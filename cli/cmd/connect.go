@@ -1,16 +1,18 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
-	"regexp"
+	"os/signal"
+	"syscall"
 	"time"
 
+	devbridge "github.com/huaweicloud/devspace-devbridge/go-sdk"
 	"github.com/spf13/cobra"
-	"huawei.com/devbridge/internal/api"
-	"huawei.com/devbridge/internal/config"
 	"huawei.com/devbridge/internal/auth"
-	client "huawei.com/devbridge/internal/connect"
+	"huawei.com/devbridge/internal/config"
+	"huawei.com/devbridge/internal/i18n"
 )
 
 var hostPorts []int
@@ -21,19 +23,7 @@ var hostToken string
 var hostAPIKey string
 var connectAPIKey string
 
-var tunnelIDPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)
-
-func validateTunnelID(id string) error {
-	if id == "" {
-		return fmt.Errorf("tunnel ID cannot be empty")
-	}
-	if !tunnelIDPattern.MatchString(id) {
-		return fmt.Errorf("invalid tunnel ID: %q (only letters, digits, hyphens, underscores allowed, length 1-64)", id)
-	}
-	return nil
-}
-
-func portResultsToInt(results []api.ListPortsResult) []int {
+func portResultsToInt(results []devbridge.Port) []int {
 	ports := make([]int, len(results))
 	for i, p := range results {
 		ports[i] = p.Port
@@ -43,14 +33,14 @@ func portResultsToInt(results []api.ListPortsResult) []int {
 
 func validatePorts(ports []int) error {
 	if len(ports) == 0 {
-		return fmt.Errorf("at least one port must be specified via -p/--ports")
+		return fmt.Errorf("%s", i18n.T(i18n.Msg.Connect.PortsRequired))
 	}
 	for _, p := range ports {
 		if p == -1 {
 			continue
 		}
 		if p < 1 || p > 65535 {
-			return fmt.Errorf("invalid port number: %d (valid range: 1-65535, or -1 for all ports)", p)
+			return fmt.Errorf(i18n.T(i18n.Msg.Connect.InvalidPortNumber), p)
 		}
 	}
 	return nil
@@ -63,14 +53,11 @@ func resolveHostConfig(cmd *cobra.Command, args []string) (tunnelID string, port
 	if hostToken != "" {
 
 		if len(args) == 0 || args[0] == "" {
-			return "", nil, "", fmt.Errorf("tunnelID is required when using --token")
+			return "", nil, "", fmt.Errorf("%s", i18n.T(i18n.Msg.Connect.TokenRequiresTunnelID))
 		}
 		tunnelID = args[0]
-		if err := validateTunnelID(tunnelID); err != nil {
-			return "", nil, "", err
-		}
 		if cmd.Flags().Changed("ports") {
-			fmt.Println("Note: --ports is ignored in --token mode, ports will be fetched from gateway")
+			fmt.Println(i18n.T(i18n.Msg.Connect.TokenModePortsNote))
 		}
 		jwtToken = hostToken
 		return
@@ -82,9 +69,10 @@ func resolveHostConfig(cmd *cobra.Command, args []string) (tunnelID string, port
 	}
 
 	if hostAPIKey == "" {
-		tokenResult, err := api.TunnelToken(tunnelID, "host")
+		client := newSDKClient()
+		tokenResult, err := client.IssueToken(context.Background(), tunnelID, "host")
 		if err != nil {
-			return "", nil, "", fmt.Errorf("Failed to get host token: %w", err)
+			return "", nil, "", fmt.Errorf("%s: %w", i18n.T(i18n.Msg.Connect.HostTokenFailed), err)
 		}
 		jwtToken = tokenResult.Token
 	}
@@ -92,19 +80,18 @@ func resolveHostConfig(cmd *cobra.Command, args []string) (tunnelID string, port
 }
 
 func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelID string, ports []int, err error) {
+	client := newSDKClient()
+
 	if len(args) > 0 && args[0] != "" {
 
 		tunnelID = args[0]
-		if err := validateTunnelID(tunnelID); err != nil {
-			return "", nil, err
-		}
-		portsResult, err := api.ListPorts(tunnelID)
+		portsResult, err := client.ListPorts(context.Background(), tunnelID)
 		if err != nil {
-			return "", nil, fmt.Errorf("Failed to list ports: %w", err)
+			return "", nil, fmt.Errorf("%s: %w", i18n.T(i18n.Msg.Connect.ListPortsFailed), err)
 		}
 		ports = portResultsToInt(portsResult)
 		if len(ports) == 0 {
-			return "", nil, fmt.Errorf("No ports configured for tunnel %s", tunnelID)
+			return "", nil, fmt.Errorf(i18n.T(i18n.Msg.Connect.NoPortsConfigured), tunnelID)
 		}
 		return tunnelID, ports, nil
 	}
@@ -112,17 +99,16 @@ func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelID string,
 	if !cmd.Flags().Changed("ports") {
 		defaultID, err := config.LoadDefaultTunnel()
 		if err != nil {
-			return "", nil, fmt.Errorf("no tunnelID and no -p specified; either set a default tunnel "+
-				"(tunnel set) or pass -p to create a temporary tunnel: %w", err)
+			return "", nil, fmt.Errorf("%s: %w", i18n.T(i18n.Msg.Connect.NoTunnelIDNoPorts), err)
 		}
 		tunnelID = defaultID
-		portsResult, err := api.ListPorts(tunnelID)
+		portsResult, err := client.ListPorts(context.Background(), tunnelID)
 		if err != nil {
-			return "", nil, fmt.Errorf("Failed to list ports: %w", err)
+			return "", nil, fmt.Errorf("%s: %w", i18n.T(i18n.Msg.Connect.ListPortsFailed), err)
 		}
 		ports = portResultsToInt(portsResult)
 		if len(ports) == 0 {
-			return "", nil, fmt.Errorf("No ports configured for tunnel %s", tunnelID)
+			return "", nil, fmt.Errorf(i18n.T(i18n.Msg.Connect.NoPortsConfigured), tunnelID)
 		}
 		return tunnelID, ports, nil
 	}
@@ -137,35 +123,45 @@ func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelID string,
 	if cmd.Flags().Changed("expiration") {
 		exp = &hostExpiration
 	}
-	result, err := api.CreateTunnel(
+	result, err := client.CreateTunnel(
+		context.Background(),
 		fmt.Sprintf("tunnel-%d-%d", ports[0], time.Now().UnixMilli()%10000),
 		hostDescription, exp)
 	if err != nil {
-		return "", nil, fmt.Errorf("Failed to create tunnel: %w", err)
+		return "", nil, fmt.Errorf("%s: %w", i18n.T(i18n.Msg.Tunnel.CreateFailed), err)
 	}
-	tunnelID = result.TunnelID
-	fmt.Printf("Created tunnel: %s\n", tunnelID)
+	tunnelID = result.ID
+	fmt.Printf(i18n.T(i18n.Msg.Connect.TunnelCreated), tunnelID)
 
 	allowAnon := true
 	for _, p := range ports {
-		if err := api.CreatePort(tunnelID, p, "auto", &allowAnon); err != nil {
-			return "", nil, fmt.Errorf("Failed to create port %d for tunnel %s: %w", p, tunnelID, err)
+		if err := client.CreatePort(context.Background(), tunnelID, p, "auto", &allowAnon); err != nil {
+			return "", nil, fmt.Errorf(i18n.T(i18n.Msg.Connect.CreatePortFailed), p, tunnelID, err)
 		}
 	}
 	return
 }
 
 var hostCmd = &cobra.Command{
-	Use:   "host [tunnelID]",
-	Short: "Start listener, register to gateway and wait for connections",
-	Args:  cobra.RangeArgs(0, 1),
+	Use:   "host [tunnel-id]",
+	Short: i18n.T(i18n.Msg.Connect.HostShort),
+	Args:  cobra.MaximumNArgs(1),
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
 		tunnelID, ports, jwtToken, err := resolveHostConfig(cmd, args)
 		if err != nil {
 			return err
 		}
-		client.Listen(tunnelID, ports, jwtToken, hostAPIKey)
-		return nil
+
+		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+		defer stop()
+
+		client := newSDKClient()
+		return client.Host(ctx, devbridge.HostConfig{
+			TunnelID: tunnelID,
+			Ports:    ports,
+			JWTToken: jwtToken,
+			APIKey:   hostAPIKey,
+		})
 	}),
 }
 
@@ -178,29 +174,26 @@ func resolveConnectConfig(args []string) (tunnelID string, ports []int, jwtToken
 	if err != nil {
 		return "", nil, "", err
 	}
-	if err := validateTunnelID(tunnelID); err != nil {
-		return "", nil, "", err
-	}
-
 	if connectToken != "" {
 
 		jwtToken = connectToken
 		return
 	}
 
-	portsResult, err := api.ListPorts(tunnelID)
+	client := newSDKClient()
+	portsResult, err := client.ListPorts(context.Background(), tunnelID)
 	if err != nil {
-		return "", nil, "", fmt.Errorf("Failed to list ports: %w", err)
+		return "", nil, "", fmt.Errorf("%s: %w", i18n.T(i18n.Msg.Connect.ListPortsFailed), err)
 	}
 	if len(portsResult) == 0 {
-		return "", nil, "", fmt.Errorf("No ports configured for tunnel %s", tunnelID)
+		return "", nil, "", fmt.Errorf(i18n.T(i18n.Msg.Connect.NoPortsConfigured), tunnelID)
 	}
 	ports = portResultsToInt(portsResult)
 
 	if connectAPIKey == "" {
-		tokenResult, err := api.TunnelToken(tunnelID, "connect")
+		tokenResult, err := client.IssueToken(context.Background(), tunnelID, "connect")
 		if err != nil {
-			return "", nil, "", fmt.Errorf("Failed to get connect token: %w", err)
+			return "", nil, "", fmt.Errorf("%s: %w", i18n.T(i18n.Msg.Connect.ConnectTokenFailed), err)
 		}
 		jwtToken = tokenResult.Token
 	}
@@ -211,7 +204,7 @@ func resolveConnectTunnelID(args []string) (string, error) {
 	if connectToken != "" {
 
 		if len(args) == 0 || args[0] == "" {
-			return "", fmt.Errorf("tunnelID is required when using --token")
+			return "", fmt.Errorf("%s", i18n.T(i18n.Msg.Connect.TokenRequiresTunnelID))
 		}
 		return args[0], nil
 	}
@@ -220,38 +213,47 @@ func resolveConnectTunnelID(args []string) (string, error) {
 	}
 	id, err := config.LoadDefaultTunnel()
 	if err != nil {
-		return "", fmt.Errorf("tunnelID is required (no default tunnel set): %w", err)
+		return "", fmt.Errorf("%s: %w", i18n.T(i18n.Msg.Connect.TunnelIDRequired), err)
 	}
 	return id, nil
 }
 
 var connectCmd = &cobra.Command{
-	Use:   "connect [tunnelID]",
-	Short: "Start sender, connect to gateway and wait for port forwarding requests",
+	Use:   "connect [tunnel-id]",
+	Short: i18n.T(i18n.Msg.Connect.ConnectShort),
 	Args:  cobra.MaximumNArgs(1),
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
 		tunnelID, ports, jwtToken, err := resolveConnectConfig(args)
 		if err != nil {
 			return err
 		}
-		client.Connect(tunnelID, jwtToken, ports, connectAPIKey)
-		return nil
+
+		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+		defer stop()
+
+		client := newSDKClient()
+		return client.Connect(ctx, devbridge.ConnectConfig{
+			TunnelID: tunnelID,
+			Ports:    ports,
+			JWTToken: jwtToken,
+			APIKey:   connectAPIKey,
+		})
 	}),
 }
 
 func init() {
 	RootCmd.AddCommand(hostCmd)
 	RootCmd.AddCommand(connectCmd)
-	hostCmd.Flags().IntSliceVarP(&hostPorts, "ports", "p", nil, "Local server port numbers (use -1 for all ports)")
-	hostCmd.Flags().StringVarP(&hostDescription, "description", "d", "", "Description for new tunnel")
+	hostCmd.Flags().IntSliceVarP(&hostPorts, "ports", "p", nil, i18n.T(i18n.Msg.Connect.FlagPorts))
+	hostCmd.Flags().StringVarP(&hostDescription, "description", "d", "", i18n.T(i18n.Msg.Connect.FlagDescription))
 	hostCmd.Flags().IntVarP(&hostExpiration, "expiration", "e", 0,
-		"Tunnel expiration (hours, 1-720)")
+		i18n.T(i18n.Msg.Connect.FlagExpiration))
 	hostCmd.Flags().StringVarP(&hostToken, "token", "t", "",
-		"JWT token for host (skip API token and port lookup)")
+		i18n.T(i18n.Msg.Connect.FlagHostToken))
 	hostCmd.Flags().StringVarP(&hostAPIKey, "api-key", "k", "",
-		"API key for host (skip TunnelToken, use X-API-Key for WebSocket auth)")
+		i18n.T(i18n.Msg.Connect.FlagHostAPIKey))
 	connectCmd.Flags().StringVarP(&connectToken, "token", "t", "",
-		"JWT token for connect (skip API token and port lookup)")
+		i18n.T(i18n.Msg.Connect.FlagConnectToken))
 	connectCmd.Flags().StringVarP(&connectAPIKey, "api-key", "k", "",
-		"API key for connect (skip TunnelToken, use X-API-Key for WebSocket auth)")
+		i18n.T(i18n.Msg.Connect.FlagConnectAPIKey))
 }

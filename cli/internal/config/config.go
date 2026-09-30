@@ -7,11 +7,16 @@ import (
 	"sync"
 
 	"gopkg.in/yaml.v3"
+
+	"huawei.com/devbridge/internal/i18n"
 )
 
-var DefaultServerDomain = "https://relay-dev-local.tailb4159e.ts.net:8443"
+var DefaultServerDomain = "https://bridge.developer.myhuaweicloud.com"
 
-var errKeyNotFound = errors.New("key not found")
+// RelayControllerPath is the REST API path prefix for the relay controller.
+const RelayControllerPath = "/open-api-inner/v1/relay-controller"
+
+var errKeyNotFound = errors.New(i18n.T(i18n.Msg.Config.KeyNotFound))
 
 var (
 	configMu sync.Mutex

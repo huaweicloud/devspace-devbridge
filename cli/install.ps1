@@ -14,7 +14,7 @@ function Install-DevBridge {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
     # ---------------------------------------------------------------------------
-    # 全局配置
+    # Global configuration
     # ---------------------------------------------------------------------------
     $Script:APP_NAME = "devbridge"
     $Script:APP_DISPLAY_NAME = "DevBridge"
@@ -22,7 +22,7 @@ function Install-DevBridge {
     $Script:CONFIG_DIR = Join-Path $HOME ".huawei\devbridge"
     $Script:DEFAULT_ARTIFACT_URL = "https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge"
     if ($Script:DEFAULT_ARTIFACT_URL -match '^__.*__$') {
-        $Script:DEFAULT_ARTIFACT_URL = "https://obs-test-hd-space-cdn-sharedata-north7.obs.cn-north-7.ulanqab.huawei.com/space/devbridge"
+        $Script:DEFAULT_ARTIFACT_URL = "https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge"
     }
     $Script:DEFAULT_VERSION = "0.1.13-release"
     if ($Script:DEFAULT_VERSION -match '^__.*__$') {
@@ -38,7 +38,7 @@ function Install-DevBridge {
     $Script:EXE_SUFFIX = ""
 
     # ---------------------------------------------------------------------------
-    # 日志函数
+    # Log helpers
     # ---------------------------------------------------------------------------
     function Write-Info { param([string]$Msg) Write-Host "[INFO]  $Msg" -ForegroundColor Green }
     function Write-Warn { param([string]$Msg) Write-Host "[WARN]  $Msg" -ForegroundColor Yellow }
@@ -49,13 +49,13 @@ function Install-DevBridge {
         throw $Msg
     }
 
-    # Get-FileSha256 - 计算文件 SHA256 哈希（小写）
+    # Get-FileSha256 - compute the file SHA256 hash (lowercase)
     function Get-FileSha256 {
         param([string]$Path)
         return (Get-FileHash -Path $Path -Algorithm SHA256).Hash.ToLower()
     }
 
-    # Get-WebContent - 获取远程 URL 文本内容
+    # Get-WebContent - fetch remote URL text content
     function Get-WebContent {
         param([string]$Url, [switch]$BestEffort)
         try {
@@ -73,7 +73,7 @@ function Install-DevBridge {
     }
 
     # ---------------------------------------------------------------------------
-    # 欢迎横幅
+    # Welcome banner
     # ---------------------------------------------------------------------------
     function Show-Welcome {
         Write-Host ""
@@ -124,7 +124,7 @@ Environment Variables:
     }
 
     # ---------------------------------------------------------------------------
-    # Detect-Platform - 检测操作系统和 CPU 架构
+    # Detect-Platform - detect the OS and CPU architecture
     # ---------------------------------------------------------------------------
     function Detect-Platform {
         $os = ""
@@ -160,7 +160,7 @@ Environment Variables:
     }
 
     # ---------------------------------------------------------------------------
-    # Check-Platform - 校验平台组合是否支持
+    # Check-Platform - verify the platform combination is supported
     # ---------------------------------------------------------------------------
     function Check-Platform {
         $supported = @("Linux_amd64", "Linux_arm64", "Darwin_amd64", "Darwin_arm64", "Windows_amd64", "Windows_arm64")
@@ -176,28 +176,28 @@ Environment Variables:
     }
 
     # ---------------------------------------------------------------------------
-    # Get-BinaryName - 获取远程产物 tar.gz 包名
+    # Get-BinaryName - get the remote artifact tar.gz package name
     # ---------------------------------------------------------------------------
     function Get-BinaryName {
         return "$($Script:APP_NAME)_$($Script:GOOS)_$($Script:ARCH)_$($Script:VERSION)$($Script:EXE_SUFFIX).tar.gz"
     }
 
     # ---------------------------------------------------------------------------
-    # Get-BinaryNameInside - 获取 tar 包内的二进制文件名（不含 .tar.gz 后缀）
+    # Get-BinaryNameInside - get the binary filename inside the tar (without the .tar.gz suffix)
     # ---------------------------------------------------------------------------
     function Get-BinaryNameInside {
         return "$($Script:APP_NAME)_$($Script:GOOS)_$($Script:ARCH)_$($Script:VERSION)$($Script:EXE_SUFFIX)"
     }
 
     # ---------------------------------------------------------------------------
-    # Get-BinaryPath - 获取已安装二进制文件的路径
+    # Get-BinaryPath - get the installed binary path
     # ---------------------------------------------------------------------------
     function Get-BinaryPath {
         return Join-Path $Script:INSTALL_DIR "$($Script:APP_NAME)$($Script:EXE_SUFFIX)"
     }
 
     # ---------------------------------------------------------------------------
-    # Invoke-HttpGet - 统一下载函数
+    # Invoke-HttpGet - unified download helper
     # ---------------------------------------------------------------------------
     function Invoke-HttpGet {
         param([string]$Url, [string]$Output, [switch]$BestEffort)
@@ -212,7 +212,7 @@ Environment Variables:
     }
 
     # ---------------------------------------------------------------------------
-    # Check-ExistingInstall - 检查是否已安装
+    # Check-ExistingInstall - check whether it is already installed
     # ---------------------------------------------------------------------------
     function Check-ExistingInstall {
         $binaryPath = Get-BinaryPath
@@ -239,10 +239,10 @@ Environment Variables:
     }
 
     # ---------------------------------------------------------------------------
-    # Test-RemoteHash - 比较本地已安装版本与目标版本
+    # Test-RemoteHash - compare the installed version with the target version.
     #
-    # GoReleaser 产物: checksums.txt 在 Release 根目录，tar.gz 内只有二进制。
-    # 改为直接比较已安装二进制的 version 输出与目标版本号。
+    # GoReleaser artifacts: checksums.txt is at the Release root, the tar.gz only holds
+    # the binary. Compare the installed binary's version output with the target instead.
     # ---------------------------------------------------------------------------
     function Test-RemoteHash {
         param([string]$BinaryPath)
@@ -257,7 +257,7 @@ Environment Variables:
     }
 
     # ---------------------------------------------------------------------------
-    # Prompt-CleanOldData - 提示清理旧配置数据
+    # Prompt-CleanOldData - prompt to clean old config data
     # ---------------------------------------------------------------------------
     function Prompt-CleanOldData {
         if ($Script:SILENT_MODE) { return }
@@ -277,18 +277,18 @@ Environment Variables:
     }
 
     # ---------------------------------------------------------------------------
-    # Resolve-TarCommand - 查找可用的 tar 命令
+    # Resolve-TarCommand - locate an available tar command.
     #
-    # Windows 10 1803+ 内置 tar.exe 在 C:\Windows\System32，但某些企业管控环境
-    # 会把 System32 从 PATH 中移除，导致裸 tar 调用失败。
-    # 本函数按优先级查找：PATH -> System32 -> Git 安装目录。
+    # Windows 10 1803+ bundles tar.exe under C:\Windows\System32, but some managed
+    # environments drop System32 from PATH, breaking a bare `tar` call.
+    # Lookup order: PATH -> System32 -> Git install directory.
     # ---------------------------------------------------------------------------
     function Resolve-TarCommand {
-        # 1. tar 已在 PATH 中
+        # 1. tar is already on PATH
         $cmd = Get-Command tar -ErrorAction SilentlyContinue
         if ($cmd) { return $cmd.Source }
 
-        # 2. Windows 内置 tar.exe（System32 / SysWOW64）
+        # 2. Windows built-in tar.exe (System32 / SysWOW64)
         $sysPaths = @(
             Join-Path $env:SystemRoot "System32\tar.exe"
             Join-Path $env:SystemRoot "SysWOW64\tar.exe"
@@ -297,7 +297,7 @@ Environment Variables:
             if (Test-Path $p) { return $p }
         }
 
-        # 3. Git for Windows 自带的 tar.exe
+        # 3. tar.exe bundled with Git for Windows
         $gitPaths = @(
             "C:\Program Files\Git\usr\bin\tar.exe",
             "C:\Program Files (x86)\Git\usr\bin\tar.exe"
@@ -311,10 +311,10 @@ Environment Variables:
 
 
     # ---------------------------------------------------------------------------
-    # Download-Binary - 从远程下载 tar.gz 包并解压
+    # Download-Binary - download and extract the tar.gz package from the remote.
     #
-    # 下载源：显式 -Url 优先，否则用 DEFAULT_ARTIFACT_URL（各渠道烤制时写入自己的地址）
-    # 返回解压后的二进制文件路径（checksums.txt 也在同目录下，供 Verify-Checksum 使用）
+    # Source: explicit -Url wins, otherwise DEFAULT_ARTIFACT_URL (baked per channel).
+    # Returns the extracted binary path (checksums.txt is alongside, for Verify-Checksum).
     # ---------------------------------------------------------------------------
     function Download-Binary {
         param([string]$Url, [string]$OutputDir)
@@ -328,13 +328,13 @@ Environment Variables:
         Write-Step "Downloading from ${remoteUrl} ..."
         Invoke-HttpGet -Url $remoteUrl -Output $localTarball
 
-        # 下载 checksums.txt（GoReleaser 生成的校验汇总文件，besteffort: 旧 Release 可能没有）
+        # Download checksums.txt (GoReleaser checksum file; best-effort: old Releases may lack it)
         $checksumsUrl = "${mirror}/checksums.txt"
         Write-Step "Downloading ${checksumsUrl} ..."
         $checksumsPath = Join-Path $OutputDir "checksums.txt"
         Invoke-HttpGet -Url $checksumsUrl -Output $checksumsPath -BestEffort
 
-        # 解压 tar.gz（Windows 10+ 内置 tar）
+        # Extract the tar.gz (Windows 10+ ships tar)
         Write-Step "Extracting ${tarballName} ..."
         $tarCmd = Resolve-TarCommand
         if (-not $tarCmd) {
@@ -349,18 +349,18 @@ Possible fixes:
 
         & $tarCmd xzf "$localTarball" -C "$OutputDir"
 
-        # 返回解压后的二进制路径
+        # Return the extracted binary path
         $binaryNameInside = Get-BinaryNameInside
         return Join-Path $OutputDir $binaryNameInside
     }
 
     # ---------------------------------------------------------------------------
-    # Verify-Checksum - 校验二进制文件的 SHA256 哈希值
+    # Verify-Checksum - verify the SHA256 hash of the binary
     # ---------------------------------------------------------------------------
     function Verify-Checksum {
         param([string]$BinaryFile)
 
-        # GoReleaser 产物: checksums.txt 在 Release 根目录，校验对象是 tar.gz 而非裸二进制
+        # GoReleaser artifacts: checksums.txt is at the Release root; the tar.gz is the checksum target
         $tarballFile = "${BinaryFile}.tar.gz"
         $checksumsFile = Join-Path (Split-Path $BinaryFile) "checksums.txt"
 
@@ -381,7 +381,7 @@ Possible fixes:
 
         $localHash = Get-FileSha256 -Path $tarballFile
 
-        # checksums.txt 格式: <hash>  <filename>，查找 tar.gz 对应的 hash
+        # checksums.txt format: <hash>  <filename>; find the hash matching the tar.gz
         $tarballBasename = Split-Path $tarballFile -Leaf
         $remoteHash = ""
         foreach ($line in (Get-Content $checksumsFile)) {
@@ -403,7 +403,7 @@ Possible fixes:
     }
 
     # ---------------------------------------------------------------------------
-    # Install-Binary - 安装二进制文件到 INSTALL_DIR
+    # Install-Binary - install the binary into INSTALL_DIR
     # ---------------------------------------------------------------------------
     function Install-Binary {
         param([string]$BinaryFile)
@@ -420,7 +420,7 @@ Possible fixes:
     }
 
     # ---------------------------------------------------------------------------
-    # Add-ToPath - 将安装目录添加到 PATH
+    # Add-ToPath - add the install directory to PATH
     # ---------------------------------------------------------------------------
     function Add-ToPath {
         $binPath = $Script:INSTALL_DIR
@@ -436,7 +436,7 @@ Possible fixes:
     }
 
     # ---------------------------------------------------------------------------
-    # Verify-Installation - 验证安装结果
+    # Verify-Installation - verify the installation
     # ---------------------------------------------------------------------------
     function Verify-Installation {
         $binaryPath = Get-BinaryPath
@@ -451,7 +451,7 @@ Possible fixes:
     }
 
     # ---------------------------------------------------------------------------
-    # Show-PostInstallNotice - 安装后提示
+    # Show-PostInstallNotice - show the post-install notice
     # ---------------------------------------------------------------------------
     function Show-PostInstallNotice {
         Write-Host ""
@@ -464,7 +464,7 @@ Possible fixes:
     }
 
     # ---------------------------------------------------------------------------
-    # main - 主入口
+    # main - entrypoint
     # ---------------------------------------------------------------------------
     function Main {
         if ($Help) { Show-Usage }

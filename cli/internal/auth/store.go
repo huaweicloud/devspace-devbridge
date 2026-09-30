@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"huawei.com/devbridge/internal/config"
+	"huawei.com/devbridge/internal/i18n"
 
 	"github.com/zalando/go-keyring"
 )
@@ -31,9 +32,9 @@ func decodeCredential(blob string) (*Credential, bool) {
 func StoreCredential(name string, cred *Credential, userInfo *UserInfo) error {
 	blob := encodeCredential(cred)
 
-	cfg, _ := config.Load()
-	if cfg == nil {
-		cfg = make(map[string]any)
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("%s: %w", i18n.T(i18n.Msg.Auth.LoadConfigFailed), err)
 	}
 
 	if err := keyring.Set(name, "Credentials", blob); err == nil {
@@ -63,7 +64,7 @@ func LoadCredential(name string) (*Credential, *UserInfo, error) {
 		cred = cfgCred
 	}
 	if cred == nil {
-		return nil, nil, fmt.Errorf("no credential found")
+		return nil, nil, fmt.Errorf("%s", i18n.T(i18n.Msg.Auth.NoCredential))
 	}
 
 	return cred, cfgUserInfo, nil

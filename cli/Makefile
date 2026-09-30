@@ -1,17 +1,15 @@
-# 版本号: 优先用环境变量，否则从 git tag 推导，最后回退到 dev
+# Version: prefer env var, else derive from git tag, else fall back to "dev"
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 SERVER_DOMAIN ?= http://relay-dev-local.tailb4159e.ts.net:8443
 LOGIN_URL ?= https://devstation.ulanqab.huawei.com
-GATEWAY_ADDR ?= 100.95.181.191:4433
-CLUSTER_DOMAIN ?= cn-north-4-bridge.myhuaweicloud.com
-CLUSTER_ID ?= devbridge-s2
+GATEWAY_ADDR ?= gateway.devbridge-s2.hwtunnel.com
+CLUSTER_DOMAIN ?= devbridge-s2.hwtunnel.com
 
 LDFLAGS = -X huawei.com/devbridge/cmd.version=$(VERSION) \
           -X huawei.com/devbridge/internal/auth.LoginURL=$(LOGIN_URL) \
           -X huawei.com/devbridge/internal/config.DefaultServerDomain=$(SERVER_DOMAIN) \
-          -X huawei.com/devbridge/internal/connect.ServerAddr=$(GATEWAY_ADDR) \
-          -X huawei.com/devbridge/internal/connect.ServerHost=$(CLUSTER_DOMAIN) \
-          -X huawei.com/devbridge/internal/api.ClusterID=$(CLUSTER_ID)
+          -X huawei.com/devbridge/internal/config.ServerAddr=$(GATEWAY_ADDR) \
+          -X huawei.com/devbridge/internal/config.ServerHost=$(CLUSTER_DOMAIN)
 
 GOFLAGS = -ldflags "-s -w $(LDFLAGS)" -buildmode=pie -trimpath
 CGO_FLAG = CGO_ENABLED=0
@@ -32,14 +30,12 @@ build-test: LOGIN_URL := https://devstation.ulanqab.huawei.com
 build-test: build
 
 build-prod: VERSION := prod
-build-prod: SERVER_DOMAIN := https://devstation.myhuaweicloud.com
+build-prod: SERVER_DOMAIN := https://bridge.developer.myhuaweicloud.com
 build-prod: LOGIN_URL := https://devstation.connect.huaweicloud.com
 build-prod: GATEWAY_ADDR := gateway.devbridge-s2.hwtunnel.com:443
-build-prod: CLUSTER_DOMAIN := devbridge-s2.hwtunnel.com
-build-prod: CLUSTER_ID := devbridge-s2
 build-prod: build
 
-# 跨平台构建: 产物名含版本号（与 install.sh 对齐: devbridge_{OS}_{Arch}_{Version}）
+# Cross-platform build: artifacts include the version (aligns with install.sh: devbridge_{OS}_{Arch}_{Version})
 build-all: build-linux build-linux-arm64 build-windows build-windows-arm64 build-darwin build-darwin-arm64 checksum
 
 build-linux:
@@ -60,7 +56,7 @@ build-darwin:
 build-darwin-arm64:
 	GOOS=darwin GOARCH=arm64 $(CGO_FLAG) go build $(GOFLAGS) -o bin/devbridge_darwin_arm64_$(VERSION) ./cmd/cli
 
-# 为所有产物生成 SHA256 校验文件
+# Generate SHA256 checksum files for all artifacts
 checksum:
 	@cd bin && for f in devbridge_*_*; do \
 		[ -f "$$f" ] || continue; \
@@ -95,4 +91,3 @@ help:
 	@echo "  LOGIN_URL         - Login page URL"
 	@echo "  GATEWAY_ADDR      - WebSocket gateway address"
 	@echo "  CLUSTER_DOMAIN    - Cluster domain for SNI"
-	@echo "  CLUSTER_ID        - Cluster ID sent to API (tunnel create)"

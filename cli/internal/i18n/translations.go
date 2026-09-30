@@ -24,18 +24,27 @@ func init() {
 	Msg.Auth.LoginShort = Message{ZH: "登录华为云", EN: "Login to Huawei Cloud"}
 	Msg.Auth.LoginErrorHint = Message{ZH: "请前往管理页面删除 API Key 后重试。API Key 管理页面: %s", EN: "Please go to the management page to delete API Keys and try again. API Key management page: %s"}
 	Msg.Auth.LoggedInHuaweiCloud = Message{ZH: "已登录 (华为云 IAM)", EN: "Logged in (Huawei Cloud IAM)"}
+	Msg.Auth.LoginFailed = Message{ZH: "登录失败", EN: "login failed"}
+	Msg.Auth.APIKeyInvalid = Message{ZH: "API Key 无效或已禁用", EN: "api key is invalid or disabled"}
+	Msg.Auth.MissingAPIKey = Message{ZH: "缺少 API Key", EN: "missing api key"}
+	Msg.Auth.LoginTimeout = Message{ZH: "登录超时", EN: "login timeout"}
+	Msg.Auth.ErrorCodeMsg = Message{ZH: "错误码: %s, 错误信息: %s", EN: "error code: %s, error message: %s"}
+	Msg.Auth.NoCredential = Message{ZH: "未找到凭证，请先登录（devbridge auth login）", EN: "no credential found, please login first (devbridge auth login)"}
+	Msg.Auth.VerifyRequestFailed = Message{ZH: "构建验证请求失败", EN: "build verify request"}
+	Msg.Auth.VerifyAPIKeyFailed = Message{ZH: "验证 API Key 失败", EN: "verify api key"}
+	Msg.Auth.VerifyResponseRead = Message{ZH: "读取验证响应失败", EN: "read verify response"}
+	Msg.Auth.VerifyUnexpected = Message{ZH: "验证 API Key 失败: 异常状态码 %d, 响应体=%s", EN: "verify api key: unexpected status %d, body=%s"}
+	Msg.Auth.LoadConfigFailed = Message{ZH: "加载配置失败", EN: "load config"}
 
 	Msg.Tunnel.TunnelID = Message{ZH: "隧道ID", EN: "Tunnel ID"}
-	Msg.Tunnel.TunnelName = Message{ZH: "隧道名称", EN: "Tunnel Name"}
 	Msg.Tunnel.TunnelExpiration = Message{ZH: "隧道过期时间", EN: "Tunnel Expiration"}
 	Msg.Tunnel.PortCount = Message{ZH: "端口数", EN: "Port Count"}
 	Msg.Tunnel.TunnelUpdated = Message{ZH: "隧道更新成功", EN: "Tunnel updated successfully"}
 	Msg.Tunnel.TunnelDeleted = Message{ZH: "隧道删除成功", EN: "Tunnel deleted successfully"}
 	Msg.Tunnel.TunnelDeletedAll = Message{ZH: "所有隧道已删除", EN: "All tunnels deleted"}
 	Msg.Tunnel.TunnelNotFound = Message{ZH: "隧道不存在", EN: "Tunnel not found"}
-	Msg.Tunnel.TunnelNameInvalid = Message{ZH: "隧道名称格式无效: 仅中文、字母、数字、连字符(连字符不能在首尾)，长度1-64", EN: "Invalid tunnel name: only Chinese characters, digits, letters, hyphens allowed (hyphens cannot be at the beginning or end), length 1-64"}
 	Msg.Tunnel.TunnelDescInvalid = Message{ZH: "隧道描述无效: 仅中文、字母、数字，长度0-64", EN: "Invalid tunnel description: only Chinese characters, digits, letters, length 0-64"}
-	Msg.Tunnel.TunnelExpInvalid = Message{ZH: "过期时间无效 (1-720小时)", EN: "Invalid expiration (1-720 hours)"}
+	Msg.Tunnel.TunnelNameInvalid = Message{ZH: "隧道名称无效: 仅中文、字母、数字、连字符（不可开头/结尾），长度1-64", EN: "Invalid tunnel name: only Chinese characters, letters, digits, hyphens (not at start/end), length 1-64"}
 	Msg.Tunnel.TunnelListEmpty = Message{ZH: "没有隧道", EN: "No tunnels found."}
 	Msg.Tunnel.ListShort = Message{ZH: "列出所有隧道", EN: "List all tunnels"}
 	Msg.Tunnel.CreateShort = Message{ZH: "创建新隧道", EN: "Create a new tunnel"}
@@ -68,8 +77,6 @@ func init() {
 	Msg.Port.AllowAnonymous = Message{ZH: "允许匿名", EN: "Allow Anonymous"}
 	Msg.Port.PortCreated = Message{ZH: "端口创建成功", EN: "Port created successfully"}
 	Msg.Port.PortUpdated = Message{ZH: "端口更新成功", EN: "Port updated successfully"}
-	Msg.Port.PortInvalid = Message{ZH: "端口必须为 1 到 65535 之间", EN: "port must be between 1 and 65535"}
-	Msg.Port.ProtocolInvalid = Message{ZH: "协议无效 (http, https, auto)", EN: "Invalid protocol (http, https, auto)"}
 	Msg.Port.PortListEmpty = Message{ZH: "该隧道没有绑定端口", EN: "No ports bound to this tunnel."}
 	Msg.Port.Port = Message{ZH: "端口", EN: "Port"}
 	Msg.Port.TunnelID = Message{ZH: "隧道ID", EN: "Tunnel ID"}
@@ -84,11 +91,10 @@ func init() {
 	Msg.Port.FlagProtocol = Message{ZH: "端口协议 (选项: http/https/auto)", EN: "Port protocol (options: http/https/auto)"}
 	Msg.Port.FlagAllowAnon = Message{ZH: "允许匿名客户端访问", EN: "Allow anonymous client access"}
 	Msg.Port.FlagDenyAnon = Message{ZH: "禁止匿名客户端访问", EN: "Deny anonymous client access"}
-
-	Msg.API.ServerError = Message{ZH: "服务器错误", EN: "Server error"}
-	Msg.API.Unauthorized = Message{ZH: "未授权", EN: "Unauthorized"}
-	Msg.API.InvalidResponse = Message{ZH: "无效响应", EN: "Invalid response"}
-	Msg.API.APIKeyExpired = Message{ZH: "API Key 已过期，请重新登录", EN: "API key expired, please login again"}
+	Msg.Port.DeleteSuccess = Message{ZH: "端口 %d 已从隧道 %s 删除。\n", EN: "Port %d removed from tunnel %s.\n"}
+	Msg.Port.InvalidProtocol = Message{ZH: "协议必须是 http、https、auto 之一，当前为: %s", EN: "protocol must be one of http, https, auto, got: %s"}
+	Msg.Port.AddFailed = Message{ZH: "添加端口 %d 失败: %w", EN: "failed to add port %d: %w"}
+	Msg.Port.DeleteFailed = Message{ZH: "删除端口 %d 失败: %w", EN: "failed to delete port %d: %w"}
 
 	Msg.Limits.LimitsShort = Message{ZH: "查看限制和余额", EN: "View limits and balance"}
 	Msg.Limits.ActiveTunnels = Message{ZH: "活跃隧道数", EN: "Active Tunnels"}
@@ -112,5 +118,41 @@ func init() {
 	Msg.Echo.Headers = Message{ZH: "请求头", EN: "Headers"}
 
 	Msg.Ping.PingShort = Message{ZH: "测试到服务器的连通性", EN: "Test connectivity to the server"}
-	Msg.Ping.URIInvalid = Message{ZH: "URI 无效", EN: "Invalid URI"}
+	Msg.Echo.PingResultOK = Message{ZH: "HTTP %s -- %d ms\n", EN: "HTTP %s -- %d ms\n"}
+	Msg.Echo.PingResultErr = Message{ZH: "HTTP %s -- %d ms（错误: %v）\n", EN: "HTTP %s -- %d ms (err: %v)\n"}
+	Msg.Echo.InvalidPortNumber = Message{ZH: "无效端口号 %d（端口需在 1-65535 之间）", EN: "invalid port number %d (port must be between 1 and 65535)"}
+	Msg.Echo.IntervalMustBePositive = Message{ZH: "间隔必须为正数，当前为 %d 毫秒", EN: "interval must be positive, got %d ms"}
+
+	Msg.Config.ConfigCommands = Message{ZH: "配置命令", EN: "Configuration commands"}
+	Msg.Config.GetShort = Message{ZH: "查看网关配置", EN: "Show gateway configuration"}
+	Msg.Config.SetShort = Message{ZH: "设置网关配置", EN: "Set gateway configuration"}
+	Msg.Config.UnsetShort = Message{ZH: "清空网关配置（恢复编译时默认值）", EN: "Clear gateway configuration (restore build defaults)"}
+	Msg.Config.GatewayAddr = Message{ZH: "网关地址", EN: "Gateway Address"}
+	Msg.Config.GatewayHost = Message{ZH: "网关SNI域名", EN: "Gateway SNI Host"}
+	Msg.Config.SetSuccess = Message{ZH: "配置已保存", EN: "Configuration saved"}
+	Msg.Config.NothingToSet = Message{ZH: "没有可设置的项，请用 --gateway-addr / --gateway-host", EN: "Nothing to set, use --gateway-addr / --gateway-host"}
+	Msg.Config.NoDefaultTunnel = Message{ZH: "未指定隧道 ID 且未设置默认隧道，请通过参数指定，或使用 'devbridge set' 设置默认隧道", EN: "tunnel ID not specified and no default tunnel set, please specify via argument or use 'devbridge set' to set default"}
+	Msg.Config.KeyNotFound = Message{ZH: "配置项不存在", EN: "key not found"}
+
+	Msg.Connect.HostShort = Message{ZH: "通过 DevBridge 隧道托管本地服务", EN: "Host local service through DevBridge tunnel"}
+	Msg.Connect.ConnectShort = Message{ZH: "启动发送端，连接网关并等待端口转发请求", EN: "Start sender, connect to gateway and wait for port forwarding requests"}
+	Msg.Connect.FlagPorts = Message{ZH: "本地服务端口列表（-1 表示所有端口）", EN: "Local server port numbers (use -1 for all ports)"}
+	Msg.Connect.FlagDescription = Message{ZH: "新隧道描述", EN: "Description for new tunnel"}
+	Msg.Connect.FlagExpiration = Message{ZH: "隧道有效期（小时, 1-720）", EN: "Tunnel expiration (hours, 1-720)"}
+	Msg.Connect.FlagHostToken = Message{ZH: "Host 专用 JWT 令牌（跳过 API 令牌签发和端口查询）", EN: "JWT token for host (skip API token and port lookup)"}
+	Msg.Connect.FlagHostAPIKey = Message{ZH: "Host 专用 API Key（跳过令牌，WebSocket 使用 X-API-Key 认证）", EN: "API key for host (skip TunnelToken, use X-API-Key for WebSocket auth)"}
+	Msg.Connect.FlagConnectToken = Message{ZH: "Connect 专用 JWT 令牌（跳过 API 令牌签发和端口查询）", EN: "JWT token for connect (skip API token and port lookup)"}
+	Msg.Connect.FlagConnectAPIKey = Message{ZH: "Connect 专用 API Key（跳过令牌，WebSocket 使用 X-API-Key 认证）", EN: "API key for connect (skip TunnelToken, use X-API-Key for WebSocket auth)"}
+	Msg.Connect.PortsRequired = Message{ZH: "至少需要通过 -p/--ports 指定一个端口", EN: "at least one port must be specified via -p/--ports"}
+	Msg.Connect.InvalidPortNumber = Message{ZH: "无效端口号: %d（有效范围 1-65535，-1 表示所有端口）", EN: "invalid port number: %d (valid range: 1-65535, or -1 for all ports)"}
+	Msg.Connect.TokenRequiresTunnelID = Message{ZH: "使用 --token 时必须提供隧道 ID", EN: "tunnelID is required when using --token"}
+	Msg.Connect.HostTokenFailed = Message{ZH: "获取 Host 令牌失败", EN: "failed to get host token"}
+	Msg.Connect.ConnectTokenFailed = Message{ZH: "获取 Connect 令牌失败", EN: "failed to get connect token"}
+	Msg.Connect.ListPortsFailed = Message{ZH: "查询端口列表失败", EN: "failed to list ports"}
+	Msg.Connect.NoPortsConfigured = Message{ZH: "隧道 %s 未配置端口", EN: "no ports configured for tunnel %s"}
+	Msg.Connect.NoTunnelIDNoPorts = Message{ZH: "未指定隧道 ID 且未提供 -p；请设置默认隧道（devbridge set）或通过 -p 创建临时隧道", EN: "no tunnelID and no -p specified; either set a default tunnel (tunnel set) or pass -p to create a temporary tunnel"}
+	Msg.Connect.CreatePortFailed = Message{ZH: "为隧道 %s 创建端口 %d 失败: %w", EN: "failed to create port %d for tunnel %s: %w"}
+	Msg.Connect.TunnelIDRequired = Message{ZH: "必须提供隧道 ID（未设置默认隧道）", EN: "tunnelID is required (no default tunnel set)"}
+	Msg.Connect.TunnelCreated = Message{ZH: "隧道创建成功: %s\n", EN: "Created tunnel: %s\n"}
+	Msg.Connect.TokenModePortsNote = Message{ZH: "注意：--token 模式下 --ports 会被忽略，端口将从网关获取", EN: "Note: --ports is ignored in --token mode, ports will be fetched from gateway"}
 }

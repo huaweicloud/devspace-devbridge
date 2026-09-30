@@ -41,7 +41,7 @@ func PadRight(s string, displayWidth int) string {
 	pad := displayWidth - current
 	var buf []byte
 	buf = append(buf, s...)
-	for i := 0; i < pad; i++ {
+	for range pad {
 		buf = append(buf, ' ')
 	}
 	return string(buf)

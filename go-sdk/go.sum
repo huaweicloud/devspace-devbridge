@@ -1,0 +1,4 @@
+github.com/coder/websocket v1.8.13 h1:f3QZdXy7uGVz+4uCJy2nTZyM0yTBj8yANEHhqlXZ9FE=
+github.com/coder/websocket v1.8.13/go.mod h1:LNVeNrXQZfe5qhS9ALED3uA+l5pPqvwXg3CKoDBB2gs=
+github.com/microsoft/dev-tunnels-ssh/src/go v0.0.0-20260505220316-5cb2dda2f200 h1:HVxyzEtXqJyf5jsFUb8K41HTTkS0ocx8mW0vcHN8nXI=
+github.com/microsoft/dev-tunnels-ssh/src/go v0.0.0-20260505220316-5cb2dda2f200/go.mod h1:IbrSmRMuvjMD7ywhSnwDzzNjVSyOotnhrNCleNWJkNI=

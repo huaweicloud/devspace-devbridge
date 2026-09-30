@@ -6,10 +6,10 @@ const sidebar = [
   {
     text: "开始使用",
     items: [
-      { text: "创建并托管隧道", link: "/" },
       { text: "什么是开发隧道", link: "/guide/overview" },
       { text: "安装 DevBridge CLI", link: "/guide/install" },
       { text: "登录与凭证", link: "/guide/authentication" },
+      { text: "创建并托管隧道", link: "/guide/quickstart" },
     ],
   },
   {
@@ -36,12 +36,14 @@ const sidebar = [
     ],
   },
   {
+    text: "集成",
+    items: [{ text: "AI Agent Skill", link: "/integrations/skill" }],
+  },
+  {
     text: "参考",
     items: [
       { text: "CLI 命令参考", link: "/reference/cli" },
-      { text: "AI Agent Skill", link: "/reference/skill" },
       { text: "REST API", link: "/reference/api" },
-      { text: "本地配置与目录", link: "/reference/configuration" },
       { text: "问题排查", link: "/reference/troubleshooting" },
       { text: "更新日志", link: "/changelog" },
     ],

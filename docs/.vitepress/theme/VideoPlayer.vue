@@ -6,6 +6,7 @@ const props = defineProps({
   src: { type: String, required: true },
   poster: { type: String, default: "" },
   title: { type: String, required: true },
+  caption: { type: Boolean, default: true },
 });
 
 // 外链（http/https 开头）直接使用，仓库内路径补 base 前缀
@@ -34,7 +35,7 @@ const preload = computed(() => (props.poster ? "none" : "metadata"));
       controls
       :preload="preload"
     ></video>
-    <figcaption class="video-card-caption">
+    <figcaption v-if="caption" class="video-card-caption">
       <span class="video-card-title">{{ title }}</span>
     </figcaption>
   </figure>

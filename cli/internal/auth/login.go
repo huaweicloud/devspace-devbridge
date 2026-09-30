@@ -26,28 +26,6 @@ type UserInfo struct {
 	UserID   string `json:"user_id"   yaml:"user_id"`
 }
 
-type legacyCredential struct {
-	APIKey string `json:"api_key"`
-	Access string `json:"access"`
-}
-
-func (c *Credential) UnmarshalJSON(data []byte) error {
-	type alias Credential
-	if err := json.Unmarshal(data, (*alias)(c)); err == nil && c.APIKey != "" {
-		return nil
-	}
-	var old legacyCredential
-	if err := json.Unmarshal(data, &old); err != nil {
-		return err
-	}
-	if old.APIKey != "" {
-		c.APIKey = old.APIKey
-	} else {
-		c.APIKey = old.Access
-	}
-	return nil
-}
-
 type callbackResponse struct {
 	APIKey   string `json:"apiKey"`
 	UserName string `json:"userName"`
@@ -66,12 +44,12 @@ type loginError struct {
 }
 
 func (e *loginError) Error() string {
-	return fmt.Sprintf("error code: %s, error message: %s", e.Code, e.Message)
+	return fmt.Sprintf(i18n.T(i18n.Msg.Auth.ErrorCodeMsg), e.Code, e.Message)
 }
 
 var (
-	errMissingAPIKey = errors.New("missing api key")
-	errLoginTimeout  = errors.New("login timeout")
+	errMissingAPIKey = errors.New(i18n.T(i18n.Msg.Auth.MissingAPIKey))
+	errLoginTimeout  = errors.New(i18n.T(i18n.Msg.Auth.LoginTimeout))
 )
 
 const (
@@ -191,7 +169,7 @@ func parseLoginCallbackBody(body []byte) (callbackResponse, error) {
 	}
 	if envelope.ErrorCode != loginSuccessCode {
 		apikeyPageURL := LoginURL + "/space/devbridge/apikey"
-		return callbackResponse{}, fmt.Errorf("Failed to login: %w\n%s", &loginError{
+		return callbackResponse{}, fmt.Errorf("%s: %w\n%s", i18n.T(i18n.Msg.Auth.LoginFailed), &loginError{
 			Code:    envelope.ErrorCode,
 			Message: envelope.ErrorMsg,
 		}, fmt.Sprintf(i18n.T(i18n.Msg.Auth.LoginErrorHint), apikeyPageURL))
