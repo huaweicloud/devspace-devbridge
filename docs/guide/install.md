@@ -20,14 +20,21 @@ description: 使用官方安装脚本安装并验证 DevBridge CLI。
 
 任选一个渠道运行安装脚本：
 
+**GitHub**
+
 ```bash
-# GitHub 渠道
 curl -fsSL https://github.com/huaweicloud/devspace-devbridge/releases/latest/download/install.sh | bash
+```
 
-# GitCode 渠道
+**GitCode**
+
+```bash
 curl -fsSL https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/latest/install.sh | bash
+```
 
-# OBS 渠道
+**OBS**
+
+```bash
 curl -fsSL https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install.sh | bash
 ```
 
@@ -35,14 +42,21 @@ curl -fsSL https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/
 
 任选一个渠道运行安装脚本：
 
+**GitHub**
+
 ```powershell
-# GitHub 渠道
 irm https://github.com/huaweicloud/devspace-devbridge/releases/latest/download/install.ps1 | iex
+```
 
-# GitCode 渠道
+**GitCode**
+
+```powershell
 irm https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/latest/install.ps1 | iex
+```
 
-# OBS 渠道
+**OBS**
+
+```powershell
 irm https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install.ps1 | iex
 ```
 

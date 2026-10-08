@@ -23,7 +23,7 @@ var configCmd = &cobra.Command{
 	Short: i18n.T(i18n.Msg.Config.ConfigCommands),
 }
 
-// configGetCmd 查看网关配置。配置为空时显示编译时默认值。
+// configGetCmd shows the gateway configuration; when empty it displays the build-time defaults.
 var configGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: i18n.T(i18n.Msg.Config.GetShort),
@@ -39,7 +39,7 @@ var configGetCmd = &cobra.Command{
 	},
 }
 
-// configSetCmd 设置网关配置。
+// configSetCmd sets the gateway configuration.
 var configSetCmd = &cobra.Command{
 	Use:   "set",
 	Short: i18n.T(i18n.Msg.Config.SetShort),
@@ -66,7 +66,7 @@ var configSetCmd = &cobra.Command{
 	}),
 }
 
-// configUnsetCmd 清空网关配置，恢复编译时默认值。
+// configUnsetCmd clears the gateway configuration, restoring the build-time defaults.
 var configUnsetCmd = &cobra.Command{
 	Use:   "unset",
 	Short: i18n.T(i18n.Msg.Config.UnsetShort),
@@ -84,8 +84,8 @@ var configUnsetCmd = &cobra.Command{
 }
 
 func init() {
-	configSetCmd.Flags().StringVar(&cfgGatewayAddr, "gateway-addr", "", "网关地址（host:port）")
-	configSetCmd.Flags().StringVar(&cfgGatewayHost, "gateway-host", "", "网关 SNI 域名")
+	configSetCmd.Flags().StringVar(&cfgGatewayAddr, "gateway-addr", "", "gateway address (host:port)")
+	configSetCmd.Flags().StringVar(&cfgGatewayHost, "gateway-host", "", "gateway SNI host")
 	configCmd.AddCommand(configGetCmd, configSetCmd, configUnsetCmd)
 	RootCmd.AddCommand(configCmd)
 }

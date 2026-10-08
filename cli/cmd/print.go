@@ -13,9 +13,7 @@ func printKV(kv [][2]string) {
 	maxKeyWidth := 0
 	for _, pair := range kv {
 		w := i18n.DisplayWidth(pair[0])
-		if w > maxKeyWidth {
-			maxKeyWidth = w
-		}
+		maxKeyWidth = max(maxKeyWidth, w)
 	}
 	for _, pair := range kv {
 		keyWithColon := pair[0] + ":"

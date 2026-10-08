@@ -9,6 +9,12 @@ import (
 	"fmt"
 )
 
+// REST API path patterns for port management.
+const (
+	tunnelPortsPath = "/tunnels/%s/ports"
+	tunnelPortPath  = "/tunnels/%s/ports/%d"
+)
+
 // CreatePort creates a port on a tunnel.
 func (d *Devbridge) CreatePort(ctx context.Context, tunnelID string, port int, protocol string, allowAnonymous *bool) error {
 	if err := validateTunnelID(tunnelID); err != nil {
@@ -26,7 +32,7 @@ func (d *Devbridge) CreatePort(ctx context.Context, tunnelID string, port int, p
 		Protocol:       protocol,
 		AllowAnonymous: allowAnonymous,
 	}
-	return d.api.Post(ctx, fmt.Sprintf("/tunnels/%s/ports", tunnelID), req, nil)
+	return d.api.Post(ctx, fmt.Sprintf(tunnelPortsPath, tunnelID), req, nil)
 }
 
 // ListPorts lists the ports of a tunnel.
@@ -35,7 +41,7 @@ func (d *Devbridge) ListPorts(ctx context.Context, tunnelID string) ([]Port, err
 		return nil, err
 	}
 	var result []Port
-	if err := d.api.Get(ctx, fmt.Sprintf("/tunnels/%s/ports", tunnelID), &result); err != nil {
+	if err := d.api.Get(ctx, fmt.Sprintf(tunnelPortsPath, tunnelID), &result); err != nil {
 		return nil, err
 	}
 	return result, nil
@@ -50,7 +56,7 @@ func (d *Devbridge) ShowPort(ctx context.Context, tunnelID string, port int) (*P
 		return nil, err
 	}
 	var result Port
-	if err := d.api.Get(ctx, fmt.Sprintf("/tunnels/%s/ports/%d", tunnelID, port), &result); err != nil {
+	if err := d.api.Get(ctx, fmt.Sprintf(tunnelPortPath, tunnelID, port), &result); err != nil {
 		return nil, err
 	}
 	return &result, nil
@@ -65,7 +71,7 @@ func (d *Devbridge) UpdatePort(ctx context.Context, tunnelID string, port int, a
 		return err
 	}
 	req := updatePortRequest{AllowAnonymous: allowAnonymous}
-	return d.api.Put(ctx, fmt.Sprintf("/tunnels/%s/ports/%d", tunnelID, port), req, nil)
+	return d.api.Put(ctx, fmt.Sprintf(tunnelPortPath, tunnelID, port), req, nil)
 }
 
 // DeletePort deletes a port.
@@ -76,5 +82,5 @@ func (d *Devbridge) DeletePort(ctx context.Context, tunnelID string, port int) e
 	if err := validatePortNumber(port); err != nil {
 		return err
 	}
-	return d.api.Delete(ctx, fmt.Sprintf("/tunnels/%s/ports/%d", tunnelID, port), nil)
+	return d.api.Delete(ctx, fmt.Sprintf(tunnelPortPath, tunnelID, port), nil)
 }

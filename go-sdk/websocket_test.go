@@ -54,7 +54,9 @@ func TestParseSSHCloseError(t *testing.T) {
 			got := parseSSHCloseError(tt.err)
 
 			// Sentinel error cases: compare by identity.
-			if tt.want == ErrQuotaExceeded || tt.want == ErrTunnelNotFound || tt.want == ErrDuplicateHost {
+			if errors.Is(tt.want, ErrQuotaExceeded) ||
+				errors.Is(tt.want, ErrTunnelNotFound) ||
+				errors.Is(tt.want, ErrDuplicateHost) {
 				if !errors.Is(got, tt.want) {
 					t.Fatalf("parseSSHCloseError() = %v, want %v", got, tt.want)
 				}
@@ -65,13 +67,13 @@ func TestParseSSHCloseError(t *testing.T) {
 			var gotCE, wantCE websocket.CloseError
 			gotOK := errors.As(got, &gotCE)
 			wantOK := errors.As(tt.want, &wantCE)
-			if gotOK != wantOK || (gotOK && gotCE != wantCE) {
-				if !gotOK && !wantOK {
-					if got.Error() != tt.want.Error() {
-						t.Fatalf("parseSSHCloseError() = %q, want %q", got, tt.want)
-					}
-					return
+			if !gotOK && !wantOK {
+				if got.Error() != tt.want.Error() {
+					t.Fatalf("parseSSHCloseError() = %q, want %q", got, tt.want)
 				}
+				return
+			}
+			if gotOK != wantOK || gotCE != wantCE {
 				t.Fatalf("parseSSHCloseError() = %v (AsCloseErr=%v), want %v (AsCloseErr=%v)", got, gotOK, tt.want, wantOK)
 			}
 		})

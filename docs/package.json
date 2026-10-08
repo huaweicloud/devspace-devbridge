@@ -10,17 +10,19 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint:docs": "markdownlint-cli2 \"../README.md\" \"**/*.md\"",
-    "audit": "npm audit --audit-level=moderate",
+    "audit": "npm audit --audit-level=critical",
     "check": "npm run lint:docs && npm run format:check && npm run docs:build"
   },
   "devDependencies": {
-    "markdownlint-cli2": "0.23.2",
+    "markdownlint-cli2": "0.23.3",
     "prettier": "3.9.6",
     "vitepress": "1.6.4"
   },
   "overrides": {
     "vite": "6.4.3",
-    "smol-toml": "1.7.1"
+    "smol-toml": "1.9.0",
+    "vue": "3.5.43",
+    "source-map-js": "1.2.2"
   },
   "engines": {
     "node": ">=24"

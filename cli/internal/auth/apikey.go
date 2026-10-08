@@ -7,7 +7,7 @@ import (
 
 var overrideAPIKey string
 
-// SetOverrideAPIKey 设置命令行传入的 API Key，使后续 API 调用直接使用该 key.
+// SetOverrideAPIKey sets the command-line API Key so subsequent API calls use it directly.
 func SetOverrideAPIKey(key string) {
 	overrideAPIKey = key
 }

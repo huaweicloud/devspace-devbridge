@@ -1,14 +1,39 @@
 package i18n
 
 type Messages struct {
-	Auth   AuthMessages
-	Tunnel TunnelMessages
-	Port   PortMessages
-	Common CommonMessages
-	Limits LimitsMessages
-	Echo   EchoMessages
-	Ping   PingMessages
-	Config ConfigMessages
+	Auth    AuthMessages
+	Tunnel  TunnelMessages
+	Port    PortMessages
+	Common  CommonMessages
+	Limits  LimitsMessages
+	Echo    EchoMessages
+	Ping    PingMessages
+	Config  ConfigMessages
+	Connect ConnectMessages
+}
+
+type ConnectMessages struct {
+	HostShort             Message
+	ConnectShort          Message
+	FlagPorts             Message
+	FlagDescription       Message
+	FlagExpiration        Message
+	FlagHostToken         Message
+	FlagHostAPIKey        Message
+	FlagConnectToken      Message
+	FlagConnectAPIKey     Message
+	PortsRequired         Message
+	InvalidPortNumber     Message
+	TokenRequiresTunnelID Message
+	HostTokenFailed       Message
+	ConnectTokenFailed    Message
+	ListPortsFailed       Message
+	NoPortsConfigured     Message
+	NoTunnelIDNoPorts     Message
+	CreatePortFailed      Message
+	TunnelIDRequired      Message
+	TunnelCreated         Message
+	TokenModePortsNote    Message
 }
 
 type AuthMessages struct {
@@ -24,6 +49,17 @@ type AuthMessages struct {
 	LoginShort          Message
 	LoggedInHuaweiCloud Message
 	LoginErrorHint      Message
+	LoginFailed         Message
+	APIKeyInvalid       Message
+	MissingAPIKey       Message
+	LoginTimeout        Message
+	ErrorCodeMsg        Message
+	NoCredential        Message
+	VerifyRequestFailed Message
+	VerifyAPIKeyFailed  Message
+	VerifyResponseRead  Message
+	VerifyUnexpected    Message
+	LoadConfigFailed    Message
 }
 
 type TunnelMessages struct {
@@ -84,6 +120,10 @@ type PortMessages struct {
 	FlagProtocol     Message
 	FlagAllowAnon    Message
 	FlagDenyAnon     Message
+	DeleteSuccess    Message
+	InvalidProtocol  Message
+	AddFailed        Message
+	DeleteFailed     Message
 }
 
 type CommonMessages struct {
@@ -114,14 +154,18 @@ type LimitsMessages struct {
 }
 
 type EchoMessages struct {
-	EchoStarted Message
-	EchoShort   Message
-	Method      Message
-	URL         Message
-	Host        Message
-	RemoteAddr  Message
-	Proto       Message
-	Headers     Message
+	EchoStarted           Message
+	EchoShort             Message
+	Method                Message
+	URL                   Message
+	Host                  Message
+	RemoteAddr            Message
+	Proto                 Message
+	Headers               Message
+	PingResultOK          Message
+	PingResultErr         Message
+	InvalidPortNumber     Message
+	IntervalMustBePositive Message
 }
 
 type PingMessages struct {
@@ -129,14 +173,16 @@ type PingMessages struct {
 }
 
 type ConfigMessages struct {
-	ConfigCommands Message
-	GetShort       Message
-	SetShort       Message
-	UnsetShort     Message
-	GatewayAddr    Message
-	GatewayHost    Message
-	SetSuccess     Message
-	NothingToSet   Message
+	ConfigCommands  Message
+	GetShort        Message
+	SetShort        Message
+	UnsetShort      Message
+	GatewayAddr     Message
+	GatewayHost     Message
+	SetSuccess      Message
+	NothingToSet    Message
+	NoDefaultTunnel Message
+	KeyNotFound     Message
 }
 
 var Msg Messages

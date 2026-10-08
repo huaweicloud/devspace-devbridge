@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"log/slog"
 
+	devbridge "github.com/huaweicloud/devspace-devbridge/go-sdk"
+	"github.com/spf13/cobra"
 	"huawei.com/devbridge/internal/auth"
 	"huawei.com/devbridge/internal/config"
 	"huawei.com/devbridge/internal/i18n"
-	devbridge "github.com/huaweicloud/devspace-devbridge/go-sdk"
-
-	"github.com/spf13/cobra"
 )
 
 var hcLoginAPIKey string
@@ -51,7 +50,7 @@ var loginCmd = &cobra.Command{
 		}
 
 		if err := auth.VerifyAPIKey(cred.APIKey); err != nil {
-			return fmt.Errorf("login failed: %w", err)
+			return fmt.Errorf("%s: %w", i18n.T(i18n.Msg.Auth.LoginFailed), err)
 		}
 		if err := auth.StoreCredential(auth.CredentialName, &cred, userInfo); err != nil {
 			return err

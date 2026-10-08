@@ -20,14 +20,14 @@ import (
 
 const (
 	DefaultAPIBaseURL  = "https://bridge.developer.myhuaweicloud.com/open-api-inner/v1/relay-controller"
-	DefaultGatewayAddr = "gateway.cn-north-4-bridge.myhuaweicloud.com:443" //"gateway.devbridge-s2.hwtunnel.com:443"
-	DefaultGatewayHost = "cn-north-4-bridge.myhuaweicloud.com"             //"devbridge-s2.hwtunnel.com"
+	DefaultGatewayAddr = "gateway.devbridge-s2.hwtunnel.com:443"
+	DefaultGatewayHost = "devbridge-s2.hwtunnel.com"
 )
 
 // DefaultClusterID is the cluster used when creating new tunnels.
 // It is a var (not const) so builds can override it via ldflags
 // (-X github.com/huaweicloud/devspace-devbridge/go-sdk.DefaultClusterID=...).
-var DefaultClusterID = "cn-north-4-bridge"
+var DefaultClusterID = "devbridge-s2"
 
 var (
 	tunnelIDRegexp   = regexp.MustCompile(`^[a-z2-7]{8}$`)
@@ -135,11 +135,11 @@ func warmDNS(gatewayAddr string) {
 }
 
 func (d *Devbridge) statusf(format string, args ...any) {
-	fmt.Fprintf(d.outputWriter, format, args...)
+	_, _ = fmt.Fprintf(d.outputWriter, format, args...)
 }
 
 func (d *Devbridge) statusln(args ...any) {
-	fmt.Fprintln(d.outputWriter, args...)
+	_, _ = fmt.Fprintln(d.outputWriter, args...)
 }
 
 func validateTunnelID(id string) error {

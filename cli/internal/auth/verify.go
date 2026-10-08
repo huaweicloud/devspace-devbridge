@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"errors"
-	"crypto/tls"
 	"fmt"
 	"io"
 	"log/slog"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"huawei.com/devbridge/internal/config"
+	"huawei.com/devbridge/internal/i18n"
 )
 
 const (
@@ -19,17 +19,14 @@ const (
 	headerXAPIKey = "X-API-Key"
 )
 
-// errAPIKeyInvalid 表示 API Key 无效（401）。
-var errAPIKeyInvalid = errors.New("api key is invalid or disabled")
+// errAPIKeyInvalid indicates the API Key is invalid (401).
+var errAPIKeyInvalid = errors.New(i18n.T(i18n.Msg.Auth.APIKeyInvalid))
 
 var verifyClient = &http.Client{
 	Timeout: 10 * time.Second,
-	Transport: &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	},
 }
 
-// VerifyAPIKey 校验 API Key 有效性，返回 204 表示有效。
+// VerifyAPIKey validates the API Key; a 204 response means it is valid.
 func VerifyAPIKey(apiKey string) error {
 	if apiKey == "" {
 		return errAPIKeyInvalid
@@ -38,7 +35,7 @@ func VerifyAPIKey(apiKey string) error {
 	url := strings.TrimRight(config.DefaultServerDomain, "/") + authCheckPath
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return fmt.Errorf("build verify request: %w", err)
+		return fmt.Errorf("%s: %w", i18n.T(i18n.Msg.Auth.VerifyRequestFailed), err)
 	}
 	req.Header.Set(headerXAPIKey, apiKey)
 
@@ -47,12 +44,12 @@ func VerifyAPIKey(apiKey string) error {
 	start := time.Now()
 	resp, err := verifyClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("verify api key: %w", err)
+		return fmt.Errorf("%s: %w", i18n.T(i18n.Msg.Auth.VerifyAPIKeyFailed), err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 4096))
 	if err != nil {
-		return fmt.Errorf("read verify response: %w", err)
+		return fmt.Errorf("%s: %w", i18n.T(i18n.Msg.Auth.VerifyResponseRead), err)
 	}
 
 	logVerifyResponse(resp, body, time.Since(start))
@@ -63,7 +60,7 @@ func VerifyAPIKey(apiKey string) error {
 	case http.StatusUnauthorized:
 		return errAPIKeyInvalid
 	default:
-		return fmt.Errorf("verify api key: unexpected status %d, body=%s", resp.StatusCode, string(body))
+		return fmt.Errorf(i18n.T(i18n.Msg.Auth.VerifyUnexpected), resp.StatusCode, string(body))
 	}
 }
 

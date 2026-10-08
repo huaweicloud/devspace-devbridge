@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// TunnelNotFoundCode 与服务端约定的"隧道不存在"错误码。
+// TunnelNotFoundCode is the "tunnel not found" error code agreed with the server.
 const TunnelNotFoundCode = "10002"
 
 var (

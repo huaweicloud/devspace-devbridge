@@ -7,6 +7,17 @@ description: DevBridge 文档站点的变更内容。
 
 本文件记录 DevBridge 文档站点的变更内容。
 
+## 2026-09-21
+
+### 端侧变更
+
+#### 变更
+
+##### 集群与网关
+
+- 生产构建的网关地址、SNI 域名与集群标识从 `cn-north-4-bridge.myhuaweicloud.com` 切换为 `devbridge-s2.hwtunnel.com`。
+- 新增可注入的集群标识 `ClusterID`（默认 `devbridge-s2`），创建隧道时随请求下发，支持通过 ldflags 注入。
+
 ## 2026-08-31
 
 ### 端侧变更

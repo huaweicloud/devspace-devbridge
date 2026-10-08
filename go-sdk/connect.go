@@ -6,18 +6,18 @@ package sdk
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"net"
-	"net/http"
 	"strconv"
 	"sync"
 	"time"
 
 	"github.com/microsoft/dev-tunnels-ssh/src/go/ssh"
 	"github.com/microsoft/dev-tunnels-ssh/src/go/tcp"
+
+	"github.com/huaweicloud/devspace-devbridge/go-sdk/internal/i18n"
 )
 
 // ConnectConfig is the configuration for connecting to a tunnel.
@@ -56,6 +56,9 @@ func (d *Devbridge) Connect(ctx context.Context, cfg ConnectConfig) error {
 	apiKey := cfg.APIKey
 	if apiKey == "" && cfg.JWTToken == "" {
 		apiKey = d.apiKey
+		if apiKey == "" {
+			return ErrMissingAPIKey
+		}
 	}
 
 	header, subprotocols := buildWSHeader(cfg.JWTToken, apiKey)
@@ -63,57 +66,40 @@ func (d *Devbridge) Connect(ctx context.Context, cfg ConnectConfig) error {
 	wsURL := "wss://" + sniHost + "/"
 
 	factory := newListenerFactory(len(cfg.Ports), cfg.LocalIP, d.outputWriter, d.logger)
-
-	const maxReconnectAttempts = 5
-	const baseReconnectDelay = 3 * time.Second
-	const maxReconnectDelay = 30 * time.Second
-
-	consecutiveFailures := 0
-	for consecutiveFailures < maxReconnectAttempts {
-		connected, err := d.runConnectSession(ctx, wsURL, sniHost, header, subprotocols, cfg.TunnelID, cfg.Ports, factory, cfg.OnReady)
-		if ctx.Err() != nil {
-			return nil
-		}
-		if errors.Is(err, ErrQuotaExceeded) || errors.Is(err, ErrTunnelNotFound) {
-			d.logger.Debug("connection rejected by gateway", "tunnelID", cfg.TunnelID, "err", err)
-			return err
-		}
-		if connected {
-			consecutiveFailures = 0
-		} else {
-			consecutiveFailures++
-		}
-		if consecutiveFailures >= maxReconnectAttempts {
-			d.logger.Debug("reconnect exhausted", "maxAttempts", maxReconnectAttempts, "err", err)
-			return fmt.Errorf("reconnect failed after %d attempts: %w", maxReconnectAttempts, err)
-		}
-
-		delay := baseReconnectDelay
-		for i := 0; i < consecutiveFailures-1; i++ {
-			delay *= 2
-			if delay >= maxReconnectDelay {
-				delay = maxReconnectDelay
-				break
-			}
-		}
-		d.statusf("Connection lost, reconnecting... (%v)\n", err)
-		select {
-		case <-ctx.Done():
-			return nil
-		case <-time.After(delay):
-		}
+	params := sessionParams{
+		wsURL:        wsURL,
+		sniHost:      sniHost,
+		header:       header,
+		subprotocols: subprotocols,
+		tunnelID:     cfg.TunnelID,
+		ports:        cfg.Ports,
 	}
-	return nil
+
+	return d.reconnectLoop(ctx, func() (bool, error) {
+		return d.runConnectSession(ctx, params, factory, cfg.OnReady)
+	}, reconnectDecision{
+		// Gateway explicitly rejects (quota exceeded / tunnel not found): abort immediately, no retry.
+		shouldStop: func(err error) bool {
+			if gatewayRejectedError(err) {
+				d.logger.Debug("connection rejected by gateway", "tunnelID", cfg.TunnelID, "err", err)
+				return true
+			}
+			return false
+		},
+		onReconnect: func(err error) {
+			d.statusf(i18n.T(i18n.MsgReconnectingWithErr), err)
+		},
+	})
 }
 
-func (d *Devbridge) runConnectSession(ctx context.Context, wsURL string, sniHost string, header http.Header, subprotocols []string, tunnelID string, ports []int, factory *listenerFactory, onReady func([]Forwarding)) (connected bool, err error) {
-	netConn, err := d.dialWebSocket(ctx, wsURL, sniHost, header, subprotocols, 5)
+func (d *Devbridge) runConnectSession(ctx context.Context, params sessionParams, factory *listenerFactory, onReady func([]Forwarding)) (connected bool, err error) {
+	netConn, err := d.dialWebSocket(ctx, params.wsURL, params.sniHost, params.header, params.subprotocols, 5)
 	if err != nil {
 		return false, fmt.Errorf("WebSocket connection failed: %w", err)
 	}
 
 	config := ssh.NewNoSecurityConfig()
-	config.KeepAliveIntervalSeconds = 10
+	config.KeepAliveIntervalSeconds = keepAliveIntervalSeconds
 	tcp.AddPortForwardingService(config)
 
 	session := ssh.NewClientSession(config)
@@ -123,7 +109,7 @@ func (d *Devbridge) runConnectSession(ctx context.Context, wsURL string, sniHost
 	pfs := tcp.GetPortForwardingService(&session.Session)
 	if pfs == nil {
 		_ = netConn.Close()
-		return false, fmt.Errorf("port forwarding service unavailable")
+		return false, fmt.Errorf(i18n.T(i18n.MsgPortForwardingUnavailable))
 	}
 	factory.reset()
 	pfs.ListenerFactory = factory
@@ -135,18 +121,18 @@ func (d *Devbridge) runConnectSession(ctx context.Context, wsURL string, sniHost
 	}
 	connected = true
 
-	d.statusf("Connected to tunnel: %s\n", tunnelID)
+	d.statusf(i18n.T(i18n.MsgConnectedToTunnel), params.tunnelID)
 
 	// Filter out the "all ports" sentinel value (-1). Such a tunnel can only be reached by URL for any port,
 	// so the connect side does not need to create a local listener for -1.
-	realPorts := filterForwardPorts(ports)
+	realPorts := filterForwardPorts(params.ports)
 
 	if len(realPorts) > 0 {
-		d.statusln("Mode: active forwarding (ports from API)")
-	} else if len(ports) > 0 {
-		d.statusf("All ports mode: access via URL instead, e.g. https://%s-<port>.%s\n", tunnelID, d.gatewayHost)
+		d.statusln(i18n.T(i18n.MsgModeActiveForwarding))
+	} else if len(params.ports) > 0 {
+		d.statusf(i18n.T(i18n.MsgAllPortsURLHint), params.tunnelID, d.gatewayHost)
 	} else {
-		d.statusln("Mode: passive forwarding (ports from host via SSH)")
+		d.statusln(i18n.T(i18n.MsgModePassiveForwarding))
 	}
 
 	if len(realPorts) > 0 {
@@ -156,7 +142,7 @@ func (d *Devbridge) runConnectSession(ctx context.Context, wsURL string, sniHost
 	}
 	factory.printForwardings()
 
-	d.statusln("Auto reconnect: enabled")
+	d.statusln(i18n.T(i18n.MsgAutoReconnectEnabled))
 
 	if onReady != nil {
 		onReady(factory.snapshotForwardings())
@@ -164,7 +150,7 @@ func (d *Devbridge) runConnectSession(ctx context.Context, wsURL string, sniHost
 
 	select {
 	case <-session.Session.Done():
-		return true, fmt.Errorf("session closed")
+		return true, fmt.Errorf(i18n.T(i18n.MsgSessionClosed))
 	case <-ctx.Done():
 		return true, nil
 	}
@@ -197,7 +183,7 @@ func newListenerFactory(expectedCount int, localIP string, outputWriter io.Write
 // CreateTCPListener implements the tcp.ListenerFactory interface.
 func (f *listenerFactory) CreateTCPListener(
 	remotePort int,
-	localIPAddress string,
+	_ string,
 	localPort int,
 	canChangeLocalPort bool,
 ) (net.Listener, error) {
@@ -213,7 +199,7 @@ func (f *listenerFactory) CreateTCPListener(
 		if canChangeLocalPort {
 			return f.listenOnRandomPortLocked(remotePort, localPort)
 		}
-		return nil, fmt.Errorf("port %d is already in use: %w", localPort, err)
+		return nil, fmt.Errorf(i18n.T(i18n.MsgPortInUse), localPort, err)
 	}
 	f.portOverrides[remotePort] = localPort
 	f.listeners = append(f.listeners, listener)
@@ -260,7 +246,7 @@ func (f *listenerFactory) printForwardings() {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	for _, msg := range f.pendingForwardings {
-		fmt.Fprint(f.outputWriter, msg)
+		_, _ = fmt.Fprint(f.outputWriter, msg)
 	}
 }
 

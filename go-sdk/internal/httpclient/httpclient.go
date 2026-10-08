@@ -11,13 +11,14 @@ package httpclient
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/huaweicloud/devspace-devbridge/go-sdk/internal/i18n"
 )
 
 const (
@@ -63,9 +64,6 @@ func New(apiKey, baseURL string, logger *slog.Logger) *Client {
 		BaseURL: baseURL,
 		HTTP: &http.Client{
 			Timeout: 30 * time.Second,
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			},
 		},
 		Logger: logger,
 	}
@@ -94,14 +92,14 @@ func (c *Client) Do(ctx context.Context, method, path string, body, result any) 
 	if hasBody && body != nil {
 		b, err := json.Marshal(body)
 		if err != nil {
-			return fmt.Errorf("marshal request body: %w", err)
+			return fmt.Errorf(i18n.T(i18n.MsgMarshalRequestFailed), err)
 		}
 		bodyBytes = b
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, c.BaseURL+path, bytes.NewReader(bodyBytes))
 	if err != nil {
-		return fmt.Errorf("create request: %w", err)
+		return fmt.Errorf(i18n.T(i18n.MsgCreateRequestFailed), err)
 	}
 	req.Header.Set(headerXAPIKey, c.APIKey)
 	if hasBody {
@@ -113,13 +111,13 @@ func (c *Client) Do(ctx context.Context, method, path string, body, result any) 
 	start := time.Now()
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
-		return fmt.Errorf("http request failed: %w", err)
+		return fmt.Errorf(i18n.T(i18n.MsgHTTPRequestFailed), err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("read response: %w", err)
+		return fmt.Errorf(i18n.T(i18n.MsgReadResponseFailed), err)
 	}
 
 	c.logResponse(resp, respBody, time.Since(start))
@@ -128,12 +126,12 @@ func (c *Client) Do(ctx context.Context, method, path string, body, result any) 
 		if apiErr := parseAPIError(respBody); apiErr != nil {
 			return apiErr
 		}
-		return fmt.Errorf("server error: HTTP %d: %s", resp.StatusCode, string(respBody))
+			return fmt.Errorf(i18n.T(i18n.MsgServerHTTPError), resp.StatusCode, string(respBody))
 	}
 
 	if result != nil && len(respBody) > 0 {
 		if err := json.Unmarshal(respBody, result); err != nil {
-			return fmt.Errorf("unmarshal response: %w", err)
+			return fmt.Errorf(i18n.T(i18n.MsgUnmarshalResponseFailed), err)
 		}
 	}
 	return nil

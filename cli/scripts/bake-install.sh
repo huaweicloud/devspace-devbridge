@@ -1,31 +1,31 @@
 #!/usr/bin/env bash
 # =============================================================================
-# scripts/bake-install.sh - 烤制安装脚本
+# scripts/bake-install.sh - bake the install scripts
 #
-# 将版本号和下载地址注入 install.sh / install.ps1，按渠道输出到 dist-extra/：
+# Inject the version and download URL into install.sh / install.ps1, per channel:
 #
-#   dist-extra/install.sh / install.ps1      — GitHub 渠道（指向 GitHub Release）
-#   dist-extra/obs/install.sh / install.ps1  — OBS 渠道（指向 OBS 版本化目录）
+#   dist-extra/install.sh / install.ps1      — GitHub channel (points to GitHub Release)
+#   dist-extra/obs/install.sh / install.ps1  — OBS channel (points to the OBS flat dir)
 #
-# GitCode 渠道无需单独烤制：post-release.sh 上传时由
-# upload-gitcode-release.sh 重烤为 GitCode 地址。
+# GitCode needs no separate bake: post-release.sh re-bakes it to the GitCode URL on
+# upload via upload-gitcode-release.sh.
 #
-# 用法:
+# Usage:
 #   ./scripts/bake-install.sh <version> <github_release_url> [obs_release_url]
 #
-# 示例:
+# Example:
 #   ./scripts/bake-install.sh 1.0.0-release \
 #     "https://github.com/huaweicloud/devspace-devbridge/releases/download/1.0.0-release" \
-#     "https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/releases/download/1.0.0-release"
+#     "https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge"
 #
-# 产物:
-#   dist-extra/install.sh / install.ps1   — GitHub 渠道
-#   dist-extra/obs/install.sh / .ps1      — OBS 渠道（传入 obs_release_url 时生成）
+# Output:
+#   dist-extra/install.sh / install.ps1   — GitHub channel
+#   dist-extra/obs/install.sh / .ps1      — OBS channel (only when obs_release_url is set)
 # =============================================================================
 set -euo pipefail
 
-VERSION="${1:?用法: bake-install.sh <version> <github_release_url> [obs_release_url]}"
-GITHUB_RELEASE_URL="${2:?用法: bake-install.sh <version> <github_release_url> [obs_release_url]}"
+VERSION="${1:?usage: bake-install.sh <version> <github_release_url> [obs_release_url]}"
+GITHUB_RELEASE_URL="${2:?usage: bake-install.sh <version> <github_release_url> [obs_release_url]}"
 OBS_RELEASE_URL="${3:-}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -49,10 +49,10 @@ bake() {
     grep -E 'DEFAULT_ARTIFACT_URL = "|DEFAULT_VERSION = "' "${dst_dir}/install.ps1" | head -2
 }
 
-# ---- GitHub 渠道 ----
+# ---- GitHub channel ----
 bake "${PROJECT_ROOT}" "${OUTPUT_DIR}" "${GITHUB_RELEASE_URL}"
 
-# ---- OBS 渠道（可选）----
+# ---- OBS channel (optional) ----
 if [[ -n "${OBS_RELEASE_URL}" ]]; then
     bake "${PROJECT_ROOT}" "${OUTPUT_DIR}/obs" "${OBS_RELEASE_URL}"
 fi

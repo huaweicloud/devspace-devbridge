@@ -24,11 +24,11 @@ func ExampleDevbridge_fullWorkflow() {
 	client := sdk.New(sdk.Config{APIKey: "your-api-key"})
 
 	// 1. Create a tunnel
-	tunnel, err := client.CreateTunnel(ctx, "my-dev-tunnel", "开发联调环境", nil)
+	tunnel, err := client.CreateTunnel(ctx, "my-dev-tunnel", "dev/test environment", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("隧道已创建: %s\n", tunnel.ID)
+	fmt.Printf("tunnel created: %s\n", tunnel.ID)
 
 	// 2. Add a port
 	allowAnon := true
@@ -45,7 +45,7 @@ func ExampleDevbridge_fullWorkflow() {
 			TunnelID: tunnel.ID,
 			Ports:    []int{8080},
 		}); err != nil {
-			log.Printf("Host 退出: %v", err)
+			log.Printf("host exited: %v", err)
 		}
 	}()
 
@@ -60,7 +60,7 @@ func ExampleDevbridge_fullWorkflow() {
 			TunnelID: tunnel.ID,
 			Ports:    []int{8080},
 		}); err != nil {
-			log.Printf("Connect 退出: %v", err)
+			log.Printf("connect exited: %v", err)
 		}
 	}()
 
@@ -69,7 +69,7 @@ func ExampleDevbridge_fullWorkflow() {
 	// 5. Cleanup
 	connectCancel()
 	hostCancel()
-	client.DeleteTunnel(ctx, tunnel.ID)
+	_ = client.DeleteTunnel(ctx, tunnel.ID)
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -151,7 +151,7 @@ func ExampleDevbridge_tunnelManagement() {
 
 	// Create a tunnel with 24-hour validity
 	exp := 24
-	tunnel, _ := client.CreateTunnel(ctx, "my-tunnel", "描述", &exp)
+	tunnel, _ := client.CreateTunnel(ctx, "my-tunnel", "description", &exp)
 
 	// List tunnels
 	tunnels, _ := client.ListTunnels(ctx)
@@ -162,13 +162,13 @@ func ExampleDevbridge_tunnelManagement() {
 	// Get tunnel details
 	detail, _ := client.ShowTunnel(ctx, tunnel.ID)
 	if detail.Status != nil {
-		fmt.Printf("端口数: %d\n", detail.Status.HostConnectionCount)
+		fmt.Printf("port count: %d\n", detail.Status.HostConnectionCount)
 	}
 
 	// Update the tunnel
 	newName := "renamed-tunnel"
-	client.UpdateTunnel(ctx, tunnel.ID, &newName, nil, nil)
+	_ = client.UpdateTunnel(ctx, tunnel.ID, &newName, nil, nil)
 
 	// Delete the tunnel
-	client.DeleteTunnel(ctx, tunnel.ID)
+	_ = client.DeleteTunnel(ctx, tunnel.ID)
 }

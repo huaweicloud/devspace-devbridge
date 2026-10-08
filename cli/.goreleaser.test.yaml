@@ -1,22 +1,22 @@
 # =============================================================================
-# GoReleaser 配置 — test 环境
+# GoReleaser config — test environment
 #
-# 用法:
+# Usage:
 #   goreleaser build --snapshot --clean --config .goreleaser.test.yaml
-#     → PR 触发：只验证编译，不打包不发布
+#     → PR trigger: verify compilation only, no packaging or publishing
 #
 #   goreleaser release --clean --skip=publish --config .goreleaser.test.yaml
-#     → 手动触发（非 release 版本）：构建 + 打包 + 存 dist/，不发布
+#     → manual trigger (non-release version): build + package + store to dist/, no publish
 #
 #   goreleaser release --clean --config .goreleaser.test.yaml
-#     → 手动触发（release 版本）：构建 + 发布 GitHub Release
+#     → manual trigger (release version): build + publish GitHub Release
 #
-# 与 prod 配置的区别:
-#   - 仅 ldflags 注入 test 环境的 4 个地址不同
-#   - release / before.hooks 完全相同（release 版本都需要烤制脚本）
+# Differences from prod:
+#   - only the 4 ldflags-injected test addresses differ
+#   - release / before.hooks are identical (release versions need baked scripts)
 #
-# 注意: after.hooks 是 GoReleaser Pro 功能，OSS 版不支持。
-# GitCode 上传由 workflow 的单独步骤完成（post-release.sh）。
+# Note: after.hooks is a GoReleaser Pro feature, unsupported in the OSS build.
+# GitCode upload is a separate workflow step (post-release.sh).
 # =============================================================================
 version: 2
 
@@ -25,7 +25,7 @@ project_name: devbridge
 before:
   hooks:
     - go test ./...
-    # 烤制安装脚本：注入版本号 + GitHub Release 下载地址
+    # Bake install scripts: inject version + GitHub Release URL
     - ./scripts/bake-install.sh {{ .Version }} "https://github.com/huaweicloud/devspace-devbridge/releases/download/{{ .Version }}"
 
 builds:
@@ -55,8 +55,8 @@ builds:
 archives:
   - formats:
       - tar.gz
-    # 保持与 install.sh 对齐: devbridge_{os}_{arch}_{version}[.exe].tar.gz
-    # 注意: 不带 .tar.gz 后缀，GoReleaser 会根据 formats 自动追加
+    # Align with install.sh: devbridge_{os}_{arch}_{version}[.exe].tar.gz
+    # Note: no .tar.gz suffix here; GoReleaser appends it based on `formats`
     name_template: >-
       devbridge_{{ .Os }}_{{ .Arch }}_{{ .Version }}{{ if eq .Os "windows" }}.exe{{ end }}
 
@@ -71,7 +71,7 @@ release:
   github:
     owner: huaweicloud
     name: devspace-devbridge
-  # 烤制好的安装脚本作为额外附件
+  # Baked install scripts as extra release assets
   extra_files:
     - glob: ./dist-extra/install.sh
     - glob: ./dist-extra/install.ps1

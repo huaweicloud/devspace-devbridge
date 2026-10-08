@@ -19,6 +19,8 @@ import (
 
 	"github.com/coder/websocket"
 	"github.com/microsoft/dev-tunnels-ssh/src/go/ssh"
+
+	"github.com/huaweicloud/devspace-devbridge/go-sdk/internal/i18n"
 )
 
 const (
@@ -37,6 +39,18 @@ const (
 	colorYellow = "\033[33m"
 	colorReset  = "\033[0m"
 )
+
+// sessionParams bundles the inputs shared by a host/connect session: the
+// WebSocket dial target and handshake, plus the tunnel and ports context.
+// Grouping them avoids an unwieldy per-session function signature.
+type sessionParams struct {
+	wsURL        string
+	sniHost      string
+	header       http.Header
+	subprotocols []string
+	tunnelID     string
+	ports        []int
+}
 
 // buildWSHeader builds the WebSocket handshake header.
 //
@@ -119,11 +133,11 @@ func (d *Devbridge) dialWithRetry(ctx context.Context, url string, opts *websock
 			_ = resp.Body.Close()
 			reason := strings.TrimSpace(string(body))
 			if attempt == 0 {
-				d.statusf("Connection rejected by gateway: %s, retrying...\n", reason)
+				d.statusf(i18n.T(i18n.MsgGatewayRejected), reason)
 			}
-			lastErr = fmt.Errorf("connection rejected by gateway (429): %s", reason)
+			lastErr = fmt.Errorf(i18n.T(i18n.MsgGatewayRejected429), reason)
 		} else if attempt == 0 {
-			d.statusln("Connection failed, retrying...")
+			d.statusln(i18n.T(i18n.MsgConnectionFailedRetrying))
 		}
 
 		if attempt == maxRetries {
@@ -131,10 +145,7 @@ func (d *Devbridge) dialWithRetry(ctx context.Context, url string, opts *websock
 		}
 
 		// exponential backoff + random jitter
-		delay := baseDelay * time.Duration(1<<uint(attempt))
-		if delay > maxDelay {
-			delay = maxDelay
-		}
+		delay := min(baseDelay*time.Duration(1<<uint(attempt)), maxDelay)
 		jittered := time.Duration(rand.Int64N(int64(delay)))
 
 		d.logger.Debug("WebSocket dial retry",
@@ -142,39 +153,35 @@ func (d *Devbridge) dialWithRetry(ctx context.Context, url string, opts *websock
 
 		select {
 		case <-ctx.Done():
-			return nil, fmt.Errorf("websocket dial cancelled: %w", ctx.Err())
+			return nil, fmt.Errorf(i18n.T(i18n.MsgDialCancelled), ctx.Err())
 		case <-time.After(jittered):
 		}
 	}
-	return nil, fmt.Errorf("websocket dial failed after %d retries: %w", maxRetries, lastErr)
+	return nil, fmt.Errorf(i18n.T(i18n.MsgDialFailedRetries), maxRetries, lastErr)
 }
 
-// sshTraceFunc returns the SSH protocol layer trace function.
+// sshTraceFunc returns a trace function that logs SSH protocol events: errors
+// at error level, everything else at debug level.
 func sshTraceFunc(logger *slog.Logger) ssh.TraceFunc {
 	if logger == nil {
 		return nil
 	}
 	return func(level ssh.TraceLevel, eventID int, message string) {
-		attrs := []slog.Attr{
+		lvl := slog.LevelDebug
+		if level == ssh.TraceLevelError {
+			lvl = slog.LevelError
+		}
+		logger.LogAttrs(context.Background(), lvl, "ssh trace",
 			slog.Int("eventID", eventID),
-			slog.String("msg", message),
-		}
-		switch level {
-		case ssh.TraceLevelError:
-			logger.LogAttrs(context.Background(), slog.LevelError, "ssh trace", attrs...)
-		case ssh.TraceLevelWarning:
-			logger.LogAttrs(context.Background(), slog.LevelWarn, "ssh trace", attrs...)
-		case ssh.TraceLevelInfo:
-			logger.LogAttrs(context.Background(), slog.LevelDebug, "ssh trace", attrs...)
-		case ssh.TraceLevelVerbose:
-			logger.LogAttrs(context.Background(), slog.LevelDebug, "ssh trace", attrs...)
-		}
+			slog.String("msg", message))
 	}
 }
 
 // parseSSHCloseError extracts a typed business error from a WebSocket close
-// error. The gateway signals business errors via application close codes
-// (4000-4999) so the reason text is never parsed.
+// error. Two wire formats are recognised:
+//   - application close codes 4001/4002/4003 (designed protocol)
+//   - close code 1008 (StatusPolicyViolation) carrying a reason text, which is
+//     what the gateway currently sends before the application codes land
 func parseSSHCloseError(err error) error {
 	var ce websocket.CloseError
 	if !errors.As(err, &ce) {
@@ -187,6 +194,15 @@ func parseSSHCloseError(err error) error {
 		return ErrTunnelNotFound
 	case closeCodeDuplicateHost:
 		return ErrDuplicateHost
+	case websocket.StatusPolicyViolation:
+		switch ce.Reason {
+		case "account quota exceeded":
+			return ErrQuotaExceeded
+		case "tunnel not found":
+			return ErrTunnelNotFound
+		case "tunnel already registered":
+			return ErrDuplicateHost
+		}
 	}
 	return err
 }
