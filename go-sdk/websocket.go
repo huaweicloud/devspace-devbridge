@@ -85,6 +85,14 @@ func (d *Devbridge) dialWebSocket(ctx context.Context, wsURL, sniHost string, he
 	return websocket.NetConn(ctx, conn, websocket.MessageBinary), nil
 }
 
+// insecureSkipVerifyWS is an opt-in debug override for the WebSocket TLS
+// handshake. Kept as a string so it can be flipped at build time via ldflags
+// (-X github.com/huaweicloud/devspace-devbridge/go-sdk.insecureSkipVerifyWS=true);
+// the shipped binary stays strict. ServerName is always preserved — SNI must
+// remain the tunnel domain so the gateway can route. Only use the override to
+// test against a gateway whose certificate does not yet cover the SNI label.
+var insecureSkipVerifyWS = "false"
+
 // getWSHTTPClient returns the HTTP client used for the WebSocket handshake.
 // Key detail: DialContext is overridden to dial the gateway address, with TLS SNI set to sniHost.
 func (d *Devbridge) getWSHTTPClient(sniHost string) *http.Client {
@@ -95,6 +103,7 @@ func (d *Devbridge) getWSHTTPClient(sniHost string) *http.Client {
 				MinVersion:         tls.VersionTLS12,
 				MaxVersion:         tls.VersionTLS13,
 				ServerName:         sniHost,
+				InsecureSkipVerify: insecureSkipVerifyWS == "true",
 				ClientSessionCache: d.tlsSessionCache,
 			},
 			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
