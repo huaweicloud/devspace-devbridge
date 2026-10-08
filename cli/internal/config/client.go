@@ -17,7 +17,7 @@ func NewClient(apiKey string) *devbridge.Devbridge {
 	cfg := devbridge.Config{
 		APIBaseURL:  DefaultServerDomain + RelayControllerPath,
 		GatewayAddr: ResolveGatewayAddr(),
-		GatewayHost: ResolveGatewayHost(),
+		GatewayHost: ResolveGatewayHost(apiKey),
 		APIKey:      apiKey,
 	}
 
