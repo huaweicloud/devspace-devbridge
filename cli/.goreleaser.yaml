@@ -75,4 +75,4 @@ release:
     - glob: ./dist-extra/install.ps1
   draft: false
   prerelease: false
-  name_template: "cli-release-{{ replace .Version \"-release\" \"\" }}"
+  name_template: "devbridge-cli-{{ replace .Version \"-release\" \"\" }}"
