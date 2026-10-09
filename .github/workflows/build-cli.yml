@@ -52,6 +52,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Remove SDK tags locally
+        run: git tag -l "go-sdk/*" | xargs -r git tag -d
+
       # Resolve version, environment, and the release flag.
       - name: Resolve metadata
         id: meta
