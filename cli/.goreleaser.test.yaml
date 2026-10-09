@@ -77,4 +77,4 @@ release:
     - glob: ./dist-extra/install.ps1
   draft: false
   prerelease: false
-  name_template: "cli-release-{{ .Version | replace \"-release\" \"\" }}"
+  name_template: "cli-release-{{ replace .Version \"-release\" \"\" }}"
