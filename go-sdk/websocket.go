@@ -137,6 +137,10 @@ func (d *Devbridge) dialWithRetry(ctx context.Context, url string, opts *websock
 		}
 
 		// 429 Too Many Requests: rate limited
+		// 注意：当前网关的握手路径（host/connect WebSocket 建立）不返回 429——
+		// 429 仅由访客 HTTP 路径（relayHttp/relayVisitorStream 限流）产生，
+		// 端侧 CLI 不会走到。此分支为防御性保留：若未来网关对握手引入限流，
+		// 端侧能给出友好提示而非通用重试文案。
 		if resp != nil && resp.StatusCode == http.StatusTooManyRequests {
 			body, _ := io.ReadAll(resp.Body)
 			_ = resp.Body.Close()
@@ -211,6 +215,10 @@ func parseSSHCloseError(err error) error {
 			return ErrTunnelNotFound
 		case "tunnel already registered":
 			return ErrDuplicateHost
+		// 旧网关用 1008+reason 拒绝并发超限；新网关已改为应用码 4001。
+		// 两种都视为配额类拒绝，让 reconnectLoop 立即停止而非重试风暴。
+		case "too many concurrent connections":
+			return ErrQuotaExceeded
 		}
 	}
 	return err

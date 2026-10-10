@@ -38,9 +38,9 @@ func TestParseSSHCloseError(t *testing.T) {
 			want: websocket.CloseError{Code: websocket.StatusInternalError, Reason: "connect session failed"},
 		},
 		{
-			name: "policy violation no longer mapped to duplicate host",
+			name: "policy violation mapping for concurrent connections over quota",
 			err:  websocket.CloseError{Code: websocket.StatusPolicyViolation, Reason: "too many concurrent connections"},
-			want: websocket.CloseError{Code: websocket.StatusPolicyViolation, Reason: "too many concurrent connections"},
+			want: ErrQuotaExceeded,
 		},
 		{
 			name: "non close error passes through",

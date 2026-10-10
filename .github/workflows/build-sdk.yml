@@ -176,7 +176,7 @@ jobs:
           fi
           gh release create "${TAG}" \
             ${TARGET} \
-            --title "devbridge-go-sdk ${VERSION}" \
+            --title "devbridge-go-sdk-${VERSION}" \
             --generate-notes \
             ${PRERELEASE_FLAG} \
             --latest=false \

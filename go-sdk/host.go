@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -27,6 +28,10 @@ const (
 	keyRotationThreshold     = 0               // disable key rotation (host key is process-wide)
 	keepAliveFailThreshold   = 5               // consecutive keepalive failures before forcing reconnect
 	gatewayPortTimeout       = 5 * time.Second // wait for the gateway port notification
+	// portNotificationReadTimeout bounds the single read of a potential port
+	// notification. Kept below gatewayPortTimeout so a stalled notification still
+	// leaves time for the caller's 5s path to react.
+	portNotificationReadTimeout = 2 * time.Second
 )
 
 // HostConfig is the configuration for hosting a tunnel.
@@ -344,9 +349,14 @@ func (d *Devbridge) startHostAcceptLoop(ctx context.Context, outerSession *ssh.C
 func readPortNotification(channel *ssh.Channel) (stream *ssh.Stream, ports []int, isNotif bool) {
 	stream = ssh.NewStream(channel)
 	buf := make([]byte, 4096)
-	n, err := stream.Read(buf)
+	n, err := readWithTimeout(stream, buf, portNotificationReadTimeout)
 	if err != nil {
-		return stream, nil, false
+		// 超时（或读失败）：端口通知由网关在通道建立后立即发送，2 秒内零字节
+		// 说明这并非通知通道。关闭通道终止 readWithTimeout 里可能仍在阻塞的
+		// 后台读 goroutine（Stream 无取消读 API，只能靠关闭解除阻塞），
+		// 避免其挂到连接结束才释放。上层会因通道关闭而走重连。
+		_ = stream.Close()
+		return nil, nil, false
 	}
 	ports, isNotif = parsePortNotification(buf[:n])
 	if isNotif {
@@ -354,6 +364,28 @@ func readPortNotification(channel *ssh.Channel) (stream *ssh.Stream, ports []int
 		return nil, ports, true
 	}
 	return stream, nil, false
+}
+
+// readWithTimeout reads up to len(buf) bytes from r, bounding the wait with a
+// timeout. It never blocks forever on a stream that stays open without data.
+// The caller must close the underlying stream on timeout to unblock the read
+// goroutine.
+func readWithTimeout(r io.Reader, buf []byte, timeout time.Duration) (int, error) {
+	type result struct {
+		n   int
+		err error
+	}
+	ch := make(chan result, 1)
+	go func() {
+		n, err := r.Read(buf)
+		ch <- result{n, err}
+	}()
+	select {
+	case res := <-ch:
+		return res.n, res.err
+	case <-time.After(timeout):
+		return 0, fmt.Errorf("read timed out after %s", timeout)
+	}
 }
 
 // parsePortNotification returns the ports of a RelayRequest payload, or false when
