@@ -1,0 +1,286 @@
+openapi: 3.0.3
+info:
+  title: DevBridge Open API
+  description: |
+    DevBridge 公开接口，用于 API Key 管理。
+
+    认证方式（二选一）：
+      - **IAM 3.0 Token 认证**：通过 `X-Auth-Token` 请求头携带 IAM Token。
+      - **IAM 5.0 AK/SK 认证**：使用 AK/SK 签名，请求头携带 `Authorization` 和 `X-Sdk-Date`。
+  version: 1.0.0
+  contact:
+    name: Huawei Cloud DevBridge
+    url: https://huaweicloud.github.io/devspace-devbridge/
+
+servers:
+  - url: https://devstation.myhuaweicloud.com
+    description: DevBridge 现网环境
+  - url: https://devstation-desktop-dev.cn-north-7.myhuaweicloud.com
+    description: DevBridge 开发环境
+  - url: https://devstation-desktop.cn-north-7.myhuaweicloud.com
+    description: DevBridge 测试环境
+
+tags:
+  - name: OpenApi
+    description: OpenApi 开放接口
+
+paths:
+  /open-api-public/v1/relay/api-keys:
+    get:
+      tags:
+        - API Key
+      summary: 获取 API Key
+      description: 获取当前用户的所有 API Key 列表。
+      operationId: getApiKeys
+      security:
+        - IamTokenAuth: []
+        - IamAkSkAuth: []
+      responses:
+        "200":
+          description: 成功返回 API Key 列表
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiKeyListResponse"
+              example:
+                error_code: "0000"
+                error_msg: success
+                result:
+                  - last_used_at: "2026-10-21T08:58:46.728333Z"
+                    scope: devbridge
+                    name: AISHELL login
+                    created_at: "2026-10-21T08:51:43.850192Z"
+                    id: w3xqds7slifj54bi45rm4xww4e
+                    mask: devbridge_qENc...SQlJ
+        "401":
+          $ref: "#/components/responses/UserIdEmpty"
+
+  /open-api-public/v1/relay/api-key:
+    post:
+      tags:
+        - API Key
+      summary: 创建 API Key
+      description: 创建一个新的 API Key，支持 devbox 和 devbridge 两种范围。
+      operationId: createApiKey
+      security:
+        - IamTokenAuth: []
+        - IamAkSkAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateApiKeyRequest"
+            example:
+              name: testApiKey
+              scope: devbridge
+      responses:
+        "200":
+          description: 成功创建 API Key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateApiKeyResponse"
+              example:
+                error_code: "0000"
+                error_msg: success
+                result:
+                  api_key: devbridge_M6S0E2eXAVDPlI4b-P6yNBT03nE9gb1C
+                  scope: devbridge
+                  name: testApiKey
+                  created_at: "2026-10-22T06:44:24.314002Z"
+                  id: 2wlk27ldhfuruei74n6vhphywm
+                  mask: devbridge_M6S0...gb1C
+        "401":
+          $ref: "#/components/responses/UserIdEmpty"
+
+  /open-api-public/v1/relay/api-keys/{keyId}:
+    post:
+      tags:
+        - API Key
+      summary: 删除 API Key
+      description: 根据 API Key ID 删除指定的 API Key。
+      operationId: deleteApiKey
+      security:
+        - IamTokenAuth: []
+        - IamAkSkAuth: []
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          description: API Key ID
+          schema:
+            type: string
+          example: 2wlk27ldhfuruei74n6vhphywm
+      responses:
+        "200":
+          description: 成功删除 API Key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteApiKeyResponse"
+              example:
+                result: null
+                error_msg: success
+                error_code: "0000"
+        "401":
+          $ref: "#/components/responses/UserIdEmpty"
+
+components:
+  securitySchemes:
+    IamTokenAuth:
+      type: apiKey
+      in: header
+      name: X-Auth-Token
+      description: |
+        IAM 3.0 Token 认证。
+        通过 IAM 获取 Token，填入 `X-Auth-Token` 请求头。
+    IamAkSkAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: |
+        IAM 5.0 AK/SK 签名认证。
+        使用 AK/SK 对请求进行签名，请求头需携带 `Authorization`（签名值）
+        和 `X-Sdk-Date`（请求时间，格式 yyyyMMddTHHmmssZ）。
+
+  responses:
+    UserIdEmpty:
+      description: 用户 ID 为空，鉴权失败
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error_code: HD.97420226
+            error_msg: 用户ID为空。
+            result: null
+
+  schemas:
+    # ---- 通用响应 ----
+    ErrorResponse:
+      type: object
+      properties:
+        error_code:
+          type: string
+          description: 错误码
+        error_msg:
+          type: string
+          description: 错误描述
+        result:
+          nullable: true
+          description: 结果数据，错误时通常为 null
+
+    # ---- API Key 模型 ----
+    ApiKey:
+      type: object
+      description: API Key 信息
+      properties:
+        id:
+          type: string
+          description: API Key ID
+        name:
+          type: string
+          description: API Key 名称
+        scope:
+          type: string
+          enum: [devbox, devbridge]
+          description: API Key 范围
+        mask:
+          type: string
+          description: API Key 掩码（脱敏展示）
+        created_at:
+          type: string
+          format: date-time
+          description: 创建时间（ISO 8601 UTC）
+        last_used_at:
+          type: string
+          format: date-time
+          description: 最近使用时间（ISO 8601 UTC）
+      required:
+        - id
+        - name
+        - scope
+        - mask
+        - created_at
+
+    ApiKeyWithSecret:
+      type: object
+      description: 创建后返回的 API Key（包含明文密钥）
+      allOf:
+        - $ref: "#/components/schemas/ApiKey"
+        - type: object
+          properties:
+            api_key:
+              type: string
+              description: API Key 明文（仅在创建时返回，请妥善保管）
+          required:
+            - api_key
+
+    # ---- 获取 API Key ----
+    ApiKeyListResponse:
+      type: object
+      properties:
+        error_code:
+          type: string
+          description: 错误码，成功为 "0000"
+        error_msg:
+          type: string
+          description: 错误描述，成功为 "success"
+        result:
+          type: array
+          description: API Key 列表
+          items:
+            $ref: "#/components/schemas/ApiKey"
+      required:
+        - error_code
+        - error_msg
+        - result
+
+    # ---- 创建 API Key ----
+    CreateApiKeyRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: API Key 名称
+        scope:
+          type: string
+          enum: [devbox, devbridge]
+          description: API Key 范围
+      required:
+        - name
+        - scope
+
+    CreateApiKeyResponse:
+      type: object
+      properties:
+        error_code:
+          type: string
+          description: 错误码，成功为 "0000"
+        error_msg:
+          type: string
+          description: 错误描述，成功为 "success"
+        result:
+          $ref: "#/components/schemas/ApiKeyWithSecret"
+      required:
+        - error_code
+        - error_msg
+        - result
+
+    # ---- 删除 API Key ----
+    DeleteApiKeyResponse:
+      type: object
+      properties:
+        error_code:
+          type: string
+          description: 错误码，成功为 "0000"
+        error_msg:
+          type: string
+          description: 错误描述，成功为 "success"
+        result:
+          nullable: true
+          description: 删除成功时为 null
+      required:
+        - error_code
+        - error_msg
