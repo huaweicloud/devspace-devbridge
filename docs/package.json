@@ -14,12 +14,12 @@
     "check": "npm run lint:docs && npm run format:check && npm run docs:build"
   },
   "devDependencies": {
-    "markdownlint-cli2": "^0.23.3",
+    "markdownlint-cli2": "^0.24.0",
     "prettier": "3.9.6",
     "vitepress": "1.6.4"
   },
   "overrides": {
-    "vite": "6.4.3",
+    "vite": "6.4.4",
     "smol-toml": "1.9.0",
     "katex": "0.19.0",
     "vue": "3.5.43",
