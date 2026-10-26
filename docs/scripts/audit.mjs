@@ -18,6 +18,16 @@ import { execFileSync } from "node:child_process";
 /** GHSA IDs we knowingly accept (no patched version available). */
 const IGNORED_ADVISORIES = new Set([
   "GHSA-vfj7-8cjw-p6xm", // braces ReDoS — dev-only, no fix available
+  // vite / @vitejs/plugin-vue / vitepress — dev-only, no fix for vitepress 1.6.4
+  "GHSA-698v-4r3x-3vcv",
+  "GHSA-r825-w8mm-5pxw",
+  "GHSA-587h-7wmj-h5pm",
+  "GHSA-9jrq-w75r-8gcw",
+  "GHSA-rq7h-c2jc-7f22",
+  // markdown-it / markdownlint-cli2 — dev-only, no fix available
+  "GHSA-r7fv-28h4-cvq7",
+  "GHSA-vfgh-jcmw-g37q",
+  "GHSA-gfr2-rv44-r23c",
 ]);
 
 const MIN_SEVERITY = "moderate";
