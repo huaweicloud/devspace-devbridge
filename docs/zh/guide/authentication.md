@@ -39,7 +39,7 @@ devbridge auth login
 
 你可以在 DevBridge 管理页面创建和管理 API Key：
 
-> **API Key 管理页面**：<https://devstation.connect.huaweicloud.com/space/devbridge/apikey>
+> **API Key 管理页面**：<https://devstation.connect.huaweicloud.com/space/devbridge?tab=apikey>
 
 在该页面创建新的 API Key 后，将其复制并通过环境变量 `HW_API_KEY` 注入 CLI 即可使用。
 

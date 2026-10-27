@@ -38,7 +38,7 @@ Don't write a real API key directly into commands, scripts, or pipeline definiti
 
 You can create and manage API keys on the DevBridge management page:
 
-> **API key management page**: <https://devstation.connect.huaweicloud.com/space/devbridge/apikey>
+> **API key management page**: <https://devstation.connect.huaweicloud.com/space/devbridge?tab=apikey>
 
 After creating a new API key on that page, copy it and inject it through the `HW_API_KEY` environment variable.
 

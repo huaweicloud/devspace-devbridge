@@ -106,9 +106,9 @@ source <skill_directory>/scripts/devbridge_cmd.sh
 db_init
 ```
 
-> **v0.2.x 只支持 API Key**：`--access-key / --secret-key / --security-token`（AK/SK）参数已移除，不要用 AK/SK 尝试登录（旧版 skill 的用法在 v0.2.x 无效）。API Key 在 DevBridge 管理页创建：`https://devstation.connect.huaweicloud.com/space/devbridge/apikey`。
+> **v0.2.x 只支持 API Key**：`--access-key / --secret-key / --security-token`（AK/SK）参数已移除，不要用 AK/SK 尝试登录（旧版 skill 的用法在 v0.2.x 无效）。API Key 在 DevBridge 管理页创建：`https://devstation.connect.huaweicloud.com/space/devbridge?tab=apikey`。
 
-For automation environments, use an **API Key** (see [references/iam-policies.md](references/iam-policies.md)). API Keys are created at the DevBridge management page: `https://devstation.connect.huaweicloud.com/space/devbridge/apikey`.
+For automation environments, use an **API Key** (see [references/iam-policies.md](references/iam-policies.md)). API Keys are created at the DevBridge management page: `https://devstation.connect.huaweicloud.com/space/devbridge?tab=apikey`.
 
 > **Install script note**: in non-interactive / headless environments, always pass `-s` (silent) to the install script: `... | bash -s -- -s`. Without it, the script may prompt "overwrite?" reading `/dev/tty` and fail where no terminal exists.
 

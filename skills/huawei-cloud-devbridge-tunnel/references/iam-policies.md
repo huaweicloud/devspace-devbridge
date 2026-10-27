@@ -39,7 +39,7 @@ devbridge auth login
 Create and manage API Keys at the DevBridge management page:
 
 ```
-https://devstation.connect.huaweicloud.com/space/devbridge/apikey
+https://devstation.connect.huaweicloud.com/space/devbridge?tab=apikey
 ```
 
 - API Keys are distinguished by usage scenario (DevBridge / DevBox); **up to 20 API Keys per scenario**.
@@ -105,7 +105,7 @@ When any DevBridge command fails due to invalid or missing credentials:
 
 1. **Check status** — `devbridge auth status`; confirm whether the CLI is logged in.
 2. **Identify the API Key** — if an API Key is in use, verify it still exists and is not deleted; the full value was shown only at creation time.
-3. **Re-create or re-inject** — create a new API Key at `https://devstation.connect.huaweicloud.com/space/devbridge/apikey`, inject via `HW_API_KEY`, and re-login.
+3. **Re-create or re-inject** — create a new API Key at `https://devstation.connect.huaweicloud.com/space/devbridge?tab=apikey`, inject via `HW_API_KEY`, and re-login.
 4. **Wait for confirmation** — pause execution until the user confirms credentials have been updated.
 5. **Retry the command** — after confirmation, re-run the failed command.
 
@@ -114,7 +114,7 @@ When any DevBridge command fails due to invalid or missing credentials:
 ```text
 Error: authentication failed
 → devbridge auth status
-→ Guide user to API Key management page (devstation.connect.huaweicloud.com/space/devbridge/apikey)
+→ Guide user to API Key management page (devstation.connect.huaweicloud.com/space/devbridge?tab=apikey)
 → Wait for user confirmation that a new API Key is injected
 → Retry command
 ```

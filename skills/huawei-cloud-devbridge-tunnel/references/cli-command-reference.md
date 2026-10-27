@@ -41,7 +41,7 @@ devbridge auth login
 |------|-------------|----------|
 | `--api-key` | API Key | No (alternative to interactive) |
 
-> **v0.2.x change**: AK/SK login (`--access-key`, `--secret-key`, `--security-token`) has been removed. Use API Key or interactive login. API Keys are managed at `https://devstation.connect.huaweicloud.com/space/devbridge/apikey`.
+> **v0.2.x change**: AK/SK login (`--access-key`, `--secret-key`, `--security-token`) has been removed. Use API Key or interactive login. API Keys are managed at `https://devstation.connect.huaweicloud.com/space/devbridge?tab=apikey`.
 
 #### `devbridge auth status`
 

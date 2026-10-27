@@ -21,7 +21,7 @@ https://bridge.developer.myhuaweicloud.com/open-api-inner/v1/relay-controller
 X-API-Key: devbridge_<API Key 内容>
 ```
 
-在 [API Key 管理页面](https://devstation.connect.huaweicloud.com/space/devbridge/apikey)
+在 [API Key 管理页面](https://devstation.connect.huaweicloud.com/space/devbridge?tab=apikey)
 创建 DevBridge Key，将完整值填入 `X-API-Key`。
 
 ```bash

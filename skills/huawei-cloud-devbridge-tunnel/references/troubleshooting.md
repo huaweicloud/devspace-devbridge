@@ -100,7 +100,7 @@ devbridge auth login --api-key "$HW_API_KEY"
 
 **Solution:**
 
-1. Re-create an API Key at `https://devstation.connect.huaweicloud.com/space/devbridge/apikey` (full value shown only at creation; up to 20 per scenario).
+1. Re-create an API Key at `https://devstation.connect.huaweicloud.com/space/devbridge?tab=apikey` (full value shown only at creation; up to 20 per scenario).
 2. Re-inject via environment variable and re-login:
 
 ```bash
@@ -345,7 +345,7 @@ export SSL_CERT_FILE=/path/to/ca-bundle.crt
 
 **Solution:**
 
-1. Re-create an API Key at `https://devstation.connect.huaweicloud.com/space/devbridge/apikey`.
+1. Re-create an API Key at `https://devstation.connect.huaweicloud.com/space/devbridge?tab=apikey`.
 2. Inject and re-login: `export HW_API_KEY=<key>` then `devbridge auth login --api-key "$HW_API_KEY"`.
 
 ### Problem: `403 Forbidden: token expired`

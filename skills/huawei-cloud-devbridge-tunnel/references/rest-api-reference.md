@@ -21,7 +21,7 @@ X-Api-Key: <api-key>
 Content-Type: application/json
 ```
 
-Create and manage API Keys at `https://devstation.connect.huaweicloud.com/space/devbridge/apikey`.
+Create and manage API Keys at `https://devstation.connect.huaweicloud.com/space/devbridge?tab=apikey`.
 
 ## Response Envelope
 

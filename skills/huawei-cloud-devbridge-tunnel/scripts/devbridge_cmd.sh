@@ -21,7 +21,7 @@ DEVBRIDGE_INSTALL_URL="https://gitcode.com/CloudDeveloperDepartment/devbrige/rel
 
 # 日志和认证
 _DB_LOG_DIR="/tmp"
-_DB_APIKEY_URL="https://devstation.connect.huaweicloud.com/space/devbridge/apikey"
+_DB_APIKEY_URL="https://devstation.connect.huaweicloud.com/space/devbridge?tab=apikey"
 # OBS 渠道提供最新 v0.2.x；旧渠道 res-hd.hc-cdn.cn 只有 v0.1.x（域名已迁移，不可用）
 _DB_INSTALL_URL_OBS="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install.sh"
 

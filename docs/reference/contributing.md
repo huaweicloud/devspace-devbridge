@@ -360,7 +360,7 @@ CLI configuration priority: config file > ldflags (build-time) > hardcoded defau
 | `HW_API_KEY`     | Both  | API key for REST API authentication           | Yes       |
 | `DEVBRIDGE_LANG` | CLI   | Override interface language (e.g. `zh`, `en`) | No        |
 
-Create a DevBridge key on the [API key management page](https://devstation.connect.huaweicloud.com/space/devbridge/apikey), then set the environment variable:
+Create a DevBridge key on the [API key management page](https://devstation.connect.huaweicloud.com/space/devbridge?tab=apikey), then set the environment variable:
 
 ```bash
 export HW_API_KEY="devbridge_your_api_key"

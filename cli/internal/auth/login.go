@@ -83,7 +83,7 @@ func hcBrowserLogin() (Credential, *UserInfo, error) {
 	slog.Debug(i18n.T(i18n.Msg.Auth.OpenBrowser))
 	if err := browser.OpenURL(redirectURL); err != nil {
 		slog.Debug("open browser failed", "err", err)
-		apikeyPageURL := LoginURL + "/space/devbridge/apikey"
+		apikeyPageURL := LoginURL + "/space/devbridge?tab=apikey"
 		return Credential{}, nil, fmt.Errorf(i18n.T(i18n.Msg.Auth.NoBrowserHint), apikeyPageURL)
 	}
 	slog.Debug(i18n.T(i18n.Msg.Auth.BrowserOpened))
@@ -168,7 +168,7 @@ func parseLoginCallbackBody(body []byte) (callbackResponse, error) {
 		return callbackResponse{}, err
 	}
 	if envelope.ErrorCode != loginSuccessCode {
-		apikeyPageURL := LoginURL + "/space/devbridge/apikey"
+		apikeyPageURL := LoginURL + "/space/devbridge?tab=apikey"
 		return callbackResponse{}, fmt.Errorf("%s: %w\n%s", i18n.T(i18n.Msg.Auth.LoginFailed), &loginError{
 			Code:    envelope.ErrorCode,
 			Message: envelope.ErrorMsg,

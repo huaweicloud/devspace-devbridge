@@ -360,7 +360,7 @@ CLI 配置优先级：配置文件 > ldflags（构建时注入）> 代码硬编�
 | `HW_API_KEY`     | 两者   | REST API 认证的 API Key       | 是       |
 | `DEVBRIDGE_LANG` | CLI    | 覆盖界面语言（如 `zh`、`en`） | 否       |
 
-在 [API Key 管理页面](https://devstation.connect.huaweicloud.com/space/devbridge/apikey) 创建 DevBridge Key，然后设置环境变量：
+在 [API Key 管理页面](https://devstation.connect.huaweicloud.com/space/devbridge?tab=apikey) 创建 DevBridge Key，然后设置环境变量：
 
 ```bash
 export HW_API_KEY="devbridge_your_api_key"

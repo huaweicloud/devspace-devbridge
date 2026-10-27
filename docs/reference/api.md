@@ -21,7 +21,7 @@ Paths in this document are relative to this base URL. Every request carries the 
 X-API-Key: devbridge_<API key content>
 ```
 
-Create a DevBridge key on the [API key management page](https://devstation.connect.huaweicloud.com/space/devbridge/apikey)
+Create a DevBridge key on the [API key management page](https://devstation.connect.huaweicloud.com/space/devbridge?tab=apikey)
 and put the full value into `X-API-Key`.
 
 ```bash
