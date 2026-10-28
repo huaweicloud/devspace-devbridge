@@ -16,6 +16,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"runtime"
 	"time"
 
 	"github.com/huaweicloud/devspace-devbridge/go-sdk/internal/i18n"
@@ -30,14 +31,52 @@ const (
 	headerErrorOrigin = "X-DevBridge-Error-Origin"
 )
 
+// legacyRouteNotFoundCode is the business error code the gateway returns for
+// requests hitting the deprecated /open-api-inner/v1/relay-controller/* routes.
+const legacyRouteNotFoundCode = "40400"
+
+// Install script URLs, kept verbatim in sync with the constants in
+// cli/internal/updater/updater.go (go-sdk and cli are separate Go modules,
+// so the strings are duplicated here on purpose).
+const (
+	gitCodeInstallSh = "https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/latest/install.sh"
+	gitCodeInstallPs = "https://gitcode.com/CloudDeveloperDepartment/devbrige/releases/download/latest/install.ps1"
+	githubInstallSh  = "https://github.com/huaweicloud/devspace-devbridge/releases/latest/download/install.sh"
+	githubInstallPs  = "https://github.com/huaweicloud/devspace-devbridge/releases/latest/download/install.ps1"
+)
+
 // APIError represents a business error returned by the server.
 type APIError struct {
 	Code    string // error code, e.g. "HD.98320078"
 	Message string // error description
+
+	// upgrade, when non-empty, appends an actionable upgrade guide to Error().
+	// It is only set for the deprecated-route error code 40400; all other
+	// errors render exactly as before.
+	upgrade string
 }
 
 func (e *APIError) Error() string {
-	return fmt.Sprintf("error code: %s, error message: %s", e.Code, e.Message)
+	msg := fmt.Sprintf("error code: %s, error message: %s", e.Code, e.Message)
+	if e.upgrade != "" {
+		msg += "\n" + e.upgrade
+	}
+	return msg
+}
+
+// upgradeGuide returns the bilingual upgrade notice plus the dual-source
+// (GitCode/GitHub) install commands for the current platform, mirroring
+// cli/internal/updater/updater.go InstallCommand().
+func upgradeGuide() string {
+	var cmds string
+	if runtime.GOOS == "windows" {
+		cmds = fmt.Sprintf("Update:\n  # GitCode\n  irm %s | iex\n\n  # GitHub\n  irm %s | iex",
+			gitCodeInstallPs, githubInstallPs)
+	} else {
+		cmds = fmt.Sprintf("Update:\n  # GitCode\n  curl -fsSL %s | bash\n\n  # GitHub\n  curl -fsSL %s | bash",
+			gitCodeInstallSh, githubInstallSh)
+	}
+	return i18n.T(i18n.MsgLegacyAPIUpgrade) + "\n" + cmds
 }
 
 // errorBody is an alternative error format (used by some endpoints).
@@ -127,6 +166,9 @@ func (c *Client) Do(ctx context.Context, method, path string, body, result any) 
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		if apiErr := parseAPIError(respBody); apiErr != nil {
+			if apiErr.Code == legacyRouteNotFoundCode {
+				apiErr.upgrade = upgradeGuide()
+			}
 			return apiErr
 		}
 		// X-Served-By 为空表示响应不是经过隧道基础设施产生的：请求可能

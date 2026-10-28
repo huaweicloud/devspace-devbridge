@@ -40,4 +40,5 @@ var (
 	MsgServiceHTTPErrorWithMeta  = Message{ZH: "隧道内服务错误: HTTP %d: %s（来源: %s，请求 ID: %s）", EN: "tunneled service error: HTTP %d: %s (source: %s, request id: %s)"}
 	MsgNotReachedTunnel          = Message{ZH: "请求未到达隧道服务，域名可能被防火墙/负载均衡拦截", EN: "request did not reach the tunnel service; the domain may be blocked by a firewall/load balancer"}
 	MsgUnmarshalResponseFailed   = Message{ZH: "解析响应失败: %w", EN: "unmarshal response: %w"}
+	MsgLegacyAPIUpgrade          = Message{ZH: "当前 CLI 版本过旧，该接口已废弃，请升级后重试。", EN: "the current CLI version is too old and this API is deprecated; please upgrade and retry."}
 )
