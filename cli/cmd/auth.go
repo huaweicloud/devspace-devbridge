@@ -22,7 +22,7 @@ func newSDKClient() *devbridge.Devbridge {
 	if cred := auth.ReadValidAPIKey(); cred != nil {
 		apiKey = cred.APIKey
 	}
-	return config.NewClient(apiKey)
+	return config.NewClient(apiKey, version)
 }
 
 var authCmd = &cobra.Command{

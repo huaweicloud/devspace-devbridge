@@ -17,7 +17,7 @@ func TestDo_NoServedByOnError(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := New("key", srv.URL, nil)
+	c := New("key", srv.URL, nil, nil)
 	err := c.Do(context.Background(), http.MethodGet, "/x", nil, nil)
 	if err == nil {
 		t.Fatal("expected error, got nil")
@@ -37,7 +37,7 @@ func TestDo_ServedByOnError(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := New("key", srv.URL, nil)
+	c := New("key", srv.URL, nil, nil)
 	err := c.Do(context.Background(), http.MethodGet, "/x", nil, nil)
 	if err == nil {
 		t.Fatal("expected error, got nil")
@@ -62,7 +62,7 @@ func TestDo_ServiceOriginOnError(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := New("key", srv.URL, nil)
+	c := New("key", srv.URL, nil, nil)
 	err := c.Do(context.Background(), http.MethodGet, "/x", nil, nil)
 	if err == nil {
 		t.Fatal("expected error, got nil")
@@ -84,7 +84,7 @@ func TestDo_BusinessErrorWins(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := New("key", srv.URL, nil)
+	c := New("key", srv.URL, nil, nil)
 	err := c.Do(context.Background(), http.MethodGet, "/x", nil, nil)
 	apiErr, ok := err.(*APIError)
 	if !ok {

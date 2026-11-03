@@ -12,6 +12,7 @@ import (
 	"io"
 	"log/slog"
 	"net"
+	"net/http"
 	"os"
 	"regexp"
 
@@ -63,6 +64,11 @@ type Config struct {
 	// hosted ports, forwarding info). Defaults to os.Stdout; set it to
 	// io.Discard to silence these outputs.
 	OutputWriter io.Writer
+
+	// HTTPClient, when non-nil, is used for REST API requests instead of the
+	// SDK default client. It allows the caller (e.g. the CLI) to inject a
+	// custom transport or headers without changing other SDK behavior.
+	HTTPClient *http.Client
 }
 
 // resolve returns a copy with defaults and env-var fallbacks applied.
@@ -113,7 +119,7 @@ func New(cfg Config) *Devbridge {
 		gatewayHost:     resolved.GatewayHost,
 		logger:          slog.Default(),
 		outputWriter:    resolved.OutputWriter,
-		api:             httpclient.New(resolved.APIKey, resolved.APIBaseURL, slog.Default()),
+		api:             httpclient.New(resolved.APIKey, resolved.APIBaseURL, resolved.HTTPClient, slog.Default()),
 		tlsSessionCache: tls.NewLRUClientSessionCache(32),
 	}
 	go warmDNS(d.gatewayAddr)

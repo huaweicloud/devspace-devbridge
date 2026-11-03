@@ -16,6 +16,8 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/huaweicloud/devspace-devbridge/go-sdk/internal/i18n"
@@ -40,6 +42,16 @@ func (e *APIError) Error() string {
 	return fmt.Sprintf("error code: %s, error message: %s", e.Code, e.Message)
 }
 
+// UpgradeRequiredError indicates the server rejected the request because the
+// client version is below the server's minimum required version (HTTP 426).
+type UpgradeRequiredError struct {
+	Message string
+}
+
+func (e *UpgradeRequiredError) Error() string {
+	return e.Message
+}
+
 // errorBody is an alternative error format (used by some endpoints).
 type errorBody struct {
 	Error struct {
@@ -57,18 +69,22 @@ type Client struct {
 	Logger  *slog.Logger
 }
 
-// New creates an HTTP client, using the default logger when logger is nil.
-func New(apiKey, baseURL string, logger *slog.Logger) *Client {
+// New creates an HTTP client. When httpClient is nil a default client with a
+// 30s timeout is created; otherwise the caller-provided client is used.
+func New(apiKey, baseURL string, httpClient *http.Client, logger *slog.Logger) *Client {
 	if logger == nil {
 		logger = slog.Default()
+	}
+	if httpClient == nil {
+		httpClient = &http.Client{
+			Timeout: 30 * time.Second,
+		}
 	}
 	return &Client{
 		APIKey:  apiKey,
 		BaseURL: baseURL,
-		HTTP: &http.Client{
-			Timeout: 30 * time.Second,
-		},
-		Logger: logger,
+		HTTP:    httpClient,
+		Logger:  logger,
 	}
 }
 
@@ -113,6 +129,7 @@ func (c *Client) Do(ctx context.Context, method, path string, body, result any) 
 
 	start := time.Now()
 	resp, err := c.HTTP.Do(req)
+	c.logRequestHeaders(req)
 	if err != nil {
 		return fmt.Errorf(i18n.T(i18n.MsgHTTPRequestFailed), err)
 	}
@@ -124,6 +141,10 @@ func (c *Client) Do(ctx context.Context, method, path string, body, result any) 
 	}
 
 	c.logResponse(resp, respBody, time.Since(start))
+
+	if resp.StatusCode == http.StatusUpgradeRequired {
+		return &UpgradeRequiredError{Message: parseMessage(respBody)}
+	}
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		if apiErr := parseAPIError(respBody); apiErr != nil {
@@ -169,6 +190,29 @@ func (c *Client) logRequest(req *http.Request, body []byte) {
 	c.Logger.LogAttrs(context.Background(), slog.LevelDebug, "HTTP request", attrs...)
 }
 
+// logRequestHeaders dumps the final request headers after the transport has
+// run (so headers injected by a caller-provided RoundTripper, such as the
+// CLI's X-User-Agent, are included).
+func (c *Client) logRequestHeaders(req *http.Request) {
+	if !c.Logger.Enabled(context.Background(), slog.LevelDebug) {
+		return
+	}
+	keys := make([]string, 0, len(req.Header))
+	for k := range req.Header {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	attrs := make([]slog.Attr, 0, len(keys))
+	for _, k := range keys {
+		if strings.EqualFold(k, headerXAPIKey) {
+			attrs = append(attrs, slog.String(k, "<redacted>"))
+			continue
+		}
+		attrs = append(attrs, slog.String(k, strings.Join(req.Header[k], ", ")))
+	}
+	c.Logger.LogAttrs(context.Background(), slog.LevelDebug, "HTTP request headers", attrs...)
+}
+
 func (c *Client) logResponse(resp *http.Response, body []byte, elapsed time.Duration) {
 	if !c.Logger.Enabled(context.Background(), slog.LevelDebug) {
 		return
@@ -194,4 +238,16 @@ func parseAPIError(body []byte) *APIError {
 		return &APIError{Code: eb.Error.Code, Message: eb.Error.Message}
 	}
 	return nil
+}
+
+// parseMessage extracts the "message" field from a flat {"code","message"}
+// business response, falling back to the raw body when it can't be parsed.
+func parseMessage(body []byte) string {
+	var b struct {
+		Message string `json:"message"`
+	}
+	if json.Unmarshal(body, &b) == nil && b.Message != "" {
+		return b.Message
+	}
+	return string(body)
 }
