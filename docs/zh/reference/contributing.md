@@ -461,12 +461,12 @@ client := devbridge.New(cfg)
 
 SDK 默认常量：
 
-| 常量                 | 值                                                                              |
-| -------------------- | ------------------------------------------------------------------------------- |
+| 常量                 | 值                                           |
+| -------------------- | -------------------------------------------- |
 | `DefaultAPIBaseURL`  | `https://bridge.developer.myhuaweicloud.com` |
-| `DefaultGatewayAddr` | `gateway.devbridge-s2.hwtunnel.com:443`                                         |
-| `DefaultGatewayHost` | `devbridge-s2.hwtunnel.com`                                                     |
-| `DefaultClusterID`   | `devbridge-s2`（可通过 ldflags 覆盖）                                           |
+| `DefaultGatewayAddr` | `gateway.devbridge-s2.hwtunnel.com:443`      |
+| `DefaultGatewayHost` | `devbridge-s2.hwtunnel.com`                  |
+| `DefaultClusterID`   | `devbridge-s2`（可通过 ldflags 覆盖）        |
 
 ### 代码组织约定
 

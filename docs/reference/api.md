@@ -72,9 +72,9 @@ Use the HTTP status and `error.code` to decide how to handle the error; `message
 
 ## API overview
 
-| Method | Path                                   | Purpose                                        |
-| ------ | -------------------------------------- | ---------------------------------------------- |
-| POST   | `/v1/api-keys/check`                          | Verify credentials.                            |
+| Method | Path                                      | Purpose                                        |
+| ------ | ----------------------------------------- | ---------------------------------------------- |
+| POST   | `/v1/api-keys/check`                      | Verify credentials.                            |
 | POST   | `/v1/tunnels`                             | Create a tunnel.                               |
 | GET    | `/v1/tunnels`                             | Query the current user's valid tunnels.        |
 | DELETE | `/v1/tunnels`                             | Delete all of the current user's tunnels.      |

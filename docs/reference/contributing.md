@@ -461,12 +461,12 @@ client := devbridge.New(cfg)
 
 SDK default constants:
 
-| Constant             | Value                                                                           |
-| -------------------- | ------------------------------------------------------------------------------- |
+| Constant             | Value                                        |
+| -------------------- | -------------------------------------------- |
 | `DefaultAPIBaseURL`  | `https://bridge.developer.myhuaweicloud.com` |
-| `DefaultGatewayAddr` | `gateway.devbridge-s2.hwtunnel.com:443`                                         |
-| `DefaultGatewayHost` | `devbridge-s2.hwtunnel.com`                                                     |
-| `DefaultClusterID`   | `devbridge-s2` (overridable via ldflags)                                        |
+| `DefaultGatewayAddr` | `gateway.devbridge-s2.hwtunnel.com:443`      |
+| `DefaultGatewayHost` | `devbridge-s2.hwtunnel.com`                  |
+| `DefaultClusterID`   | `devbridge-s2` (overridable via ldflags)     |
 
 ### Code organization conventions
 
