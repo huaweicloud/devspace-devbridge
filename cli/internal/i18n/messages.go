@@ -99,6 +99,10 @@ type TunnelMessages struct {
 	FlagExpiration        Message
 	FlagName              Message
 	FlagScope             Message
+	FlagYes               Message
+	ConfirmDeleteAll      Message
+	DeleteAborted         Message
+	ConfirmNonInteractive Message
 }
 
 type PortMessages struct {
@@ -154,17 +158,17 @@ type LimitsMessages struct {
 }
 
 type EchoMessages struct {
-	EchoStarted           Message
-	EchoShort             Message
-	Method                Message
-	URL                   Message
-	Host                  Message
-	RemoteAddr            Message
-	Proto                 Message
-	Headers               Message
-	PingResultOK          Message
-	PingResultErr         Message
-	InvalidPortNumber     Message
+	EchoStarted            Message
+	EchoShort              Message
+	Method                 Message
+	URL                    Message
+	Host                   Message
+	RemoteAddr             Message
+	Proto                  Message
+	Headers                Message
+	PingResultOK           Message
+	PingResultErr          Message
+	InvalidPortNumber      Message
 	IntervalMustBePositive Message
 }
 
