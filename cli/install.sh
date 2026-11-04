@@ -331,12 +331,12 @@ prompt_clean_old_data() {
 }
 
 # ---------------------------------------------------------------------------
-# download_binary - download and extract the tar.gz package from the remote.
+# download_package - download the tar.gz package and its checksums.txt.
 #
 # Source: explicit -u wins, otherwise DEFAULT_ARTIFACT_URL (baked per channel).
-# Returns the extracted binary path (checksums.txt is alongside, for verify_checksum).
+# Returns the path to the downloaded tar.gz (checksums.txt is alongside).
 # ---------------------------------------------------------------------------
-download_binary() {
+download_package() {
     local url="$1" output_dir="$2"
     local tarball_name
     tarball_name=$(get_binary_name)
@@ -353,23 +353,16 @@ download_binary() {
     verbose "Downloading ${checksums_url} ..."
     http_get "${checksums_url}" "${output_dir}/checksums.txt" besteffort
 
-    verbose "Extracting ${tarball_name} ..."
-    tar xzf "${local_tarball}" -C "${output_dir}"
-
-    local binary_name_inside
-    binary_name_inside=$(get_binary_name_inside)
-    echo "${output_dir}/${binary_name_inside}"
+    echo "${local_tarball}"
 }
 
 # ---------------------------------------------------------------------------
-# verify_checksum - verify the SHA256 hash of the binary
+# verify_checksum - verify the SHA256 hash of the downloaded tar.gz
 # ---------------------------------------------------------------------------
 verify_checksum() {
-    local binary_file="$1"
-    # GoReleaser artifacts: checksums.txt is at the Release root; the tar.gz is the checksum target
-    local tarball_file="${binary_file}.tar.gz"
+    local tarball_file="$1"
     local checksums_file
-    checksums_file="$(dirname "${binary_file}")/checksums.txt"
+    checksums_file="$(dirname "${tarball_file}")/checksums.txt"
 
     if [[ "${SKIP_CHECKSUM}" == true ]]; then
         warn "Skipping checksum verification"
@@ -405,6 +398,21 @@ verify_checksum() {
     fi
 
     error "Checksum verification failed for ${tarball_file}"
+}
+
+# ---------------------------------------------------------------------------
+# extract_binary - extract the binary from the verified tar.gz package.
+# Returns the extracted binary path.
+# ---------------------------------------------------------------------------
+extract_binary() {
+    local tarball_file="$1" output_dir="$2"
+
+    verbose "Extracting $(basename "${tarball_file}") ..."
+    tar xzf "${tarball_file}" -C "${output_dir}"
+
+    local binary_name_inside
+    binary_name_inside=$(get_binary_name_inside)
+    echo "${output_dir}/${binary_name_inside}"
 }
 
 # ---------------------------------------------------------------------------
@@ -514,11 +522,15 @@ main() {
 
     verbose "Downloading from remote repository: ${ARTIFACT_URL}"
 
-    local binary_file
-    binary_file=$(download_binary "${ARTIFACT_URL}" "${download_dir}")
-    [[ ! -f "${binary_file}" ]] && error "Failed to download binary"
+    local tarball_file
+    tarball_file=$(download_package "${ARTIFACT_URL}" "${download_dir}")
+    [[ ! -f "${tarball_file}" ]] && error "Failed to download package"
 
-    verify_checksum "${binary_file}"
+    verify_checksum "${tarball_file}"
+
+    local binary_file
+    binary_file=$(extract_binary "${tarball_file}" "${download_dir}")
+
     install_binary "${binary_file}"
     add_to_path
     verify_installation
