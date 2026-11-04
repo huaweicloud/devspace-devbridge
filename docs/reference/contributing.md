@@ -353,7 +353,7 @@ make build-all    # builds 6 platform binaries + SHA256 checksums
 
 ### Environment variables
 
-CLI configuration priority: config file > ldflags (build-time) > hardcoded defaults.
+CLI configuration priority: ldflags (build-time) > hardcoded defaults.
 
 | Variable         | Scope | Purpose                                       | Required? |
 | ---------------- | ----- | --------------------------------------------- | --------- |
@@ -366,26 +366,6 @@ Create a DevBridge key on the [API key management page](https://devstation.conne
 export HW_API_KEY="devbridge_your_api_key"
 export DEVBRIDGE_LANG=zh
 ```
-
-### CLI configuration file
-
-The CLI stores user-level settings in `~/.huawei/devbridge/config.yaml` (YAML, file mode `0600`). Use the `config` subcommand to manage gateway addresses:
-
-```bash
-# View current configuration
-devbridge config get
-
-# Override the WebSocket gateway address (host:port)
-devbridge config set --gateway-addr gateway.example.com:443
-
-# Override the WebSocket gateway SNI host
-devbridge config set --gateway-host example.com
-
-# Restore build-time defaults
-devbridge config unset
-```
-
-Config file values take precedence over the ldflags-injected defaults.
 
 ### Build-time address injection (ldflags)
 

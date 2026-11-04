@@ -59,7 +59,10 @@ var pingCmd = &cobra.Command{
 			case <-ctx.Done():
 				return nil
 			default:
-				result := netutil.PingURI(uri, 10*time.Second)
+				result := netutil.PingURI(ctx, uri, 10*time.Second)
+				if ctx.Err() != nil {
+					return nil
+				}
 				statusText := result.StatusText
 				if result.Err != nil {
 					fmt.Printf(i18n.T(i18n.Msg.Echo.PingResultErr),

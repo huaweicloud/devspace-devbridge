@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -30,18 +31,25 @@ func validateProtocolLocal(protocol string) error {
 	return nil
 }
 
-// resolveAllowAnon resolves --allow-anonymous / --deny-anonymous.
-// It returns nil when neither flag is set, meaning "leave unchanged".
-func resolveAllowAnon(cmd *cobra.Command) *bool {
-	if cmd.Flags().Changed("allow-anonymous") {
-		v := true
-		return &v
+// resolveAllowAnon resolves --allow-anonymous / --deny-anonymous into the
+// allow-anonymous boolean. It returns (nil, nil) when neither flag is set,
+// meaning "leave unchanged", and an error when both flags are set.
+func resolveAllowAnon(cmd *cobra.Command) (*bool, error) {
+	allowSet := cmd.Flags().Changed("allow-anonymous")
+	denySet := cmd.Flags().Changed("deny-anonymous")
+	if allowSet && denySet {
+		return nil, errors.New(i18n.T(i18n.Msg.Port.FlagAllowAnonConflict))
 	}
-	if cmd.Flags().Changed("deny-anonymous") {
-		v := false
-		return &v
+	if allowSet {
+		v, _ := cmd.Flags().GetBool("allow-anonymous")
+		return &v, nil
 	}
-	return nil
+	if denySet {
+		v, _ := cmd.Flags().GetBool("deny-anonymous")
+		allow := !v
+		return &allow, nil
+	}
+	return nil, nil
 }
 
 var portCmd = &cobra.Command{
@@ -61,7 +69,10 @@ var portCreateCmd = &cobra.Command{
 		if err := validateProtocolLocal(portProtocol); err != nil {
 			return err
 		}
-		allowAnon := resolveAllowAnon(cmd)
+		allowAnon, err := resolveAllowAnon(cmd)
+		if err != nil {
+			return err
+		}
 		if allowAnon == nil {
 			deny := false
 			allowAnon = &deny
@@ -147,7 +158,11 @@ var portUpdateCmd = &cobra.Command{
 			return err
 		}
 		client := newSDKClient()
-		if err := client.UpdatePort(context.Background(), tunnelID, portNumber, resolveAllowAnon(cmd)); err != nil {
+		allowAnon, err := resolveAllowAnon(cmd)
+		if err != nil {
+			return err
+		}
+		if err := client.UpdatePort(context.Background(), tunnelID, portNumber, allowAnon); err != nil {
 			return err
 		}
 		fmt.Println(i18n.T(i18n.Msg.Port.PortUpdated))

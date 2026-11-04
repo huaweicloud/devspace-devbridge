@@ -102,28 +102,29 @@ type TunnelMessages struct {
 }
 
 type PortMessages struct {
-	Protocol         Message
-	AllowAnonymous   Message
-	PortCreated      Message
-	PortUpdated      Message
-	PortListEmpty    Message
-	Port             Message
-	TunnelID         Message
-	PortCreateShort  Message
-	PortListShort    Message
-	PortShowShort    Message
-	PortUpdateShort  Message
-	PortDeleteShort  Message
-	PortShort        Message
-	FlagPortNumber   Message
-	FlagPortRequired Message
-	FlagProtocol     Message
-	FlagAllowAnon    Message
-	FlagDenyAnon     Message
-	DeleteSuccess    Message
-	InvalidProtocol  Message
-	AddFailed        Message
-	DeleteFailed     Message
+	Protocol              Message
+	AllowAnonymous        Message
+	PortCreated           Message
+	PortUpdated           Message
+	PortListEmpty         Message
+	Port                  Message
+	TunnelID              Message
+	PortCreateShort       Message
+	PortListShort         Message
+	PortShowShort         Message
+	PortUpdateShort       Message
+	PortDeleteShort       Message
+	PortShort             Message
+	FlagPortNumber        Message
+	FlagPortRequired      Message
+	FlagProtocol          Message
+	FlagAllowAnon         Message
+	FlagDenyAnon          Message
+	FlagAllowAnonConflict Message
+	DeleteSuccess         Message
+	InvalidProtocol       Message
+	AddFailed             Message
+	DeleteFailed          Message
 }
 
 type CommonMessages struct {

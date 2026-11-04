@@ -1,6 +1,7 @@
 package netutil
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,7 +14,7 @@ func TestPingURI_NoServedByOnError(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	r := PingURI(srv.URL, 5*time.Second)
+	r := PingURI(context.Background(), srv.URL, 5*time.Second)
 	if r.Err == nil {
 		t.Fatal("expected Err on non-OK without X-Served-By, got nil")
 	}
@@ -30,7 +31,7 @@ func TestPingURI_ServedByKeepsStatus(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	r := PingURI(srv.URL, 5*time.Second)
+	r := PingURI(context.Background(), srv.URL, 5*time.Second)
 	if r.Err == nil {
 		t.Fatal("expected Err for gateway-origin 4xx, got nil")
 	}
@@ -47,7 +48,7 @@ func TestPingURI_ServiceOriginError(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	r := PingURI(srv.URL, 5*time.Second)
+	r := PingURI(context.Background(), srv.URL, 5*time.Second)
 	if r.Err != nil {
 		t.Fatalf("expected nil Err for service-origin 5xx (network is fine), got %v", r.Err)
 	}
@@ -57,7 +58,7 @@ func TestPingURI_ServiceOriginError(t *testing.T) {
 }
 
 func TestPingURI_DisconnectedOnTransportError(t *testing.T) {
-	r := PingURI("http://127.0.0.1:1/", 2*time.Second)
+	r := PingURI(context.Background(), "http://127.0.0.1:1/", 2*time.Second)
 	if r.Err == nil {
 		t.Fatal("expected transport Err, got nil")
 	}

@@ -1,6 +1,7 @@
 package netutil
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -21,26 +22,31 @@ type PingResult struct {
 // (no X-Served-By on a 4xx/5xx response). It no longer fakes "Bad Gateway" /
 // "Gateway Timeout" for transport failures, which were indistinguishable from a
 // real gateway 502/504.
-func PingURI(rawURI string, timeout time.Duration) *PingResult {
+// pingClient is shared across ping probes. DisableKeepAlives closes each
+// connection after use so a long-running `devbridge ping` does not leak idle
+// TCP connections or transports.
+var pingClient = &http.Client{
+	Transport: &http.Transport{
+		Proxy:             http.ProxyFromEnvironment,
+		DisableKeepAlives: true,
+	},
+}
+
+func PingURI(ctx context.Context, rawURI string, timeout time.Duration) *PingResult {
 	result := &PingResult{}
 	start := time.Now()
 
-	transport := &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-	}
-	client := &http.Client{
-		Transport: transport,
-		Timeout:   timeout,
-	}
+	reqCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
-	req, err := http.NewRequest(http.MethodGet, rawURI, nil)
+	req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, rawURI, nil)
 	if err != nil {
 		result.Err = err
 		result.StatusText = i18n.T(i18n.Msg.Ping.Disconnected)
 		return result
 	}
 
-	resp, err := client.Do(req)
+	resp, err := pingClient.Do(req)
 	result.Latency = time.Since(start)
 	if err != nil {
 		result.Err = err
