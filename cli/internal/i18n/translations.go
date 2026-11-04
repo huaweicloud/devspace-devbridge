@@ -93,6 +93,7 @@ func init() {
 	Msg.Port.FlagProtocol = Message{ZH: "端口协议 (选项: http/https/auto)", EN: "Port protocol (options: http/https/auto)"}
 	Msg.Port.FlagAllowAnon = Message{ZH: "允许匿名客户端访问", EN: "Allow anonymous client access"}
 	Msg.Port.FlagDenyAnon = Message{ZH: "禁止匿名客户端访问", EN: "Deny anonymous client access"}
+	Msg.Port.FlagAllowAnonConflict = Message{ZH: "不能同时使用 --allow-anonymous 和 --deny-anonymous", EN: "cannot combine --allow-anonymous and --deny-anonymous"}
 	Msg.Port.DeleteSuccess = Message{ZH: "端口 %d 已从隧道 %s 删除。\n", EN: "Port %d removed from tunnel %s.\n"}
 	Msg.Port.InvalidProtocol = Message{ZH: "协议必须是 http、https、auto 之一，当前为: %s", EN: "protocol must be one of http, https, auto, got: %s"}
 	Msg.Port.AddFailed = Message{ZH: "添加端口 %d 失败: %w", EN: "failed to add port %d: %w"}
