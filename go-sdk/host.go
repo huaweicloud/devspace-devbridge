@@ -351,10 +351,9 @@ func readPortNotification(channel *ssh.Channel) (stream *ssh.Stream, ports []int
 	buf := make([]byte, 4096)
 	n, err := readWithTimeout(stream, buf, portNotificationReadTimeout)
 	if err != nil {
-		// 超时（或读失败）：端口通知由网关在通道建立后立即发送，2 秒内零字节
-		// 说明这并非通知通道。关闭通道终止 readWithTimeout 里可能仍在阻塞的
-		// 后台读 goroutine（Stream 无取消读 API，只能靠关闭解除阻塞），
-		// 避免其挂到连接结束才释放。上层会因通道关闭而走重连。
+		// Timeout or read failure means this is not a notification channel (the
+		// gateway sends it right after opening). Close it to unblock the pending
+		// read goroutine (Stream has no cancel-read API); the caller reconnects.
 		_ = stream.Close()
 		return nil, nil, false
 	}

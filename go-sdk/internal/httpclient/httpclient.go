@@ -157,16 +157,14 @@ func (c *Client) Do(ctx context.Context, method, path string, body, result any) 
 		if apiErr := parseAPIError(respBody); apiErr != nil {
 			return apiErr
 		}
-		// X-Served-By 为空表示响应不是经过隧道基础设施产生的：请求可能
-		// 被防火墙/LB/CDN 拦截，根本没到达隧道服务。有该头时才附带
-		// 来源集群与请求 ID，便于回查服务端日志。
+		// No X-Served-By: the response did not come from the tunnel (likely
+		// blocked by firewall/LB/CDN); only then attach origin/request ID.
 		servedBy := resp.Header.Get(headerServedBy)
 		if servedBy == "" {
 			return fmt.Errorf(i18n.T(i18n.MsgNotReachedTunnel))
 		}
-		// X-DevBridge-Error-Origin 区分错误产生方（gateway vs service），
-		// 是自定义头、WAF/ELB 不改写，故比 Server 可靠。service 表示隧道内
-		// 服务自己返回的响应。
+		// X-DevBridge-Error-Origin is a custom header WAF/ELB won't rewrite, so
+		// it beats Server; "service" marks the tunneled service's own response.
 		if resp.Header.Get(headerErrorOrigin) == "service" {
 			return fmt.Errorf(i18n.T(i18n.MsgServiceHTTPErrorWithMeta),
 				resp.StatusCode, string(respBody), servedBy, resp.Header.Get(headerRequestID))

@@ -53,7 +53,6 @@ func TestParseSSHCloseError(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := parseSSHCloseError(tt.err)
 
-			// Sentinel error cases: compare by identity.
 			if errors.Is(tt.want, ErrQuotaExceeded) ||
 				errors.Is(tt.want, ErrTunnelNotFound) ||
 				errors.Is(tt.want, ErrDuplicateHost) {
@@ -63,7 +62,6 @@ func TestParseSSHCloseError(t *testing.T) {
 				return
 			}
 
-			// Pass-through cases: compare by concrete value.
 			var gotCE, wantCE websocket.CloseError
 			gotOK := errors.As(got, &gotCE)
 			wantOK := errors.As(tt.want, &wantCE)

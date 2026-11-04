@@ -8,8 +8,6 @@ import (
 	"testing"
 )
 
-// TestDo_NoServedByOnError 验证：非 2xx 且无 X-Served-By 时，报「请求未到达
-// 隧道服务」，而不是泛泛的 server error。
 func TestDo_NoServedByOnError(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
@@ -27,7 +25,6 @@ func TestDo_NoServedByOnError(t *testing.T) {
 	}
 }
 
-// TestDo_ServedByOnError 验证：有 X-Served-By 时，错误信息附带来源与请求 ID。
 func TestDo_ServedByOnError(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Served-By", "tunnels-cn-north-4-bridge")
@@ -50,8 +47,6 @@ func TestDo_ServedByOnError(t *testing.T) {
 	}
 }
 
-// TestDo_ServiceOriginOnError 验证：origin=service 的 4xx/5xx 报「隧道内服务
-// 错误」而非「服务端错误」，且仍附带来源与请求 ID。
 func TestDo_ServiceOriginOnError(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Served-By", "tunnels-cn-north-4-bridge")
@@ -75,8 +70,6 @@ func TestDo_ServiceOriginOnError(t *testing.T) {
 	}
 }
 
-// TestDo_BusinessErrorWins 验证：业务错误（{error:{code,message}}）仍优先判为
-// APIError，不被响应头逻辑覆盖。
 func TestDo_BusinessErrorWins(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)

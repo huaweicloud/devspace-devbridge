@@ -44,23 +44,20 @@ func PingURI(rawURI string, timeout time.Duration) *PingResult {
 	result.Latency = time.Since(start)
 	if err != nil {
 		result.Err = err
-		// 传输层错误（DNS 失败 / TLS 失败 / reset / EOF）统一归为
-		// 「隧道连接断开」，不再伪装成 Bad Gateway / Gateway Timeout。
+		// Transport errors (DNS/TLS failure, reset, EOF) mean the tunnel is gone; don't fake Bad Gateway/Timeout.
 		result.StatusText = i18n.T(i18n.Msg.Ping.Disconnected)
 		return result
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= http.StatusBadRequest {
-		// 有 HTTP 状态但缺少 X-Served-By：响应不是经隧道基础设施产生，
-		// 请求可能被防火墙 / LB / CDN 拦截，根本没到达隧道服务。
+		// No X-Served-By on an HTTP error: the request never reached the tunnel (likely blocked by firewall/LB/CDN).
 		if resp.Header.Get("X-Served-By") == "" {
 			result.Err = errors.New(resp.Status)
 			result.StatusText = i18n.T(i18n.Msg.Ping.NotServedByTun)
 			return result
 		}
-		// X-DevBridge-Error-Origin 区分错误产生方（自定义头，WAF/ELB 不改写）：
-		// service → 隧道内服务返回；gateway/空 → 网关自产。
+		// X-DevBridge-Error-Origin (custom, WAF/ELB won't rewrite): "service" = tunneled service, else gateway.
 		if resp.Header.Get("X-DevBridge-Error-Origin") == "service" {
 			// 业务服务自己返回的 4xx/5xx：请求已成功穿过隧道到达业务，网络是通的，
 			// 不算连接失败。Err 保持 nil，仅展示业务返回的状态，ping 循环继续。
