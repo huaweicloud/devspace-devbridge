@@ -12,10 +12,10 @@ description: Use the DevBridge REST API to manage tunnels, ports, and access tok
 API base URL:
 
 ```text
-https://bridge.developer.myhuaweicloud.com/open-api-inner/v1/relay-controller
+https://bridge.developer.myhuaweicloud.com
 ```
 
-Paths in this document are relative to this base URL. Every request carries the full API key:
+Paths in this document include the `/v1` version prefix. Every request carries the full API key:
 
 ```http
 X-API-Key: devbridge_<API key content>
@@ -25,10 +25,10 @@ Create a DevBridge key on the [API key management page](https://devstation.conne
 and put the full value into `X-API-Key`.
 
 ```bash
-export API_BASE='https://bridge.developer.myhuaweicloud.com/open-api-inner/v1/relay-controller'
+export API_BASE='https://bridge.developer.myhuaweicloud.com'
 export DEVBRIDGE_API_KEY='<full DevBridge API key>'
 
-curl -k -i "$API_BASE/auth/check" -H "X-API-Key: $DEVBRIDGE_API_KEY"
+curl -k -i -X POST "$API_BASE/v1/api-keys/check" -H "X-API-Key: $DEVBRIDGE_API_KEY"
 ```
 
 A successful request returns `204 No Content`. All requests below carry `X-API-Key`;
@@ -74,26 +74,26 @@ Use the HTTP status and `error.code` to decide how to handle the error; `message
 
 | Method | Path                                   | Purpose                                        |
 | ------ | -------------------------------------- | ---------------------------------------------- |
-| GET    | `/auth/check`                          | Verify credentials.                            |
-| POST   | `/tunnels`                             | Create a tunnel.                               |
-| GET    | `/tunnels`                             | Query the current user's valid tunnels.        |
-| DELETE | `/tunnels`                             | Delete all of the current user's tunnels.      |
-| GET    | `/tunnels/{tunnelId}`                  | Query details and runtime status.              |
-| PUT    | `/tunnels/{tunnelId}`                  | Update a tunnel.                               |
-| DELETE | `/tunnels/{tunnelId}`                  | Delete a specific tunnel.                      |
-| POST   | `/tunnels/{tunnelId}/token?scope=host` | Issue a host or connect token.                 |
-| POST   | `/tunnels/upsert-with-token`           | Create or reuse by name and issue both tokens. |
-| POST   | `/tunnels/{tunnelId}/ports`            | Create a port.                                 |
-| GET    | `/tunnels/{tunnelId}/ports`            | Query the port list.                           |
-| GET    | `/tunnels/{tunnelId}/ports/{port}`     | Query a port's details.                        |
-| PUT    | `/tunnels/{tunnelId}/ports/{port}`     | Update a port policy.                          |
-| DELETE | `/tunnels/{tunnelId}/ports/{port}`     | Delete a port.                                 |
-| GET    | `/limits`                              | Query limits and balance.                      |
+| POST   | `/v1/api-keys/check`                          | Verify credentials.                            |
+| POST   | `/v1/tunnels`                             | Create a tunnel.                               |
+| GET    | `/v1/tunnels`                             | Query the current user's valid tunnels.        |
+| DELETE | `/v1/tunnels`                             | Delete all of the current user's tunnels.      |
+| GET    | `/v1/tunnels/{tunnelId}`                  | Query details and runtime status.              |
+| PUT    | `/v1/tunnels/{tunnelId}`                  | Update a tunnel.                               |
+| DELETE | `/v1/tunnels/{tunnelId}`                  | Delete a specific tunnel.                      |
+| POST   | `/v1/tunnels/{tunnelId}/token?scope=host` | Issue a host or connect token.                 |
+| POST   | `/v1/tunnels/upsert-with-token`           | Create or reuse by name and issue both tokens. |
+| POST   | `/v1/tunnels/{tunnelId}/ports`            | Create a port.                                 |
+| GET    | `/v1/tunnels/{tunnelId}/ports`            | Query the port list.                           |
+| GET    | `/v1/tunnels/{tunnelId}/ports/{port}`     | Query a port's details.                        |
+| PUT    | `/v1/tunnels/{tunnelId}/ports/{port}`     | Update a port policy.                          |
+| DELETE | `/v1/tunnels/{tunnelId}/ports/{port}`     | Delete a port.                                 |
+| GET    | `/v1/limits`                              | Query limits and balance.                      |
 
 ## Create a tunnel
 
 ```http
-POST /tunnels
+POST /v1/tunnels
 Content-Type: application/json
 
 {
@@ -135,7 +135,7 @@ After creation, obtain connection tokens via the token endpoint.
 
 ## Query tunnels
 
-`GET /tunnels` returns the current user's valid tunnels and can be filtered with `?clusterId=...`:
+`GET /v1/tunnels` returns the current user's valid tunnels and can be filtered with `?clusterId=...`:
 
 ```json
 [
@@ -154,7 +154,7 @@ After creation, obtain connection tokens via the token endpoint.
 ]
 ```
 
-A list response is either an empty array or an array of tunnels. `GET /tunnels/{tunnelId}` returns the same fields as creation,
+A list response is either an empty array or an array of tunnels. `GET /v1/tunnels/{tunnelId}` returns the same fields as creation,
 plus the optional runtime `status`. Here is what `status` contains:
 
 ```json
@@ -175,7 +175,7 @@ The `bandwidthUsed` in details is the settled total upload and download traffic,
 ## Update and delete a tunnel
 
 ```http
-PUT /tunnels/aaaadysa
+PUT /v1/tunnels/aaaadysa
 Content-Type: application/json
 
 {
@@ -191,18 +191,18 @@ A successful update returns the JSON boolean `true` directly.
 The following delete endpoints also return `true`, while removing ports and runtime status:
 
 ```text
-DELETE /tunnels/{tunnelId}
-DELETE /tunnels
+DELETE /v1/tunnels/{tunnelId}
+DELETE /v1/tunnels
 ```
 
-`DELETE /tunnels` deletes all of the current user's tunnels, including expired ones.
+`DELETE /v1/tunnels` deletes all of the current user's tunnels, including expired ones.
 
 ## Issue a tunnel token
 
 Each call issues a new token. `scope` is a required query parameter, either `host` or `connect`:
 
 ```bash
-curl -k -X POST "$API_BASE/tunnels/aaaadysa/token?scope=host" -H "X-API-Key: $DEVBRIDGE_API_KEY"
+curl -k -X POST "$API_BASE/v1/tunnels/aaaadysa/token?scope=host" -H "X-API-Key: $DEVBRIDGE_API_KEY"
 ```
 
 ```json
@@ -221,7 +221,7 @@ When establishing a connection, both the tunnel and the token must be within the
 ## Create or reuse by name and issue tokens
 
 ```http
-POST /tunnels/upsert-with-token
+POST /v1/tunnels/upsert-with-token
 Content-Type: application/json
 
 {
@@ -260,7 +260,7 @@ On success, returns the tunnel-creation response plus these two fields:
 ## Create and query ports
 
 ```http
-POST /tunnels/aaaadysa/ports
+POST /v1/tunnels/aaaadysa/ports
 Content-Type: application/json
 
 {
@@ -285,13 +285,13 @@ Success response:
 }
 ```
 
-`GET /tunnels/{tunnelId}/ports` returns an array of ports, `[]` when empty.
-`GET /tunnels/{tunnelId}/ports/{port}` returns a single port object.
+`GET /v1/tunnels/{tunnelId}/ports` returns an array of ports, `[]` when empty.
+`GET /v1/tunnels/{tunnelId}/ports/{port}` returns a single port object.
 
 ## Update and delete a port
 
 ```http
-PUT /tunnels/aaaadysa/ports/8080
+PUT /v1/tunnels/aaaadysa/ports/8080
 Content-Type: application/json
 
 {
@@ -302,11 +302,11 @@ Content-Type: application/json
 `protocol` and `allowAnonymous` are both optional; omit them or pass `null` to leave them unchanged.
 The `port` in the path specifies the target port. On success, returns the updated port object.
 
-`DELETE /tunnels/{tunnelId}/ports/{port}` returns the JSON boolean `true` on success.
+`DELETE /v1/tunnels/{tunnelId}/ports/{port}` returns the JSON boolean `true` on success.
 
 ## Limits and balance
 
-`GET /limits` returns:
+`GET /v1/limits` returns:
 
 ```json
 {

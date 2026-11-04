@@ -127,16 +127,18 @@ type PortMessages struct {
 }
 
 type CommonMessages struct {
-	VersionInfo      Message
-	Days             Message
-	Hours            Message
-	Expired          Message
-	AuthCommands     Message
-	FlagAPIKey       Message
-	FlagVerbose      Message
-	FlagEchoPort     Message
-	FlagInterface    Message
-	FlagPingInterval Message
+	VersionInfo         Message
+	Days                Message
+	Hours               Message
+	Expired             Message
+	AuthCommands        Message
+	FlagAPIKey          Message
+	FlagVerbose         Message
+	FlagEchoPort        Message
+	FlagInterface       Message
+	FlagPingInterval    Message
+	UpdateLabel         Message
+	UpgradeRequiredHint Message
 }
 
 type LimitsMessages struct {

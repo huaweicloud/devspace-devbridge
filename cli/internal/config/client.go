@@ -18,18 +18,22 @@ import (
 // every REST request, so the backend can decide whether to prompt the client
 // to upgrade. It only affects requests that flow through this transport.
 type versionTransport struct {
-	base    http.RoundTripper
-	version string
+	base      http.RoundTripper
+	userAgent string
 }
 
 func (t versionTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("User-Agent", t.userAgent)
+	return t.base.RoundTrip(req)
+}
+
+// userAgent builds the User-Agent value: devbridge-cli/<version> (<OS>/<arch>; stable).
+func userAgent(version string) string {
 	osName := runtime.GOOS
 	if osName != "" {
 		osName = strings.ToUpper(osName[:1]) + osName[1:]
 	}
-	req.Header.Set("User-Agent",
-		fmt.Sprintf("devbridge-cli/%s (%s/%s; stable)", t.version, osName, runtime.GOARCH))
-	return t.base.RoundTrip(req)
+	return fmt.Sprintf("devbridge-cli/%s (%s/%s; stable)", version, osName, runtime.GOARCH)
 }
 
 // NewClient creates an SDK client from the CLI configuration.
@@ -40,7 +44,7 @@ func (t versionTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 // API base URL and gateway address come from CLI config and ldflags-injected values.
 func NewClient(apiKey, version string) *devbridge.Devbridge {
 	cfg := devbridge.Config{
-		APIBaseURL:  DefaultServerDomain + RelayControllerPath,
+		APIBaseURL:  DefaultServerDomain,
 		GatewayAddr: ResolveGatewayAddr(),
 		GatewayHost: ResolveGatewayHost(apiKey),
 		APIKey:      apiKey,
@@ -48,8 +52,8 @@ func NewClient(apiKey, version string) *devbridge.Devbridge {
 		HTTPClient: &http.Client{
 			Timeout: 30 * time.Second,
 			Transport: versionTransport{
-				base:    http.DefaultTransport,
-				version: version,
+				base:      http.DefaultTransport,
+				userAgent: userAgent(version),
 			},
 		},
 	}

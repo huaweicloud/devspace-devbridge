@@ -23,6 +23,11 @@ const (
 	DefaultAPIBaseURL  = "https://bridge.developer.myhuaweicloud.com"
 	DefaultGatewayAddr = "gateway.devbridge-s2.hwtunnel.com:443"
 	DefaultGatewayHost = "devbridge-s2.hwtunnel.com"
+
+	// apiVersionPrefix is the REST API version segment, prepended to every
+	// request path so the server can route by version without relying on the
+	// caller to prepend it to the base URL.
+	apiVersionPrefix = "/v1"
 )
 
 // DefaultClusterID is the cluster used when creating new tunnels.

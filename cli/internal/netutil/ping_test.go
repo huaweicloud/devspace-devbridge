@@ -43,7 +43,8 @@ func TestPingURI_ServedByKeepsStatus(t *testing.T) {
 	}
 }
 
-// TestPingURI_ServiceOriginError 验证：origin=service 的 4xx 归为「隧道内服务错误」。
+// TestPingURI_ServiceOriginError 验证：origin=service 的 4xx/5xx 归为「隧道内服务错误」，
+// 且 Err 为 nil —— 此时请求已到达业务、网络是通的，不算连接失败。
 func TestPingURI_ServiceOriginError(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Served-By", "tunnels-cn-north-4-bridge")
@@ -53,8 +54,8 @@ func TestPingURI_ServiceOriginError(t *testing.T) {
 	defer srv.Close()
 
 	r := PingURI(srv.URL, 5*time.Second)
-	if r.Err == nil {
-		t.Fatal("expected Err for service-origin 5xx, got nil")
+	if r.Err != nil {
+		t.Fatalf("expected nil Err for service-origin 5xx (network is fine), got %v", r.Err)
 	}
 	if r.StatusText == "500 Internal Server Error" {
 		t.Fatalf("should classify as service error, got raw status %q", r.StatusText)

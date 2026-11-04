@@ -10,6 +10,7 @@ import (
 	"runtime"
 
 	devbridge "github.com/huaweicloud/devspace-devbridge/go-sdk"
+	"huawei.com/devbridge/internal/i18n"
 )
 
 const (
@@ -35,8 +36,12 @@ func installCommand() string {
 // turned into an upgrade prompt matching the previous version-check notice.
 func FormatError(err error) string {
 	var ue *devbridge.UpgradeRequiredError
-	if errors.As(err, &ue) && ue.Message != "" {
-		return fmt.Sprintf("\n%s\nUpdate:\n%s\n", ue.Message, installCommand())
+	if errors.As(err, &ue) {
+		msg := ue.Message
+		if msg == "" {
+			msg = i18n.T(i18n.Msg.Common.UpgradeRequiredHint)
+		}
+		return fmt.Sprintf("\n%s\n%s\n%s\n", msg, i18n.T(i18n.Msg.Common.UpdateLabel), installCommand())
 	}
 	return err.Error()
 }

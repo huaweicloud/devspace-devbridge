@@ -12,10 +12,10 @@ description: 使用 DevBridge REST API 管理开发隧道、端口和访问令�
 API 基础地址：
 
 ```text
-https://bridge.developer.myhuaweicloud.com/open-api-inner/v1/relay-controller
+https://bridge.developer.myhuaweicloud.com
 ```
 
-本文路径均相对于该基础地址。每次请求携带完整 Key：
+本文路径均包含 `/v1` 版本前缀。每次请求携带完整 Key：
 
 ```http
 X-API-Key: devbridge_<API Key 内容>
@@ -25,10 +25,10 @@ X-API-Key: devbridge_<API Key 内容>
 创建 DevBridge Key，将完整值填入 `X-API-Key`。
 
 ```bash
-export API_BASE='https://bridge.developer.myhuaweicloud.com/open-api-inner/v1/relay-controller'
+export API_BASE='https://bridge.developer.myhuaweicloud.com'
 export DEVBRIDGE_API_KEY='<完整 DevBridge API Key>'
 
-curl -k -i "$API_BASE/auth/check" -H "X-API-Key: $DEVBRIDGE_API_KEY"
+curl -k -i -X POST "$API_BASE/v1/api-keys/check" -H "X-API-Key: $DEVBRIDGE_API_KEY"
 ```
 
 成功返回 `204 No Content`。下文请求均携带 `X-API-Key`，
@@ -74,26 +74,26 @@ curl -k -i "$API_BASE/auth/check" -H "X-API-Key: $DEVBRIDGE_API_KEY"
 
 | 方法   | 路径                                   | 用途                               |
 | ------ | -------------------------------------- | ---------------------------------- |
-| GET    | `/auth/check`                          | 校验凭据。                         |
-| POST   | `/tunnels`                             | 创建隧道。                         |
-| GET    | `/tunnels`                             | 查询当前用户的有效隧道。           |
-| DELETE | `/tunnels`                             | 删除当前用户的全部隧道。           |
-| GET    | `/tunnels/{tunnelId}`                  | 查询详情和运行状态。               |
-| PUT    | `/tunnels/{tunnelId}`                  | 更新隧道。                         |
-| DELETE | `/tunnels/{tunnelId}`                  | 删除指定隧道。                     |
-| POST   | `/tunnels/{tunnelId}/token?scope=host` | 签发 host 或 connect 令牌。        |
-| POST   | `/tunnels/upsert-with-token`           | 按名称创建或复用，并签发两个令牌。 |
-| POST   | `/tunnels/{tunnelId}/ports`            | 创建端口。                         |
-| GET    | `/tunnels/{tunnelId}/ports`            | 查询端口列表。                     |
-| GET    | `/tunnels/{tunnelId}/ports/{port}`     | 查询端口详情。                     |
-| PUT    | `/tunnels/{tunnelId}/ports/{port}`     | 更新端口策略。                     |
-| DELETE | `/tunnels/{tunnelId}/ports/{port}`     | 删除端口。                         |
-| GET    | `/limits`                              | 查询限制和余额。                   |
+| POST   | `/v1/api-keys/check`                          | 校验凭据。                         |
+| POST   | `/v1/tunnels`                             | 创建隧道。                         |
+| GET    | `/v1/tunnels`                             | 查询当前用户的有效隧道。           |
+| DELETE | `/v1/tunnels`                             | 删除当前用户的全部隧道。           |
+| GET    | `/v1/tunnels/{tunnelId}`                  | 查询详情和运行状态。               |
+| PUT    | `/v1/tunnels/{tunnelId}`                  | 更新隧道。                         |
+| DELETE | `/v1/tunnels/{tunnelId}`                  | 删除指定隧道。                     |
+| POST   | `/v1/tunnels/{tunnelId}/token?scope=host` | 签发 host 或 connect 令牌。        |
+| POST   | `/v1/tunnels/upsert-with-token`           | 按名称创建或复用，并签发两个令牌。 |
+| POST   | `/v1/tunnels/{tunnelId}/ports`            | 创建端口。                         |
+| GET    | `/v1/tunnels/{tunnelId}/ports`            | 查询端口列表。                     |
+| GET    | `/v1/tunnels/{tunnelId}/ports/{port}`     | 查询端口详情。                     |
+| PUT    | `/v1/tunnels/{tunnelId}/ports/{port}`     | 更新端口策略。                     |
+| DELETE | `/v1/tunnels/{tunnelId}/ports/{port}`     | 删除端口。                         |
+| GET    | `/v1/limits`                              | 查询限制和余额。                   |
 
 ## 创建隧道
 
 ```http
-POST /tunnels
+POST /v1/tunnels
 Content-Type: application/json
 
 {
@@ -135,7 +135,7 @@ Content-Type: application/json
 
 ## 查询隧道
 
-`GET /tunnels` 返回当前用户的有效隧道，可用 `?clusterId=...` 筛选：
+`GET /v1/tunnels` 返回当前用户的有效隧道，可用 `?clusterId=...` 筛选：
 
 ```json
 [
@@ -154,7 +154,7 @@ Content-Type: application/json
 ]
 ```
 
-列表响应为空数组或隧道数组。`GET /tunnels/{tunnelId}` 返回与创建结果相同的字段，
+列表响应为空数组或隧道数组。`GET /v1/tunnels/{tunnelId}` 返回与创建结果相同的字段，
 以及可选的运行状态 `status`。以下是 `status` 的内容：
 
 ```json
@@ -175,7 +175,7 @@ Content-Type: application/json
 ## 更新和删除隧道
 
 ```http
-PUT /tunnels/aaaadysa
+PUT /v1/tunnels/aaaadysa
 Content-Type: application/json
 
 {
@@ -191,18 +191,18 @@ Content-Type: application/json
 以下删除接口也返回 `true`，同时移除端口和运行状态：
 
 ```text
-DELETE /tunnels/{tunnelId}
-DELETE /tunnels
+DELETE /v1/tunnels/{tunnelId}
+DELETE /v1/tunnels
 ```
 
-`DELETE /tunnels` 删除当前用户的全部隧道，包括过期隧道。
+`DELETE /v1/tunnels` 删除当前用户的全部隧道，包括过期隧道。
 
 ## 签发隧道令牌
 
 每次调用签发新令牌。`scope` 是必填查询参数，取值为 `host` 或 `connect`：
 
 ```bash
-curl -k -X POST "$API_BASE/tunnels/aaaadysa/token?scope=host" -H "X-API-Key: $DEVBRIDGE_API_KEY"
+curl -k -X POST "$API_BASE/v1/tunnels/aaaadysa/token?scope=host" -H "X-API-Key: $DEVBRIDGE_API_KEY"
 ```
 
 ```json
@@ -221,7 +221,7 @@ curl -k -X POST "$API_BASE/tunnels/aaaadysa/token?scope=host" -H "X-API-Key: $DE
 ## 按名称创建或复用并签发令牌
 
 ```http
-POST /tunnels/upsert-with-token
+POST /v1/tunnels/upsert-with-token
 Content-Type: application/json
 
 {
@@ -260,7 +260,7 @@ Content-Type: application/json
 ## 创建和查询端口
 
 ```http
-POST /tunnels/aaaadysa/ports
+POST /v1/tunnels/aaaadysa/ports
 Content-Type: application/json
 
 {
@@ -285,13 +285,13 @@ Content-Type: application/json
 }
 ```
 
-`GET /tunnels/{tunnelId}/ports` 返回端口数组，空列表为 `[]`。
-`GET /tunnels/{tunnelId}/ports/{port}` 返回单个端口对象。
+`GET /v1/tunnels/{tunnelId}/ports` 返回端口数组，空列表为 `[]`。
+`GET /v1/tunnels/{tunnelId}/ports/{port}` 返回单个端口对象。
 
 ## 更新和删除端口
 
 ```http
-PUT /tunnels/aaaadysa/ports/8080
+PUT /v1/tunnels/aaaadysa/ports/8080
 Content-Type: application/json
 
 {
@@ -302,11 +302,11 @@ Content-Type: application/json
 `protocol` 和 `allowAnonymous` 均可选，省略或传 `null` 保持不变。
 路径中的 `port` 指定目标端口。成功返回更新后的端口对象。
 
-`DELETE /tunnels/{tunnelId}/ports/{port}` 成功返回 JSON 布尔值 `true`。
+`DELETE /v1/tunnels/{tunnelId}/ports/{port}` 成功返回 JSON 布尔值 `true`。
 
 ## 限制与余额
 
-`GET /limits` 返回：
+`GET /v1/limits` 返回：
 
 ```json
 {

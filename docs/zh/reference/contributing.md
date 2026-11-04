@@ -398,7 +398,7 @@ REST API 基础地址、登录页面 URL 和 WebSocket 网关地址在构建时�
 | `GATEWAY_ADDR`   | `config.ServerAddr`          | WebSocket 网关地址（host:port） |
 | `CLUSTER_DOMAIN` | `config.ServerHost`          | WebSocket 网关 SNI host         |
 
-完整的 REST API 基础地址 = `SERVER_DOMAIN` + `/open-api-inner/v1/relay-controller`。
+完整的 REST API 基础地址是裸域名 `SERVER_DOMAIN`；SDK 会在每个请求路径前统一加上 `/v1` 版本前缀。
 
 生产构建（`build-prod`）注入的地址：
 
@@ -419,11 +419,11 @@ make build-dev SERVER_DOMAIN=https://my-test-server.com LOGIN_URL=https://my-log
 
 ### 与 API 文档的对应关系
 
-[REST API](/zh/reference/api) 文档中记录的 API 基础地址对应 prod 构建的 `SERVER_DOMAIN` + `RelayControllerPath`：
+[REST API](/zh/reference/api) 文档中的 API 基于裸域名 `SERVER_DOMAIN`，并由 SDK 给每个接口路径统一加上 `/v1` 版本前缀：
 
 ```text
-https://bridge.developer.myhuaweicloud.com  +  /open-api-inner/v1/relay-controller
-= https://bridge.developer.myhuaweicloud.com/open-api-inner/v1/relay-controller
+https://bridge.developer.myhuaweicloud.com  +  /v1/tunnels
+= https://bridge.developer.myhuaweicloud.com/v1/tunnels
 ```
 
 ---
@@ -463,7 +463,7 @@ SDK 默认常量：
 
 | 常量                 | 值                                                                              |
 | -------------------- | ------------------------------------------------------------------------------- |
-| `DefaultAPIBaseURL`  | `https://bridge.developer.myhuaweicloud.com/open-api-inner/v1/relay-controller` |
+| `DefaultAPIBaseURL`  | `https://bridge.developer.myhuaweicloud.com` |
 | `DefaultGatewayAddr` | `gateway.devbridge-s2.hwtunnel.com:443`                                         |
 | `DefaultGatewayHost` | `devbridge-s2.hwtunnel.com`                                                     |
 | `DefaultClusterID`   | `devbridge-s2`（可通过 ldflags 覆盖）                                           |

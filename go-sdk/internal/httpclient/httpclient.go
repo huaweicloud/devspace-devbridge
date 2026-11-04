@@ -52,13 +52,20 @@ func (e *UpgradeRequiredError) Error() string {
 	return e.Message
 }
 
-// errorBody is an alternative error format (used by some endpoints).
+// errorBody is the nested {error: {code, message}} business-error shape.
 type errorBody struct {
 	Error struct {
 		Code    string `json:"code"`
 		Message string `json:"message"`
 		Target  string `json:"target"`
 	} `json:"error"`
+}
+
+// flatErrorBody is the flat {code, message} business-error shape (e.g. the
+// 426 upgrade-required response).
+type flatErrorBody struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
 }
 
 // Client sends REST API requests.
@@ -192,7 +199,7 @@ func (c *Client) logRequest(req *http.Request, body []byte) {
 
 // logRequestHeaders dumps the final request headers after the transport has
 // run (so headers injected by a caller-provided RoundTripper, such as the
-// CLI's X-User-Agent, are included).
+// CLI's User-Agent, are included).
 func (c *Client) logRequestHeaders(req *http.Request) {
 	if !c.Logger.Enabled(context.Background(), slog.LevelDebug) {
 		return
@@ -243,11 +250,9 @@ func parseAPIError(body []byte) *APIError {
 // parseMessage extracts the "message" field from a flat {"code","message"}
 // business response, falling back to the raw body when it can't be parsed.
 func parseMessage(body []byte) string {
-	var b struct {
-		Message string `json:"message"`
-	}
-	if json.Unmarshal(body, &b) == nil && b.Message != "" {
-		return b.Message
+	var fb flatErrorBody
+	if json.Unmarshal(body, &fb) == nil && fb.Message != "" {
+		return fb.Message
 	}
 	return string(body)
 }

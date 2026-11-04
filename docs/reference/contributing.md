@@ -398,7 +398,7 @@ The REST API base URL, login page URL, and WebSocket gateway address are injecte
 | `GATEWAY_ADDR`    | `config.ServerAddr`          | WebSocket gateway (host:port) |
 | `CLUSTER_DOMAIN`  | `config.ServerHost`          | WebSocket gateway SNI host    |
 
-The full REST API base URL is `SERVER_DOMAIN + /open-api-inner/v1/relay-controller`.
+The full REST API base URL is the bare `SERVER_DOMAIN`; the SDK prepends a `/v1` version prefix to each request path.
 
 The production build (`build-prod`) injects these addresses:
 
@@ -419,11 +419,11 @@ When modifying these variables, update both `Makefile` and `.goreleaser.yaml` (o
 
 ### Relationship to the API documentation
 
-The REST API base URL documented in [REST API](/reference/api) corresponds to the prod build value of `SERVER_DOMAIN` + `RelayControllerPath`:
+The REST API in [REST API](/reference/api) is served at the bare `SERVER_DOMAIN`, and the SDK prepends a `/v1` version prefix to each endpoint path:
 
 ```text
-https://bridge.developer.myhuaweicloud.com  +  /open-api-inner/v1/relay-controller
-= https://bridge.developer.myhuaweicloud.com/open-api-inner/v1/relay-controller
+https://bridge.developer.myhuaweicloud.com  +  /v1/tunnels
+= https://bridge.developer.myhuaweicloud.com/v1/tunnels
 ```
 
 ---
@@ -463,7 +463,7 @@ SDK default constants:
 
 | Constant             | Value                                                                           |
 | -------------------- | ------------------------------------------------------------------------------- |
-| `DefaultAPIBaseURL`  | `https://bridge.developer.myhuaweicloud.com/open-api-inner/v1/relay-controller` |
+| `DefaultAPIBaseURL`  | `https://bridge.developer.myhuaweicloud.com` |
 | `DefaultGatewayAddr` | `gateway.devbridge-s2.hwtunnel.com:443`                                         |
 | `DefaultGatewayHost` | `devbridge-s2.hwtunnel.com`                                                     |
 | `DefaultClusterID`   | `devbridge-s2` (overridable via ldflags)                                        |

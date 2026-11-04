@@ -11,6 +11,8 @@ func init() {
 	Msg.Common.FlagEchoPort = Message{ZH: "本地服务器端口号 (未指定则自动分配随机端口)", EN: "Local server port number (auto-assign random port if not specified)"}
 	Msg.Common.FlagInterface = Message{ZH: "本地接口地址", EN: "Local interface address"}
 	Msg.Common.FlagPingInterval = Message{ZH: "消息间隔(毫秒)", EN: "Interval between messages in ms"}
+	Msg.Common.UpdateLabel = Message{ZH: "更新方式：", EN: "Update:"}
+	Msg.Common.UpgradeRequiredHint = Message{ZH: "当前 CLI 版本过低，请升级后重试", EN: "your CLI version is too old, please upgrade and retry"}
 
 	Msg.Auth.LoginSuccess = Message{ZH: "登录成功", EN: "Login successful"}
 	Msg.Auth.LogoutSuccess = Message{ZH: "注销成功", EN: "Logout successful"}
@@ -121,7 +123,7 @@ func init() {
 	Msg.Ping.Disconnected = Message{ZH: "隧道连接断开", EN: "tunnel disconnected"}
 	Msg.Ping.NotServedByTun = Message{ZH: "请求未到达隧道服务，域名可能被防火墙/负载均衡拦截", EN: "request did not reach the tunnel service; the domain may be blocked by a firewall/load balancer"}
 	Msg.Ping.GatewayError = Message{ZH: "网关错误: HTTP %s", EN: "gateway error: HTTP %s"}
-	Msg.Ping.ServiceError = Message{ZH: "隧道内服务错误: HTTP %s", EN: "tunneled service error: HTTP %s"}
+	Msg.Ping.ServiceError = Message{ZH: "隧道内服务错误: %s", EN: "tunneled service error: %s"}
 	Msg.Echo.PingResultOK = Message{ZH: "HTTP %s -- %d ms\n", EN: "HTTP %s -- %d ms\n"}
 	Msg.Echo.PingResultErr = Message{ZH: "HTTP %s -- %d ms（错误: %v）\n", EN: "HTTP %s -- %d ms (err: %v)\n"}
 	Msg.Echo.InvalidPortNumber = Message{ZH: "无效端口号 %d（端口需在 1-65535 之间）", EN: "invalid port number %d (port must be between 1 and 65535)"}

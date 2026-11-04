@@ -62,7 +62,8 @@ func PingURI(rawURI string, timeout time.Duration) *PingResult {
 		// X-DevBridge-Error-Origin 区分错误产生方（自定义头，WAF/ELB 不改写）：
 		// service → 隧道内服务返回；gateway/空 → 网关自产。
 		if resp.Header.Get("X-DevBridge-Error-Origin") == "service" {
-			result.Err = errors.New(resp.Status)
+			// 业务服务自己返回的 4xx/5xx：请求已成功穿过隧道到达业务，网络是通的，
+			// 不算连接失败。Err 保持 nil，仅展示业务返回的状态，ping 循环继续。
 			result.StatusText = fmt.Sprintf(i18n.T(i18n.Msg.Ping.ServiceError), resp.Status)
 			return result
 		}
