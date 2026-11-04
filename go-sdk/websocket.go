@@ -7,6 +7,7 @@ package sdk
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -144,6 +145,15 @@ func (d *Devbridge) dialWithRetry(ctx context.Context, url string, opts *websock
 			return nil, ErrDuplicateHost
 		}
 
+		// 426 Upgrade Required: CLI version below the gateway minimum.
+		// Terminal — retrying will not change the version, so return a clear
+		// error immediately rather than entering the retry loop.
+		if resp != nil && resp.StatusCode == http.StatusUpgradeRequired {
+			body, _ := io.ReadAll(resp.Body)
+			_ = resp.Body.Close()
+			return nil, &UpgradeRequiredError{Message: gatewayMessage(body)}
+		}
+
 		// 429 Too Many Requests: rate limited
 		// 注意：当前网关的握手路径（host/connect WebSocket 建立）不返回 429——
 		// 429 仅由访客 HTTP 路径（relayHttp/relayVisitorStream 限流）产生，
@@ -245,4 +255,17 @@ func parseSSHCloseError(err error) error {
 		}
 	}
 	return err
+}
+
+// gatewayMessage extracts the human-readable message from a gateway rejection
+// body (e.g. {"code":"42600","message":"CLI version ... please upgrade"}),
+// falling back to the raw body when the JSON shape is absent or empty.
+func gatewayMessage(body []byte) string {
+	var b struct {
+		Message string `json:"message"`
+	}
+	if json.Unmarshal(body, &b) == nil && strings.TrimSpace(b.Message) != "" {
+		return b.Message
+	}
+	return strings.TrimSpace(string(body))
 }
