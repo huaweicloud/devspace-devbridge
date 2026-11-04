@@ -353,7 +353,7 @@ make build-all    # 构建 6 个平台产物 + SHA256 校验和
 
 ### 环境变量
 
-CLI 配置优先级：配置文件 > ldflags（构建时注入）> 代码硬编码默认值。
+CLI 配置优先级：ldflags（构建时注入）> 代码硬编码默认值。
 
 | 变量             | 作用域 | 用途                          | 是否必需 |
 | ---------------- | ------ | ----------------------------- | -------- |
@@ -366,26 +366,6 @@ CLI 配置优先级：配置文件 > ldflags（构建时注入）> 代码硬编�
 export HW_API_KEY="devbridge_your_api_key"
 export DEVBRIDGE_LANG=zh
 ```
-
-### CLI 配置文件
-
-CLI 将用户级配置存储在 `~/.huawei/devbridge/config.yaml`（YAML 格式，文件权限 `0600`）。使用 `config` 子命令管理网关地址：
-
-```bash
-# 查看当前配置
-devbridge config get
-
-# 覆盖 WebSocket 网关地址（host:port）
-devbridge config set --gateway-addr gateway.example.com:443
-
-# 覆盖 WebSocket 网关 SNI host
-devbridge config set --gateway-host example.com
-
-# 恢复构建时默认值
-devbridge config unset
-```
-
-配置文件中的值优先于 ldflags 注入的默认值。
 
 ### 构建时地址注入（ldflags）
 
