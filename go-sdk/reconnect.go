@@ -98,5 +98,10 @@ func reconnectDelay(failureCount int) time.Duration {
 // Duplicate host is deliberately excluded: Host treats it as fatal only
 // before the first successful connect, and retriable afterwards.
 func gatewayRejectedError(err error) bool {
-	return errors.Is(err, ErrQuotaExceeded) || errors.Is(err, ErrTunnelNotFound)
+	if errors.Is(err, ErrQuotaExceeded) || errors.Is(err, ErrTunnelNotFound) {
+		return true
+	}
+	// CLI version below the gateway minimum (HTTP 426): retrying cannot change
+	// the version, so stop immediately rather than entering a retry storm.
+	return IsUpgradeRequired(err)
 }
