@@ -129,14 +129,6 @@ func init() {
 	Msg.Echo.InvalidPortNumber = Message{ZH: "无效端口号 %d（端口需在 1-65535 之间）", EN: "invalid port number %d (port must be between 1 and 65535)"}
 	Msg.Echo.IntervalMustBePositive = Message{ZH: "间隔必须为正数，当前为 %d 毫秒", EN: "interval must be positive, got %d ms"}
 
-	Msg.Config.ConfigCommands = Message{ZH: "配置命令", EN: "Configuration commands"}
-	Msg.Config.GetShort = Message{ZH: "查看网关配置", EN: "Show gateway configuration"}
-	Msg.Config.SetShort = Message{ZH: "设置网关配置", EN: "Set gateway configuration"}
-	Msg.Config.UnsetShort = Message{ZH: "清空网关配置（恢复编译时默认值）", EN: "Clear gateway configuration (restore build defaults)"}
-	Msg.Config.GatewayAddr = Message{ZH: "网关地址", EN: "Gateway Address"}
-	Msg.Config.GatewayHost = Message{ZH: "网关SNI域名", EN: "Gateway SNI Host"}
-	Msg.Config.SetSuccess = Message{ZH: "配置已保存", EN: "Configuration saved"}
-	Msg.Config.NothingToSet = Message{ZH: "没有可设置的项，请用 --gateway-addr / --gateway-host", EN: "Nothing to set, use --gateway-addr / --gateway-host"}
 	Msg.Config.NoDefaultTunnel = Message{ZH: "未指定隧道 ID 且未设置默认隧道，请通过参数指定，或使用 'devbridge set' 设置默认隧道", EN: "tunnel ID not specified and no default tunnel set, please specify via argument or use 'devbridge set' to set default"}
 	Msg.Config.KeyNotFound = Message{ZH: "配置项不存在", EN: "key not found"}
 

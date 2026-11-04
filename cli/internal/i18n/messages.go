@@ -179,14 +179,6 @@ type PingMessages struct {
 }
 
 type ConfigMessages struct {
-	ConfigCommands  Message
-	GetShort        Message
-	SetShort        Message
-	UnsetShort      Message
-	GatewayAddr     Message
-	GatewayHost     Message
-	SetSuccess      Message
-	NothingToSet    Message
 	NoDefaultTunnel Message
 	KeyNotFound     Message
 }
