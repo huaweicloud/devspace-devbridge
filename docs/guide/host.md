@@ -1,123 +1,122 @@
 ---
-title: Host：托管本地服务
-description: 使用 Host 模式把一个或多个本地端口连接到 DevBridge。
+title: "Host: expose local services"
+description: Use Host mode to connect one or more local ports to DevBridge.
 ---
 
-# Host：托管本地服务
+# Host: expose local services
 
-<p class="lead">Host 运行在服务所在设备，通过出站连接把本地端口注册到 DevBridge。</p>
+<p class="lead">Host runs on the device that provides the service, and registers the local ports with DevBridge through an outbound connection.</p>
 
-## 托管已有隧道
+## Host an existing tunnel
 
-先确认本地服务正在监听：
+First, confirm the local service is listening:
 
 ```bash
 python3 -m http.server 8080
 ```
 
-确认对应端口已经配置在同一条隧道上，通过该命令查询：
+Confirm that the corresponding port is configured on the same tunnel by running:
 
 ```bash
 devbridge port list <tunnelId>
 ```
 
-然后托管已创建隧道的端口：
+Then host the ports of that tunnel:
 
 ```bash
 devbridge host <tunnelId>
 ```
 
-Host 会自动申请新的 Host 令牌，加载隧道中的全部端口配置，连接中继服务并开始转发。命令在前台持续运行，按 `Ctrl+C` 停止。
+Host automatically requests a new Host token, loads the tunnel's full port configuration, connects to the relay service, and begins forwarding. The command keeps running in the foreground; press `Ctrl+C` to stop it.
 
-## 创建并立即托管
+## Create and host immediately
 
-没有可复用隧道时，可以让 Host 创建一条临时使用的隧道：
+When you don't have a reusable tunnel, you can have Host create a temporary tunnel:
 
 ```bash
-devbridge host -p 8080 -d "隧道描述信息" -e 8
+devbridge host -p 8080 -d "tunnel description" -e 8
 ```
 
-这里的 `-d` 和 `-e` 属于新建隧道：分别设置隧道描述和有效期小时数。它们不是端口参数。
+Here `-d` and `-e` apply to the new tunnel: they set the tunnel description and the expiration in hours, respectively. They are not port parameters.
 
-需要稳定地址、多个端口或明确访问策略时，建议先使用 `devbridge create` 和
-`devbridge port create` 完成配置，再启动 Host。
+If you need a stable address, multiple ports, or explicit access policies, configure them first with `devbridge create` and `devbridge port create`, then start Host.
 
-## 使用已有令牌
+## Use an existing token
 
-集成其他客户端或跳过 API 调用时，可以直接提供 JWT 令牌：
+When integrating other clients or skipping API calls, you can provide a JWT token directly:
 
 ```bash
 devbridge host <tunnelId> --token <jwt>
 ```
 
-`--token` 模式跳过令牌签发和端口查询，端口由网关通过中继通道下发。必须显式指定隧道 ID。
+The `--token` mode skips token issuance and port lookup; the gateway delivers the ports through the relay channel. You must specify the tunnel ID.
 
-## 使用 API Key 鉴权
+## Authenticate with an API key
 
-跳过令牌签发，直接使用 API Key 通过 WebSocket 认证：
+Skip token issuance and authenticate directly with an API key over WebSocket:
 
 ```bash
 devbridge host <tunnelId> --api-key <key>
 ```
 
-此模式仍会通过 API 查询隧道端口配置，但跳过 TunnelToken 签发步骤。
+This mode still queries the tunnel's port configuration through the API, but skips the token-issuance step.
 
-## 访问隧道地址
+## Access the tunnel URL
 
-Host 成功后会输出隧道 ID 和访问地址，形如：
+After Host succeeds, it prints the tunnel ID and access URL, in the following format:
 
 ```text
-https://<tunnelId>.<clusterId>.myhuaweicloud.com
+https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com
 ```
 
-除了通过 Connect 建立本地映射访问外，也可以直接在浏览器中打开该地址访问托管的服务。访问行为取决于端口的匿名访问策略：
+In addition to the local mappings set up by Connect, you can open the URL directly in a browser to access the hosted service. The access behavior depends on the port's anonymous-access policy:
 
-| 端口策略             | 浏览器访问行为                                      |
-| -------------------- | --------------------------------------------------- |
-| 允许匿名访问（`-a`） | 直接打开地址即可访问，不需要 DevBridge 身份或凭证。 |
-| 禁止匿名访问（默认） | 跳转到登录页，完成认证获取凭证后即可访问。          |
+| Port policy                       | Browser behavior                                                                                            |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Allows anonymous access (`-a`)    | Open the URL directly to access it — no DevBridge identity or credentials required.                         |
+| Denies anonymous access (default) | You're redirected to a sign-in page; complete authentication to obtain credentials, then you can access it. |
 
-::: tip 两种访问方式
+::: tip Two ways to access
 
-- **直接访问隧道地址**：在任意设备浏览器中打开 `https://<tunnelId>.<clusterId>.myhuaweicloud.com`，适合快速分享和验证。
-- **通过 Connect 访问**：在另一台设备运行 `devbridge connect <tunnelId>`，再访问 `http://localhost:<port>`，适合需要本地端口映射的场景。
+- **Access the tunnel URL directly**: open `https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com` in a browser on any device. Best for quickly sharing and verifying.
+- **Access via Connect**: run `devbridge connect <tunnelId>` on another device, then access `http://localhost:<port>`. Best when you need local port mappings.
 
-两种方式等价，都能访问 Host 托管的服务。详见[Connect：连接远程服务](./connect.md)。
+The two ways are equivalent and both reach the service on the Host device. See [Connect: connect to remote services](./connect.md).
 :::
 
-端口的匿名访问策略在创建端口时通过 `-a` 或 `--deny-anonymous` 指定，详见[管理端口](./ports.md)。
+A port's anonymous-access policy is set at creation time with `-a` or `--deny-anonymous`. See [Manage ports](./ports.md).
 
-## 自动重连
+## Automatic reconnection
 
-Host 在网络短暂中断后自动尝试重连。以下状态需要人工处理：
+Host automatically tries to reconnect after brief network interruptions. The following states require manual handling:
 
-- 登录凭证已失效；
-- 隧道已经过期或删除；
-- Host 令牌无法重新签发；
-- 本地端口没有服务监听；
-- 当前网络无法连接 DevBridge。
+- login credentials have expired
+- the tunnel has expired or been deleted
+- the Host token cannot be reissued
+- no service is listening on the local port
+- the current network can't reach DevBridge
 
-自动重连不会重新创建已删除的隧道，也不会绕过端口访问策略。
+Automatic reconnection doesn't recreate deleted tunnels or bypass port access policies.
 
-## 停止 Host
+## Stop Host
 
-在 Host 终端按 `Ctrl+C`。停止 Host 只结束当前转发：
+Press `Ctrl+C` in the Host terminal. Stopping Host only ends the current forwarding:
 
-- 持久隧道和端口配置仍然保留；
-- Connect 端无法继续访问没有 Host 的端口；
-- 再次执行 Host 命令即可恢复托管。
+- persistent tunnels and port configuration are retained
+- the Connect side can no longer access ports without a running Host
+- run the Host command again to resume hosting
 
-不再使用的隧道应通过 `devbridge delete <tunnelId>` 删除。
+Delete tunnels you no longer use with `devbridge delete <tunnelId>`.
 
-## 安全建议
+## Security recommendations
 
-- 只托管本次联调需要的端口；
-- 托管前确认端口的匿名访问策略；
-- 不在 Host 输出中打印完整令牌；
-- 不使用管理员或 root 身份运行普通开发服务；
-- 完成联调后停止 Host。
+- Host only the ports you need for the current integration testing session.
+- Confirm the port's anonymous-access policy before hosting.
+- Don't print full tokens in Host output.
+- Don't run ordinary development services as an administrator or root.
+- Stop Host when integration testing is finished.
 
-## 下一步
+## Next steps
 
-- [从另一台设备连接隧道](./connect.md)
-- [排查 Host 连接问题](../reference/troubleshooting.md)
+- [Connect to the tunnel from another device](./connect.md)
+- [Troubleshoot Host connection issues](../reference/troubleshooting.md)

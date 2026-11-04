@@ -13,10 +13,10 @@ import (
 
 // REST API path patterns for tunnel management.
 const (
-	tunnelsPath     = "/tunnels"
-	tunnelPath      = "/tunnels/%s"
-	tunnelTokenPath = "/tunnels/%s/token?scope=%s"
-	limitsPath      = "/limits"
+	tunnelsPath     = apiVersionPrefix + "/tunnels"
+	tunnelPath      = apiVersionPrefix + "/tunnels/%s"
+	tunnelTokenPath = apiVersionPrefix + "/tunnels/%s/token?scope=%s"
+	limitsPath      = apiVersionPrefix + "/limits"
 )
 
 // CreateTunnel creates a tunnel; a nil expiration uses the default 72-hour validity.

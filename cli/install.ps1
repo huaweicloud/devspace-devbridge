@@ -311,12 +311,12 @@ Environment Variables:
 
 
     # ---------------------------------------------------------------------------
-    # Download-Binary - download and extract the tar.gz package from the remote.
+    # Download-Package - download the tar.gz package and its checksums.txt.
     #
     # Source: explicit -Url wins, otherwise DEFAULT_ARTIFACT_URL (baked per channel).
-    # Returns the extracted binary path (checksums.txt is alongside, for Verify-Checksum).
+    # Returns the path to the downloaded tar.gz (checksums.txt is alongside).
     # ---------------------------------------------------------------------------
-    function Download-Binary {
+    function Download-Package {
         param([string]$Url, [string]$OutputDir)
 
         $tarballName = Get-BinaryName
@@ -334,35 +334,16 @@ Environment Variables:
         $checksumsPath = Join-Path $OutputDir "checksums.txt"
         Invoke-HttpGet -Url $checksumsUrl -Output $checksumsPath -BestEffort
 
-        # Extract the tar.gz (Windows 10+ ships tar)
-        Write-Step "Extracting ${tarballName} ..."
-        $tarCmd = Resolve-TarCommand
-        if (-not $tarCmd) {
-            Write-ErrorAndExit @"
-tar command not found. Cannot extract ${tarballName}.
-Possible fixes:
-  1. Ensure C:\Windows\System32 is in your PATH (Windows 10 1803+ has built-in tar.exe)
-  2. Install Git for Windows: winget install Git.Git
-  3. Re-run this installer after adding tar to PATH
-"@
-        }
-
-        & $tarCmd xzf "$localTarball" -C "$OutputDir"
-
-        # Return the extracted binary path
-        $binaryNameInside = Get-BinaryNameInside
-        return Join-Path $OutputDir $binaryNameInside
+        return $localTarball
     }
 
     # ---------------------------------------------------------------------------
-    # Verify-Checksum - verify the SHA256 hash of the binary
+    # Verify-Checksum - verify the SHA256 hash of the downloaded tar.gz
     # ---------------------------------------------------------------------------
     function Verify-Checksum {
-        param([string]$BinaryFile)
+        param([string]$TarballFile)
 
-        # GoReleaser artifacts: checksums.txt is at the Release root; the tar.gz is the checksum target
-        $tarballFile = "${BinaryFile}.tar.gz"
-        $checksumsFile = Join-Path (Split-Path $BinaryFile) "checksums.txt"
+        $checksumsFile = Join-Path (Split-Path $TarballFile) "checksums.txt"
 
         if ($Script:SKIP_CHECKSUM) {
             Write-Warn "Skipping checksum verification"
@@ -374,15 +355,15 @@ Possible fixes:
             return
         }
 
-        if (-not (Test-Path $tarballFile)) {
-            Write-Warn "Archive $tarballFile not found, skipping checksum verification"
+        if (-not (Test-Path $TarballFile)) {
+            Write-Warn "Archive $TarballFile not found, skipping checksum verification"
             return
         }
 
-        $localHash = Get-FileSha256 -Path $tarballFile
+        $localHash = Get-FileSha256 -Path $TarballFile
 
         # checksums.txt format: <hash>  <filename>; find the hash matching the tar.gz
-        $tarballBasename = Split-Path $tarballFile -Leaf
+        $tarballBasename = Split-Path $TarballFile -Leaf
         $remoteHash = ""
         foreach ($line in (Get-Content $checksumsFile)) {
             if ($line -match "\s+$($tarballBasename)$") {
@@ -399,7 +380,33 @@ Possible fixes:
             return
         }
 
-        Write-ErrorAndExit "Checksum verification failed for ${tarballFile}"
+        Write-ErrorAndExit "Checksum verification failed for ${TarballFile}"
+    }
+
+    # ---------------------------------------------------------------------------
+    # Expand-Binary - extract the binary from the verified tar.gz package.
+    # Returns the extracted binary path.
+    # ---------------------------------------------------------------------------
+    function Expand-Binary {
+        param([string]$TarballFile, [string]$OutputDir)
+
+        $tarballBasename = Split-Path $TarballFile -Leaf
+        Write-Step "Extracting ${tarballBasename} ..."
+        $tarCmd = Resolve-TarCommand
+        if (-not $tarCmd) {
+            Write-ErrorAndExit @"
+tar command not found. Cannot extract ${tarballBasename}.
+Possible fixes:
+  1. Ensure C:\Windows\System32 is in your PATH (Windows 10 1803+ has built-in tar.exe)
+  2. Install Git for Windows: winget install Git.Git
+  3. Re-run this installer after adding tar to PATH
+"@
+        }
+
+        & $tarCmd xzf "$TarballFile" -C "$OutputDir"
+
+        $binaryNameInside = Get-BinaryNameInside
+        return Join-Path $OutputDir $binaryNameInside
     }
 
     # ---------------------------------------------------------------------------
@@ -491,12 +498,13 @@ Possible fixes:
 
         Write-Step "Downloading from remote repository: $($Script:ARTIFACT_URL)"
 
-        $binaryFile = Download-Binary -Url $Script:ARTIFACT_URL -OutputDir $downloadDir.FullName
-        if (-not (Test-Path $binaryFile)) {
-            Write-ErrorAndExit "Failed to download binary"
+        $tarballFile = Download-Package -Url $Script:ARTIFACT_URL -OutputDir $downloadDir.FullName
+        if (-not (Test-Path $tarballFile)) {
+            Write-ErrorAndExit "Failed to download package"
         }
 
-        Verify-Checksum -BinaryFile $binaryFile
+        Verify-Checksum -TarballFile $tarballFile
+        $binaryFile = Expand-Binary -TarballFile $tarballFile -OutputDir $downloadDir.FullName
         Install-Binary -BinaryFile $binaryFile
         Add-ToPath
         Verify-Installation

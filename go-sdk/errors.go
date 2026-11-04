@@ -41,3 +41,13 @@ func IsAPIError(err error) (code string, ok bool) {
 	}
 	return "", false
 }
+
+// UpgradeRequiredError indicates the server rejected a request because the
+// client version is below the required minimum (HTTP 426 Upgrade Required).
+type UpgradeRequiredError = httpclient.UpgradeRequiredError
+
+// IsUpgradeRequired reports whether err indicates an upgrade-required response.
+func IsUpgradeRequired(err error) bool {
+	var ue *UpgradeRequiredError
+	return errors.As(err, &ue)
+}

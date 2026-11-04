@@ -1,125 +1,125 @@
 ---
 title: AI Agent Skill
-description: 通过 huawei-cloud-devbridge-tunnel skill 让 AI 代理自动管理开发隧道。
+description: Use the huawei-cloud-devbridge-tunnel skill to let an AI agent manage DevBridge automatically.
 ---
 
 # AI Agent Skill
 
-<p class="lead"><code>huawei-cloud-devbridge-tunnel</code> 是一个 AI 代理技能，封装了 DevBridge CLI 的全部隧道操作，让代理自动完成安装、认证、创建隧道和托管服务。</p>
+<p class="lead"><code>huawei-cloud-devbridge-tunnel</code> is an AI agent skill that wraps all of the DevBridge CLI's tunnel operations, letting an agent automatically install, authenticate, create tunnels, and host services.</p>
 
-## 适用场景
+## Use cases
 
-- 让 AI 代理帮你一键暴露本地服务，无需手动逐条执行 CLI 命令；
-- 在对话中自然语言创建、查询、更新和删除隧道；
-- 自动处理 CLI 版本差异，无需关心 flag 重命名等兼容问题。
+- Have an AI agent expose a local service for you in one step, without running CLI commands one by one.
+- Create, query, update, and delete tunnels in natural language during a conversation.
+- Handle CLI version differences automatically, so you don't have to worry about compatibility issues such as renamed flags.
 
-## 安装 Skill
+## Install the skill
 
-### 通过 Skill 管理器安装
+### Install via the skill manager
 
 ```bash
 npx skills add https://gitcode.com/huaweicloud/huaweicloud-skills.git#master \
   --skill huawei-cloud-devbridge-tunnel -y
 ```
 
-安装后 skill 位于 `~/.agents/skills/huawei-cloud-devbridge-tunnel`。
+After installation, the skill lives at `~/.agents/skills/huawei-cloud-devbridge-tunnel`.
 
-### 从 Skill 库搜索安装
+### Install from the skill catalog
 
-已安装 `huawei-cloud-find-skills` 的代理可以通过关键词搜索并安装。由于该 skill 目前未被技能索引收录，搜索时需直接使用 skill 名称。
+An agent that has `huawei-cloud-find-skills` installed can search by keyword and install. Because this skill isn't yet indexed, search by the skill name directly.
 
-## Skill 能做什么
+## What the skill can do
 
-Skill 封装了以下操作，均通过适配层函数执行，自动适配不同 CLI 版本：
+The skill wraps the following operations, all executed through adapter functions that automatically accommodate different CLI versions:
 
-| 适配层函数       | 对应 CLI 命令           | 用途          |
-| ---------------- | ----------------------- | ------------- |
-| `db_init`        | —                       | 验证 CLI 可用 |
-| `db_create`      | `devbridge create`      | 创建隧道      |
-| `db_port_create` | `devbridge port create` | 创建端口      |
-| `db_host`        | `devbridge host`        | 托管本地服务  |
-| `db_connect`     | `devbridge connect`     | 连接远程隧道  |
-| `db_list`        | `devbridge list`        | 列出隧道      |
-| `db_show`        | `devbridge show`        | 查看隧道详情  |
-| `db_update`      | `devbridge update`      | 更新隧道      |
-| `db_delete`      | `devbridge delete`      | 删除隧道      |
-| `db_port_list`   | `devbridge port list`   | 列出端口      |
-| `db_port_delete` | `devbridge port delete` | 删除端口      |
-| `db_version`     | `devbridge version`     | 查看 CLI 版本 |
-| `db_auth_status` | `devbridge auth status` | 查看登录状态  |
-| `db_auth_login`  | `devbridge auth login`  | 登录          |
+| Adapter function | CLI command             | Purpose                    |
+| ---------------- | ----------------------- | -------------------------- |
+| `db_init`        | —                       | Verify the CLI is usable   |
+| `db_create`      | `devbridge create`      | Create a tunnel            |
+| `db_port_create` | `devbridge port create` | Create a port              |
+| `db_host`        | `devbridge host`        | Host local services        |
+| `db_connect`     | `devbridge connect`     | Connect to a remote tunnel |
+| `db_list`        | `devbridge list`        | List tunnels               |
+| `db_show`        | `devbridge show`        | View tunnel details        |
+| `db_update`      | `devbridge update`      | Update a tunnel            |
+| `db_delete`      | `devbridge delete`      | Delete a tunnel            |
+| `db_port_list`   | `devbridge port list`   | List ports                 |
+| `db_port_delete` | `devbridge port delete` | Delete a port              |
+| `db_version`     | `devbridge version`     | View the CLI version       |
+| `db_auth_status` | `devbridge auth status` | View login status          |
+| `db_auth_login`  | `devbridge auth login`  | Log in                     |
 
-## 适配层
+## Adapter layer
 
-DevBridge CLI 会在每次使用时自动更新，可能导致 flag 重命名或参数变化。Skill 通过 `scripts/devbridge_cmd.sh` 适配层解决这一问题：
+The DevBridge CLI updates itself automatically on each use, which may rename flags or change parameters. The skill solves this with the `scripts/devbridge_cmd.sh` adapter layer:
 
-1. 执行前通过 `devbridge <command> --help` 动态发现当前版本支持的 flag；
-2. 执行后解析错误信息，自动恢复因 flag 重命名、新增必选参数或命令重命名导致的失败；
-3. 自动恢复失败时，将错误和建议命令返回给代理。
+1. Before running, it dynamically discovers the flags supported by the current version via `devbridge <command> --help`.
+2. After running, it parses the error and automatically recovers from failures caused by renamed flags, new required parameters, or renamed commands.
+3. When automatic recovery fails, it returns the error and a suggested command to the agent.
 
-::: tip 为什么不直接调用 devbridge
-所有隧道、端口、Host 和 Connect 操作必须通过 `db_*` 适配层函数执行，而不是直接调用 `devbridge` 命令。只有 `devbridge auth` 和 `devbridge version` 不受此限制。
+::: tip Why not call devbridge directly
+All tunnel, port, Host, and Connect operations must go through the `db_*` adapter functions, not call `devbridge` directly. Only `devbridge auth` and `devbridge version` are exempt.
 :::
 
-## 前置条件
+## Prerequisites
 
-Skill 会在首次使用时自动完成以下准备工作：
+On first use, the skill completes the following preparation automatically:
 
-1. 安装或更新 DevBridge CLI 到最新版本；
-2. 加载适配层脚本；
-3. 检查登录状态，未登录时自动引导登录。
+1. Installs or updates the DevBridge CLI to the latest version.
+2. Loads the adapter script.
+3. Checks the login status and prompts for login when signed out.
 
-自动化环境建议使用 API Key 认证，避免交互登录：
+For automated environments, use API key authentication to avoid interactive login:
 
 ```bash
 devbridge auth login --api-key "$HW_API_KEY"
 ```
 
-## 使用示例
+## Usage examples
 
-### 快速创建隧道并托管
+### Quickly create and host a tunnel
 
-告诉代理：
+Tell the agent:
 
-> 帮我把本地 8080 端口暴露出去
+> Expose my local port 8080
 
-代理会自动执行以下流程：
+The agent automatically runs through the following flow:
 
-1. 安装 CLI 并检查认证状态；
-2. 创建隧道（名称 `dev-tunnel-<random>`，有效期 8 小时）；
-3. 添加端口 8080，协议 `http`，允许匿名访问；
-4. 后台启动 Host 托管服务。
+1. Installs the CLI and checks the authentication status.
+2. Creates a tunnel with the name `dev-tunnel-<random>` and an 8-hour expiration.
+3. Adds port 8080 with the `http` protocol and allows anonymous access.
+4. Starts Host in the background to host the service.
 
-完成后返回隧道 ID 和访问地址。
+When done, it returns the tunnel ID and access URL.
 
-### 指定参数
+### Specify parameters
 
-> 创建一个叫 frontend 的隧道，暴露 3000 端口，有效期 24 小时，禁止匿名访问
+> Create a tunnel named frontend, expose port 3000, expiration 24 hours, and deny anonymous access
 
-代理会使用你指定的参数，未指定的使用默认值，不会逐个确认。
+The agent uses the parameters you specify and defaults for the rest, without confirming one by one.
 
-### 默认参数
+### Default parameters
 
-| 参数     | 默认值                |
-| -------- | --------------------- |
-| 隧道名称 | `dev-tunnel-<random>` |
-| 描述     | `开发隧道`            |
-| 有效期   | 8 小时                |
-| 端口     | 8080                  |
-| 协议     | `http`                |
-| 匿名访问 | 允许                  |
+| Parameter        | Default               |
+| ---------------- | --------------------- |
+| Tunnel name      | `dev-tunnel-<random>` |
+| Description      | DevBridge             |
+| Expiration       | 8 hours               |
+| Port             | 8080                  |
+| Protocol         | `http`                |
+| Anonymous access | Allowed               |
 
-## 清理
+## Cleanup
 
-使用完成后，停止 Host 进程并删除隧道：
+When done, stop the Host process and delete the tunnel:
 
-> 删掉刚才创建的隧道
+> Delete the tunnel I just created
 
-代理会执行 `db_delete <tunnelId>` 删除隧道及其端口配置。
+The agent runs `db_delete <tunnelId>` to delete the tunnel and its port configuration.
 
-## 相关内容
+## Related content
 
-- [CLI 命令参考](../reference/cli.md)
-- [安装 DevBridge CLI](../guide/install.md)
-- [登录与凭证](../guide/authentication.md)
-- [问题排查](../reference/troubleshooting.md)
+- [CLI command reference](../reference/cli.md)
+- [Install the DevBridge CLI](../guide/install.md)
+- [Login and credentials](../guide/authentication.md)
+- [Troubleshooting](../reference/troubleshooting.md)

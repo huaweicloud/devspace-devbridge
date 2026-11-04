@@ -82,8 +82,13 @@ func (d *Devbridge) reconnectLoop(ctx context.Context, run reconnectSession, dec
 }
 
 // reconnectDelay returns the exponential backoff for the nth consecutive
-// failure: base 3s doubling each time, capped at 30s.
+// failure: base 3s doubling each time, capped at 30s. A zero (or negative)
+// count is clamped to the base delay so a session that connected and then
+// dropped does not trigger an infinite no-interval reconnect storm.
 func reconnectDelay(failureCount int) time.Duration {
+	if failureCount < 1 {
+		failureCount = 1
+	}
 	shift := min(failureCount-1, 4)
 	return min(baseReconnectDelay<<uint(shift), maxReconnectDelay)
 }
@@ -93,5 +98,10 @@ func reconnectDelay(failureCount int) time.Duration {
 // Duplicate host is deliberately excluded: Host treats it as fatal only
 // before the first successful connect, and retriable afterwards.
 func gatewayRejectedError(err error) bool {
-	return errors.Is(err, ErrQuotaExceeded) || errors.Is(err, ErrTunnelNotFound)
+	if errors.Is(err, ErrQuotaExceeded) || errors.Is(err, ErrTunnelNotFound) {
+		return true
+	}
+	// CLI version below the gateway minimum (HTTP 426): retrying cannot change
+	// the version, so stop immediately rather than entering a retry storm.
+	return IsUpgradeRequired(err)
 }

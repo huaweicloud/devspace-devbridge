@@ -1,193 +1,193 @@
 ---
-title: CLI 命令参考
-description: DevBridge CLI 的认证、隧道、端口、Host 和 Connect 命令速查。
+title: CLI command reference
+description: A quick reference for the DevBridge CLI's authentication, tunnel, port, Host, and Connect commands.
 ---
 
-# CLI 命令参考
+# CLI command reference
 
-<p class="lead">本页汇总 DevBridge CLI 的主要命令。使用命令级 <code>--help</code> 查看当前安装版本的完整参数。</p>
+<p class="lead">This page summarizes the main DevBridge CLI commands. Use command-level <code>--help</code> to see the full set of parameters for your installed version.</p>
 
-## 全局命令
+## Global commands
 
-| 命令                         | 说明                 |
-| ---------------------------- | -------------------- |
-| `devbridge --help`           | 显示 CLI 帮助。      |
-| `devbridge version`          | 显示 CLI 版本。      |
-| `devbridge <command> --help` | 显示指定命令的参数。 |
+| Command                      | Description                                    |
+| ---------------------------- | ---------------------------------------------- |
+| `devbridge --help`           | Display CLI help.                              |
+| `devbridge version`          | Display the CLI version.                       |
+| `devbridge <command> --help` | Display the parameters for a specific command. |
 
-### 全局参数
+### Global flags
 
-| 参数              | 说明                                 |
-| ----------------- | ------------------------------------ |
-| `--help`、`-h`    | 显示当前命令的帮助。                 |
-| `--verbose`、`-v` | 输出更详细的运行日志，便于排查问题。 |
+| Flag              | Description                                     |
+| ----------------- | ----------------------------------------------- |
+| `--help`, `-h`    | Display help for the current command.           |
+| `--verbose`, `-v` | Output more detailed logs to help troubleshoot. |
 
-## 认证
+## Authentication
 
-| 命令                                   | 说明                     |
-| -------------------------------------- | ------------------------ |
-| `devbridge auth login`                 | 交互登录（打开浏览器）。 |
-| `devbridge auth login --api-key <key>` | 使用 API Key 登录。      |
-| `devbridge auth status`                | 查看当前登录状态。       |
-| `devbridge auth logout`                | 清除本地登录凭证。       |
+| Command                                | Description                          |
+| -------------------------------------- | ------------------------------------ |
+| `devbridge auth login`                 | Interactive login (opens a browser). |
+| `devbridge auth login --api-key <key>` | Log in with an API key.              |
+| `devbridge auth status`                | View the current login status.       |
+| `devbridge auth logout`                | Clear local login credentials.       |
 
-### 登录参数
+### Login flags
 
-| 参数        | 说明                              |
-| ----------- | --------------------------------- |
-| `--api-key` | API Key，跳过浏览器交互直接登录。 |
+| Flag        | Description                                            |
+| ----------- | ------------------------------------------------------ |
+| `--api-key` | API key; skip browser interaction and log in directly. |
 
-CLI 也会自动读取 `HW_API_KEY` 环境变量。
+The CLI also reads the `HW_API_KEY` environment variable automatically.
 
-## 隧道
+## Tunnels
 
-| 命令                                    | 说明                         |
-| --------------------------------------- | ---------------------------- |
-| `devbridge create <name>`               | 创建隧道。                   |
-| `devbridge list`                        | 列出当前工作空间的有效隧道。 |
-| `devbridge show <tunnelId>`             | 查看隧道详情。               |
-| `devbridge update <tunnelId>`           | 更新隧道。                   |
-| `devbridge delete <tunnelId>`           | 删除一条隧道。               |
-| `devbridge delete-all`                  | 删除当前工作空间的全部隧道。 |
-| `devbridge token <tunnelId> -s host`    | 签发新的 Host 令牌。         |
-| `devbridge token <tunnelId> -s connect` | 签发新的 Connect 令牌。      |
-| `devbridge set <tunnelId>`              | 设置本机默认隧道。           |
-| `devbridge unset`                       | 清除本机默认隧道。           |
+| Command                                 | Description                                      |
+| --------------------------------------- | ------------------------------------------------ |
+| `devbridge create <name>`               | Create a tunnel.                                 |
+| `devbridge list`                        | List the valid tunnels in the current workspace. |
+| `devbridge show <tunnelId>`             | View a tunnel's details.                         |
+| `devbridge update <tunnelId>`           | Update a tunnel.                                 |
+| `devbridge delete <tunnelId>`           | Delete a tunnel.                                 |
+| `devbridge delete-all`                  | Delete all tunnels in the current workspace.     |
+| `devbridge token <tunnelId> -s host`    | Issue a new Host token.                          |
+| `devbridge token <tunnelId> -s connect` | Issue a new Connect token.                       |
+| `devbridge set <tunnelId>`              | Set the local default tunnel.                    |
+| `devbridge unset`                       | Clear the local default tunnel.                  |
 
-### 隧道参数
+### Tunnel flags
 
-| 参数 | 适用命令                                | 说明                            |
-| ---- | --------------------------------------- | ------------------------------- |
-| `-n` | `update`                                | 更新隧道名称。                  |
-| `-d` | `create`、`update`、无隧道 ID 的 `host` | 设置隧道描述。                  |
-| `-e` | `create`、`update`、无隧道 ID 的 `host` | 设置有效期规格，单位为小时。    |
-| `-s` | `token`                                 | 令牌范围：`host` 或 `connect`。 |
+| Flag | Applies to                                     | Description                       |
+| ---- | ---------------------------------------------- | --------------------------------- |
+| `-n` | `update`                                       | Update the tunnel name.           |
+| `-d` | `create`, `update`, `host` without a tunnel ID | Set the tunnel description.       |
+| `-e` | `create`, `update`, `host` without a tunnel ID | Set the expiration, in hours.     |
+| `-s` | `token`                                        | Token scope: `host` or `connect`. |
 
-## 端口
+## Ports
 
-| 命令                                                               | 说明               |
-| ------------------------------------------------------------------ | ------------------ |
-| `devbridge port create <tunnelId> -p <port> --protocol <protocol>` | 创建端口。         |
-| `devbridge port list <tunnelId>`                                   | 列出隧道端口。     |
-| `devbridge port show <tunnelId> -p <port>`                         | 查看端口详情。     |
-| `devbridge port update <tunnelId> -p <port>`                       | 更新匿名访问策略。 |
-| `devbridge port delete <tunnelId> -p <port>`                       | 删除端口。         |
+| Command                                                            | Description                         |
+| ------------------------------------------------------------------ | ----------------------------------- |
+| `devbridge port create <tunnelId> -p <port> --protocol <protocol>` | Create a port.                      |
+| `devbridge port list <tunnelId>`                                   | List tunnel ports.                  |
+| `devbridge port show <tunnelId> -p <port>`                         | View a port's details.              |
+| `devbridge port update <tunnelId> -p <port>`                       | Update the anonymous-access policy. |
+| `devbridge port delete <tunnelId> -p <port>`                       | Delete a port.                      |
 
-### 端口参数
+### Port flags
 
-| 参数                      | 说明                                                     |
-| ------------------------- | -------------------------------------------------------- |
-| `-p`、`--port-number`     | 端口号，范围为 `1` 到 `65535`。                          |
-| `--protocol`              | `http`、`https` 或 `auto`。仅创建时可用，默认为 `auto`。 |
-| `--deny-anonymous`        | 创建或更新时禁止匿名访问。                               |
-| `-a`、`--allow-anonymous` | 创建或更新时允许匿名访问。                               |
+| Flag                      | Description                                                                 |
+| ------------------------- | --------------------------------------------------------------------------- |
+| `-p`, `--port-number`     | Port number, from `1` to `65535`.                                           |
+| `--protocol`              | `http`, `https`, or `auto`. Available on creation only; defaults to `auto`. |
+| `--deny-anonymous`        | Deny anonymous access on create or update.                                  |
+| `-a`, `--allow-anonymous` | Allow anonymous access on create or update.                                 |
 
-当前 CLI 不支持修改已有端口的协议。端口命令不支持 `-d` 描述参数，也不提供端口批量删除命令。
+The current CLI doesn't support changing an existing port's protocol. Port commands don't support the `-d` description flag, and there's no bulk-delete command for ports.
 
 ## Host
 
-| 命令                                                   | 说明                                   |
-| ------------------------------------------------------ | -------------------------------------- |
-| `devbridge host <tunnelId>`                            | 托管已有隧道中配置的全部端口。         |
-| `devbridge host -p <port> -d <description> -e <hours>` | 创建隧道并立即托管端口。               |
-| `devbridge host <tunnelId> --token <jwt>`              | 使用已有 JWT 令牌托管，跳过 API 调用。 |
-| `devbridge host <tunnelId> --api-key <key>`            | 使用 API Key 鉴权，跳过令牌签发。      |
+| Command                                                | Description                                            |
+| ------------------------------------------------------ | ------------------------------------------------------ |
+| `devbridge host <tunnelId>`                            | Host all the ports configured in an existing tunnel.   |
+| `devbridge host -p <port> -d <description> -e <hours>` | Create a tunnel and host its ports immediately.        |
+| `devbridge host <tunnelId> --token <jwt>`              | Host with an existing JWT token, skipping API calls.   |
+| `devbridge host <tunnelId> --api-key <key>`            | Authenticate with an API key, skipping token issuance. |
 
-Host 是前台长运行命令。`-d` 和 `-e` 只在 Host 同时创建隧道时描述新隧道。
+Host is a long-running foreground command. `-d` and `-e` apply to the new tunnel only when Host creates one at the same time.
 
-### Host 参数
+### Host flags
 
-| 参数                  | 说明                                                       |
-| --------------------- | ---------------------------------------------------------- |
-| `-p`、`--ports`       | 本地端口号，可传多个。仅在创建临时隧道时使用。             |
-| `-d`、`--description` | 新隧道的描述。                                             |
-| `-e`、`--expiration`  | 新隧道的有效期，单位为小时。                               |
-| `-t`、`--token`       | 直接提供 JWT 令牌，跳过 API 令牌签发和端口查询。           |
-| `-k`、`--api-key`     | 使用 API Key 鉴权，跳过 TunnelToken，通过 X-API-Key 认证。 |
+| Flag                  | Description                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------ |
+| `-p`, `--ports`       | Local port number(s); can pass multiple. Used only when creating a temporary tunnel. |
+| `-d`, `--description` | Description of the new tunnel.                                                       |
+| `-e`, `--expiration`  | Expiration of the new tunnel, in hours.                                              |
+| `-t`, `--token`       | Provide a JWT token directly, skipping token issuance and port lookup.               |
+| `-k`, `--api-key`     | Authenticate with an API key, skipping token issuance, via `X-API-Key`.              |
 
 ## Connect
 
-| 命令                                           | 说明                                   |
-| ---------------------------------------------- | -------------------------------------- |
-| `devbridge connect <tunnelId>`                 | 连接隧道并建立本地端口映射。           |
-| `devbridge connect <tunnelId> --token <jwt>`   | 使用已有 JWT 令牌连接，跳过 API 调用。 |
-| `devbridge connect <tunnelId> --api-key <key>` | 使用 API Key 鉴权，跳过令牌签发。      |
+| Command                                        | Description                                             |
+| ---------------------------------------------- | ------------------------------------------------------- |
+| `devbridge connect <tunnelId>`                 | Connect to a tunnel and set up local port mappings.     |
+| `devbridge connect <tunnelId> --token <jwt>`   | Connect with an existing JWT token, skipping API calls. |
+| `devbridge connect <tunnelId> --api-key <key>` | Authenticate with an API key, skipping token issuance.  |
 
-### Connect 参数
+### Connect flags
 
-| 参数              | 说明                                                       |
-| ----------------- | ---------------------------------------------------------- |
-| `-t`、`--token`   | 直接提供 JWT 令牌，跳过 API 令牌签发和端口查询。           |
-| `-k`、`--api-key` | 使用 API Key 鉴权，跳过 TunnelToken，通过 X-API-Key 认证。 |
+| Flag              | Description                                                             |
+| ----------------- | ----------------------------------------------------------------------- |
+| `-t`, `--token`   | Provide a JWT token directly, skipping token issuance and port lookup.  |
+| `-k`, `--api-key` | Authenticate with an API key, skipping token issuance, via `X-API-Key`. |
 
-## 配额查询
+## Quota query
 
-| 命令               | 说明                     |
-| ------------------ | ------------------------ |
-| `devbridge limits` | 查看账户配额与当前用量。 |
+| Command            | Description                           |
+| ------------------ | ------------------------------------- |
+| `devbridge limits` | View account quota and current usage. |
 
-输出包含：
+The output includes:
 
-- 重置时间；
-- 流量配额与已用流量；
-- 活跃隧道数；
-- 隧道、端口、Host 数量上限；
-- 隧道带宽上限；
-- 单端口 HTTP 请求频率上限；
-- 单端口连接数上限。
+- reset time
+- traffic quota and traffic used
+- the number of active tunnels
+- limits on the number of tunnels, ports, and Hosts
+- tunnel bandwidth limit
+- per-port HTTP request-rate limit
+- per-port connection limit
 
-## 调试工具
+## Debug tools
 
 ### echo
 
-启动一个 HTTP echo 服务，用于验证隧道链路是否通畅。
+Starts an HTTP echo service for verifying that the tunnel link works.
 
-| 命令                                | 说明                                             |
-| ----------------------------------- | ------------------------------------------------ |
-| `devbridge echo`                    | 启动 echo 服务，默认随机端口，监听 `127.0.0.1`。 |
-| `devbridge echo -p 8080`            | 指定监听端口。                                   |
-| `devbridge echo -p 8080 -i 0.0.0.0` | 指定监听端口和监听地址。                         |
+| Command                             | Description                                                        |
+| ----------------------------------- | ------------------------------------------------------------------ |
+| `devbridge echo`                    | Start the echo service on a random port, listening on `127.0.0.1`. |
+| `devbridge echo -p 8080`            | Specify the listening port.                                        |
+| `devbridge echo -p 8080 -i 0.0.0.0` | Specify the listening port and address.                            |
 
 ### ping
 
-对指定 URI 发起 HTTP ping 探测，用于检查隧道地址的连通性和延迟。
+Sends HTTP ping probes to a URI to check the connectivity and latency of a tunnel URL.
 
-| 命令                          | 说明                                |
-| ----------------------------- | ----------------------------------- |
-| `devbridge ping <uri>`        | 对 URI 发起探测，默认 1000ms 间隔。 |
-| `devbridge ping <uri> -i 500` | 指定探测间隔，单位为毫秒。          |
+| Command                       | Description                                     |
+| ----------------------------- | ----------------------------------------------- |
+| `devbridge ping <uri>`        | Probe a URI with a default interval of 1000 ms. |
+| `devbridge ping <uri> -i 500` | Specify the probe interval in milliseconds.     |
 
-示例：
+Examples:
 
 ```bash
-devbridge ping https://<tunnelId>-8080.cn-north-4-bridge.myhuaweicloud.com
+devbridge ping https://<tunnelId>-8080.devbridge-s2.hwtunnel.com
 devbridge ping http://127.0.0.1:8080 -i 3000
 ```
 
-输出形如：
+Output looks like:
 
 ```text
 HTTP 200 OK -- 4 ms
 ```
 
-### 调试日志
+### Debug logging
 
-任一命令追加 `-v` / `--verbose` 启用 Debug 级别日志：
+Append `-v` / `--verbose` to any command to enable debug-level logging:
 
 ```bash
 devbridge -v host <tunnelId>
 devbridge connect <tunnelId> --verbose
 ```
 
-## 补全
+## Completion
 
-| 命令                                                 | 说明                                        |
-| ---------------------------------------------------- | ------------------------------------------- |
-| `devbridge completion [bash\|zsh\|fish\|powershell]` | 生成 Shell 自动补全脚本（Cobra 内置命令）。 |
+| Command                                              | Description                                                         |
+| ---------------------------------------------------- | ------------------------------------------------------------------- |
+| `devbridge completion [bash\|zsh\|fish\|powershell]` | Generate a shell auto-completion script (a built-in Cobra command). |
 
-## 相关内容
+## Related content
 
-- [管理隧道](../guide/tunnels.md)
-- [管理端口](../guide/ports.md)
-- [Host：托管本地服务](../guide/host.md)
-- [Connect：连接远程服务](../guide/connect.md)
+- [Manage tunnels](../guide/tunnels.md)
+- [Manage ports](../guide/ports.md)
+- [Host: expose local services](../guide/host.md)
+- [Connect: connect to remote services](../guide/connect.md)

@@ -102,41 +102,44 @@ type TunnelMessages struct {
 }
 
 type PortMessages struct {
-	Protocol         Message
-	AllowAnonymous   Message
-	PortCreated      Message
-	PortUpdated      Message
-	PortListEmpty    Message
-	Port             Message
-	TunnelID         Message
-	PortCreateShort  Message
-	PortListShort    Message
-	PortShowShort    Message
-	PortUpdateShort  Message
-	PortDeleteShort  Message
-	PortShort        Message
-	FlagPortNumber   Message
-	FlagPortRequired Message
-	FlagProtocol     Message
-	FlagAllowAnon    Message
-	FlagDenyAnon     Message
-	DeleteSuccess    Message
-	InvalidProtocol  Message
-	AddFailed        Message
-	DeleteFailed     Message
+	Protocol              Message
+	AllowAnonymous        Message
+	PortCreated           Message
+	PortUpdated           Message
+	PortListEmpty         Message
+	Port                  Message
+	TunnelID              Message
+	PortCreateShort       Message
+	PortListShort         Message
+	PortShowShort         Message
+	PortUpdateShort       Message
+	PortDeleteShort       Message
+	PortShort             Message
+	FlagPortNumber        Message
+	FlagPortRequired      Message
+	FlagProtocol          Message
+	FlagAllowAnon         Message
+	FlagDenyAnon          Message
+	FlagAllowAnonConflict Message
+	DeleteSuccess         Message
+	InvalidProtocol       Message
+	AddFailed             Message
+	DeleteFailed          Message
 }
 
 type CommonMessages struct {
-	VersionInfo      Message
-	Days             Message
-	Hours            Message
-	Expired          Message
-	AuthCommands     Message
-	FlagAPIKey       Message
-	FlagVerbose      Message
-	FlagEchoPort     Message
-	FlagInterface    Message
-	FlagPingInterval Message
+	VersionInfo         Message
+	Days                Message
+	Hours               Message
+	Expired             Message
+	AuthCommands        Message
+	FlagAPIKey          Message
+	FlagVerbose         Message
+	FlagEchoPort        Message
+	FlagInterface       Message
+	FlagPingInterval    Message
+	UpdateLabel         Message
+	UpgradeRequiredHint Message
 }
 
 type LimitsMessages struct {
@@ -154,33 +157,29 @@ type LimitsMessages struct {
 }
 
 type EchoMessages struct {
-	EchoStarted           Message
-	EchoShort             Message
-	Method                Message
-	URL                   Message
-	Host                  Message
-	RemoteAddr            Message
-	Proto                 Message
-	Headers               Message
-	PingResultOK          Message
-	PingResultErr         Message
-	InvalidPortNumber     Message
+	EchoStarted            Message
+	EchoShort              Message
+	Method                 Message
+	URL                    Message
+	Host                   Message
+	RemoteAddr             Message
+	Proto                  Message
+	Headers                Message
+	PingResultOK           Message
+	PingResultErr          Message
+	InvalidPortNumber      Message
 	IntervalMustBePositive Message
 }
 
 type PingMessages struct {
-	PingShort Message
+	PingShort      Message
+	Disconnected   Message
+	NotServedByTun Message
+	GatewayError   Message
+	ServiceError   Message
 }
 
 type ConfigMessages struct {
-	ConfigCommands  Message
-	GetShort        Message
-	SetShort        Message
-	UnsetShort      Message
-	GatewayAddr     Message
-	GatewayHost     Message
-	SetSuccess      Message
-	NothingToSet    Message
 	NoDefaultTunnel Message
 	KeyNotFound     Message
 }

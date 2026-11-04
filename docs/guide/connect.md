@@ -1,78 +1,77 @@
 ---
-title: Connect：连接远程服务
-description: 使用 Connect 模式访问 DevBridge 隧道中的远程端口。
+title: "Connect: connect to remote services"
+description: Use Connect mode to access remote ports in a DevBridge tunnel.
 ---
 
-# Connect：连接远程服务
+# Connect: connect to remote services
 
-<p class="lead">Connect 运行在访问设备，为隧道中的远程端口建立本地映射。</p>
+<p class="lead">Connect runs on the device that accesses the service and sets up local mappings for the remote ports in the tunnel.</p>
 
-## 建立连接
+## Establish a connection
 
-在已经安装并登录 DevBridge CLI 的设备上运行：
+On a device where you've installed the DevBridge CLI and logged in, run:
 
 ```bash
 devbridge connect <tunnelId>
 ```
 
-Connect 会读取隧道端口配置、申请新的 Connect 令牌，并连接当前可用的 Host。
+Connect reads the tunnel's port configuration, requests a new Connect token, and connects to the currently available Host.
 
-连接建立后，通过本机相同端口访问远程服务。例如，隧道包含端口 `8080`：
+Once the connection is established, access the remote service through the same port on your local machine. For example, if the tunnel has port `8080`:
 
 ```text
 http://localhost:8080
 ```
 
-## 连接多个端口
+## Connect to multiple ports
 
-一条隧道可以配置多个端口。Connect 会根据隧道端口配置建立对应映射，不需要使用未经确认的
-`--port` 参数筛选端口。
+A tunnel can be configured with multiple ports. Connect sets up the corresponding mappings based on the tunnel's port configuration; you don't need to use a `--port` flag to filter ports.
 
-查看远程端口列表：
+View the list of remote ports:
 
 ```bash
 devbridge port list <tunnelId>
 ```
 
-## 使用已有令牌
+## Use an existing token
 
-集成其他客户端或跳过 API 调用时，可以直接提供 JWT 令牌：
+When integrating other clients or skipping API calls, you can provide a JWT token directly:
 
 ```bash
 devbridge connect <tunnelId> --token <jwt>
 ```
 
-`--token` 模式跳过令牌签发和端口查询，端口由 Host 端通过中继通道协商下发。必须显式指定隧道 ID。
+The `--token` mode skips token issuance and port lookup; the Host side negotiates and delivers the ports through the relay channel. You must specify the tunnel ID.
 
-## 使用 API Key 鉴权
+## Authenticate with an API key
 
-跳过令牌签发，直接使用 API Key 通过 WebSocket 认证：
+Skip token issuance and authenticate directly with an API key over WebSocket:
 
 ```bash
 devbridge connect <tunnelId> --api-key <key>
 ```
 
-此模式仍会通过 API 查询隧道端口配置，但跳过 TunnelToken 签发步骤。
+This mode still queries the tunnel's port configuration through the API, but skips the token-issuance step.
 
-## 受保护端口
+## Protected ports
 
-端口使用 `--deny-anonymous` 配置后，Connect 必须使用有效身份和 Connect 令牌。CLI 会自动申请令牌，通常不需要手动执行 `devbridge token`。
+When a port is configured with `--deny-anonymous`, Connect must use a valid identity, along with a Connect token. The CLI requests the token automatically, so you usually don't need to run `devbridge token` manually.
 
-Host 令牌不能用于 Connect，Connect 令牌也不能用于 Host。
+A Host token can't be used for Connect, and a Connect token can't be used for Host.
 
-## 自动重连
+## Automatic reconnection
 
-Connect 是前台长运行命令。网络短暂中断时会自动尝试恢复连接；按 `Ctrl+C` 停止。
+Connect is a long-running foreground command. It automatically tries to reconnect after brief network interruptions; press `Ctrl+C` to stop.
 
-以下情况需要人工处理：
+The following cases require manual handling:
 
-- 登录凭证已经失效；
-- 隧道已过期或删除；
-- Host 当前未运行；
-- 端口已删除或协议发生变化；
-- 本地端口已被其他进程占用。
+- login credentials have expired
+- the tunnel has expired or been deleted
+- Host is not currently running
+- the port has been deleted or its protocol has changed
+- the local port is already in use by another process
 
-## 下一步
+## Next steps
 
-- [管理端口访问策略](./ports.md)
-- [排查连接问题](../reference/troubleshooting.md)
+- [Manage port access policies](./ports.md)
+- [Troubleshoot connection issues](../reference/troubleshooting.md)

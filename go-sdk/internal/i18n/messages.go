@@ -25,6 +25,7 @@ var (
 	MsgSessionClosed             = Message{ZH: "会话已关闭", EN: "session closed"}
 	MsgPortInUse                 = Message{ZH: "端口 %d 已被占用: %w", EN: "port %d is already in use: %w"}
 	MsgGatewayRejected429        = Message{ZH: "连接被网关拒绝 (429): %s", EN: "connection rejected by gateway (429): %s"}
+	MsgWSResponseOrigin          = Message{ZH: "（来源: %s，请求 %s）", EN: " (source: %s, request %s)"}
 	MsgDialCancelled             = Message{ZH: "WebSocket 连接已取消: %w", EN: "websocket dial cancelled: %w"}
 	MsgDialFailedRetries         = Message{ZH: "WebSocket 连接失败（已重试 %d 次）: %w", EN: "websocket dial failed after %d retries: %w"}
 	MsgInvalidExpiration         = Message{ZH: "有效期必须是 1-720 小时，当前为 %d", EN: "expiration must be 1-720 hours, got %d"}
@@ -35,6 +36,8 @@ var (
 	MsgCreateRequestFailed       = Message{ZH: "创建请求失败: %w", EN: "create request: %w"}
 	MsgHTTPRequestFailed         = Message{ZH: "HTTP 请求失败: %w", EN: "http request failed: %w"}
 	MsgReadResponseFailed        = Message{ZH: "读取响应失败: %w", EN: "read response: %w"}
-	MsgServerHTTPError           = Message{ZH: "服务端错误: HTTP %d: %s", EN: "server error: HTTP %d: %s"}
+	MsgServerHTTPErrorWithMeta   = Message{ZH: "服务端错误: HTTP %d: %s（来源: %s，请求 ID: %s）", EN: "server error: HTTP %d: %s (source: %s, request id: %s)"}
+	MsgServiceHTTPErrorWithMeta  = Message{ZH: "隧道内服务错误: HTTP %d: %s（来源: %s，请求 ID: %s）", EN: "tunneled service error: HTTP %d: %s (source: %s, request id: %s)"}
+	MsgNotReachedTunnel          = Message{ZH: "请求未到达隧道服务，域名可能被防火墙/负载均衡拦截", EN: "request did not reach the tunnel service; the domain may be blocked by a firewall/load balancer"}
 	MsgUnmarshalResponseFailed   = Message{ZH: "解析响应失败: %w", EN: "unmarshal response: %w"}
 )

@@ -1,0 +1,912 @@
+#=============================================================================
+# DevBridge RDP Tunnel Auto-Setup Script for Windows ECS
+#
+# 功能：
+#   1. 安装 DevBridge CLI
+#   2. 用 API Key 登录
+#   3. 创建持久隧道 + 添加 3389 端口 (RDP)
+#   4. 用 Windows 计划任务托管，开机自启
+#   5. 每次启动自动检查登录状态，过期则用 API Key 重新登录
+#   6. 自动续期：剩余 < 24 小时时自动续到 720 小时
+#   7. API Key 加密存储（AES-256-GCM + PBKDF2-SHA256，密钥从机器 UUID 派生）
+#
+# 用法：
+#   .\setup-devbridge-ssh.ps1 -ApiKey <YOUR_API_KEY>
+#   $env:HW_API_KEY="<key>"; .\setup-devbridge-ssh.ps1
+#   .\setup-devbridge-ssh.ps1    # 交互式输入 API Key
+#=============================================================================
+[CmdletBinding()]
+param(
+    [string]$ApiKey = "",
+    [switch]$PlainText
+)
+
+$ErrorActionPreference = "Stop"
+
+# 强制 TLS 1.2，避免 Windows Server 2019 默认 TLS 1.0 导致下载卡住
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+# ---------- 常量 ----------
+$InstallUrl = "https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install.ps1"
+$HuaweiDir = "$env:USERPROFILE\.huawei"
+$DevbridgeBin = "$HuaweiDir\bin\devbridge.exe"
+$ConfigDir = "$HuaweiDir\devbridge"
+$ConfigFile = "$ConfigDir\ssh-tunnel.json"
+$WrapperScript = "$ConfigDir\devbridge-ssh-wrapper.ps1"
+$TaskName = "DevBridge-SSH"
+
+$TunnelExpiration = 720
+$RenewThreshold = 24
+$SshPort = 3389
+$EncryptionSalt = "devbridge-ssh-tunnel-v1"
+
+# ---------- 日志函数 ----------
+function Log-Info($msg)  { Write-Host "[INFO] $msg" -ForegroundColor Green }
+function Log-Warn($msg)  { Write-Host "[WARN] $msg" -ForegroundColor Yellow }
+function Log-Error($msg) { Write-Host "[ERROR] $msg" -ForegroundColor Red }
+function Log-Step($msg)  { Write-Host "[STEP] $msg" -ForegroundColor Cyan }
+
+# ---------- 加解密函数 ----------
+# 密钥从机器 UUID 派生，换机器无法解密
+# ---------- 加解密 (AES-256-GCM + PBKDF2-SHA256 100000轮) ----------
+# C# 辅助类：PBKDF2 密钥派生 + AES-256-GCM 加密（通过 Windows CNG/BCrypt API）
+$DbCryptoCode = @"
+using System;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text;
+
+public class DbCrypto {
+    [StructLayout(LayoutKind.Sequential)]
+    struct AUTH_INFO {
+        public uint cbSize;
+        public uint dwInfoVersion;
+        public IntPtr pbNonce;
+        public uint cbNonce;
+        public IntPtr pbAuthData;
+        public uint cbAuthData;
+        public IntPtr pbTag;
+        public uint cbTag;
+        public IntPtr pbMacContext;
+        public uint cbMacContext;
+        public uint cbAad;
+        public long cbData;
+        public uint dwFlags;
+    }
+
+    [DllImport("bcrypt.dll", CharSet = CharSet.Unicode)]
+    static extern uint BCryptOpenAlgorithmProvider(out IntPtr phAlg, string alg, string impl, uint flags);
+
+    [DllImport("bcrypt.dll", CharSet = CharSet.Unicode)]
+    static extern uint BCryptSetProperty(IntPtr h, string prop, byte[] val, uint cb, uint flags);
+
+    [DllImport("bcrypt.dll")]
+    static extern uint BCryptGenerateSymmetricKey(IntPtr hAlg, out IntPtr hKey, IntPtr ko, uint cko, byte[] key, uint cb, uint flags);
+
+    [DllImport("bcrypt.dll")]
+    static extern uint BCryptEncrypt(IntPtr hKey, byte[] pbIn, uint cbIn, ref AUTH_INFO pInfo, IntPtr pbIV, uint cbIV, byte[] pbOut, uint cbOut, out uint pcbResult, uint flags);
+
+    [DllImport("bcrypt.dll")]
+    static extern uint BCryptDecrypt(IntPtr hKey, byte[] pbIn, uint cbIn, ref AUTH_INFO pInfo, IntPtr pbIV, uint cbIV, byte[] pbOut, uint cbOut, out uint pcbResult, uint flags);
+
+    [DllImport("bcrypt.dll")]
+    static extern uint BCryptDestroyKey(IntPtr hKey);
+
+    [DllImport("bcrypt.dll")]
+    static extern uint BCryptCloseAlgorithmProvider(IntPtr hAlg, uint flags);
+
+    static void Check(uint s) { if (s != 0) throw new Exception("BCrypt 0x" + s.ToString("X8")); }
+
+    // PBKDF2-HMAC-SHA256: 纯手动实现，不依赖 .NET 4.7.2+ 的 Rfc2898DeriveBytes
+    static byte[] PBKDF2(byte[] pw, byte[] salt, int iter, int len) {
+        using (var h = new HMACSHA256(pw)) {
+            int bs = 32, nb = (len + bs - 1) / bs;
+            byte[] r = new byte[len];
+            for (int b = 1; b <= nb; b++) {
+                byte[] u = new byte[salt.Length + 4];
+                Array.Copy(salt, u, salt.Length);
+                u[salt.Length] = (byte)(b >> 24); u[salt.Length+1] = (byte)(b >> 16);
+                u[salt.Length+2] = (byte)(b >> 8); u[salt.Length+3] = (byte)b;
+                u = h.ComputeHash(u);
+                byte[] t = (byte[])u.Clone();
+                for (int i = 1; i < iter; i++) { u = h.ComputeHash(u); for (int j = 0; j < bs; j++) t[j] ^= u[j]; }
+                int off = (b - 1) * bs, cl = Math.Min(bs, len - off);
+                Array.Copy(t, 0, r, off, cl);
+            }
+            return r;
+        }
+    }
+
+    static IntPtr OpenGcm() {
+        IntPtr hAlg;
+        Check(BCryptOpenAlgorithmProvider(out hAlg, "AES", null, 0));
+        byte[] mode = Encoding.Unicode.GetBytes("ChainingModeGCM\0");
+        Check(BCryptSetProperty(hAlg, "ChainingMode", mode, (uint)mode.Length, 0));
+        return hAlg;
+    }
+
+    public static string Encrypt(string plain, string password) {
+        byte[] pw = Encoding.UTF8.GetBytes(password);
+        byte[] salt = new byte[16], nonce = new byte[12], tag = new byte[16];
+        using (var rng = RandomNumberGenerator.Create()) { rng.GetBytes(salt); rng.GetBytes(nonce); }
+        byte[] key = PBKDF2(pw, salt, 100000, 32);
+        byte[] pt = Encoding.UTF8.GetBytes(plain);
+        byte[] ct = new byte[pt.Length];
+
+        IntPtr hAlg = OpenGcm(), hKey;
+        Check(BCryptGenerateSymmetricKey(hAlg, out hKey, IntPtr.Zero, 0, key, 32, 0));
+
+        var ai = new AUTH_INFO();
+        ai.cbSize = (uint)Marshal.SizeOf(typeof(AUTH_INFO));
+        ai.dwInfoVersion = 1;
+        GCHandle hn = GCHandle.Alloc(nonce, GCHandleType.Pinned), ht = GCHandle.Alloc(tag, GCHandleType.Pinned);
+        ai.pbNonce = hn.AddrOfPinnedObject(); ai.cbNonce = 12;
+        ai.pbTag = ht.AddrOfPinnedObject(); ai.cbTag = 16;
+
+        uint rl;
+        Check(BCryptEncrypt(hKey, pt, (uint)pt.Length, ref ai, IntPtr.Zero, 0, ct, (uint)ct.Length, out rl, 0));
+
+        hn.Free(); ht.Free(); BCryptDestroyKey(hKey); BCryptCloseAlgorithmProvider(hAlg, 0);
+
+        byte[] r = new byte[28 + ct.Length + 16];
+        Array.Copy(salt, 0, r, 0, 16);
+        Array.Copy(nonce, 0, r, 16, 12);
+        Array.Copy(ct, 0, r, 28, ct.Length);
+        Array.Copy(tag, 0, r, 28 + ct.Length, 16);
+        return Convert.ToBase64String(r);
+    }
+
+    public static string Decrypt(string enc, string password) {
+        byte[] pw = Encoding.UTF8.GetBytes(password);
+        byte[] raw = Convert.FromBase64String(enc);
+        byte[] salt = new byte[16]; Array.Copy(raw, 0, salt, 0, 16);
+        byte[] nonce = new byte[12]; Array.Copy(raw, 16, nonce, 0, 12);
+        int ctLen = raw.Length - 28 - 16;
+        byte[] ct = new byte[ctLen]; Array.Copy(raw, 28, ct, 0, ctLen);
+        byte[] tag = new byte[16]; Array.Copy(raw, 28 + ctLen, tag, 0, 16);
+        byte[] key = PBKDF2(pw, salt, 100000, 32);
+        byte[] pt = new byte[ct.Length];
+
+        IntPtr hAlg = OpenGcm(), hKey;
+        Check(BCryptGenerateSymmetricKey(hAlg, out hKey, IntPtr.Zero, 0, key, 32, 0));
+
+        var ai = new AUTH_INFO();
+        ai.cbSize = (uint)Marshal.SizeOf(typeof(AUTH_INFO));
+        ai.dwInfoVersion = 1;
+        GCHandle hn = GCHandle.Alloc(nonce, GCHandleType.Pinned), ht = GCHandle.Alloc(tag, GCHandleType.Pinned);
+        ai.pbNonce = hn.AddrOfPinnedObject(); ai.cbNonce = 12;
+        ai.pbTag = ht.AddrOfPinnedObject(); ai.cbTag = 16;
+
+        uint rl, s = BCryptDecrypt(hKey, ct, (uint)ct.Length, ref ai, IntPtr.Zero, 0, pt, (uint)pt.Length, out rl, 0);
+
+        hn.Free(); ht.Free(); BCryptDestroyKey(hKey); BCryptCloseAlgorithmProvider(hAlg, 0);
+        if (s != 0) throw new Exception("Decrypt failed: 0x" + s.ToString("X8"));
+        return Encoding.UTF8.GetString(pt, 0, (int)rl);
+    }
+}
+"@
+if (-not ("DbCrypto" -as [type])) {
+    Add-Type -TypeDefinition $DbCryptoCode
+}
+
+# UUID 全零/全F 时回退到计算机名，避免多台机器派生相同密钥
+function Get-MachineKey {
+    $uuid = (Get-WmiObject Win32_ComputerSystemProduct -ErrorAction SilentlyContinue).UUID
+    if (-not $uuid -or $uuid -match '^0{8}-0{4}-0{4}-0{4}-0{12}$' -or $uuid -match '^F{8}-F{4}-F{4}-F{4}-F{12}$') {
+        $uuid = $env:COMPUTERNAME
+    }
+    return "$uuid$EncryptionSalt"
+}
+
+function Encrypt-Secret($plain) {
+    $pass = Get-MachineKey
+    return [DbCrypto]::Encrypt($plain, $pass)
+}
+
+function Decrypt-Secret($enc) {
+    $pass = Get-MachineKey
+    return [DbCrypto]::Decrypt($enc, $pass)
+}
+
+# ========== Step 0: 解析参数 ==========
+Log-Step "0/7 解析参数"
+
+if (-not $ApiKey) { $ApiKey = $env:HW_API_KEY }
+if (-not $ApiKey) {
+    $secureInput = Read-Host "请输入 DevBridge API Key" -AsSecureString
+    $ptr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureInput)
+    $ApiKey = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($ptr)
+    [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)
+}
+if (-not $ApiKey) { Log-Error "API Key 不能为空"; throw "脚本终止，请查看上方错误信息" }
+Log-Info "API Key 已获取"
+
+# ========== Step 1: 前置检查 ==========
+Log-Step "1/7 前置检查"
+
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $isAdmin) {
+    Log-Error "需要管理员权限运行。请以管理员身份打开 PowerShell 再执行。"
+    throw "脚本终止，请查看上方错误信息"
+}
+
+if ($PSVersionTable.PSVersion.Major -lt 5) {
+    Log-Error "需要 PowerShell 5.1 或以上版本。"
+    throw "脚本终止，请查看上方错误信息"
+}
+
+Log-Info "前置检查通过"
+
+# ========== Step 2: 安装 DevBridge CLI ==========
+Log-Step "2/7 安装 DevBridge CLI"
+
+$env:PATH = "$HuaweiDir\bin;$env:PATH"
+
+$dbCmd = Get-Command devbridge -ErrorAction SilentlyContinue
+if ($dbCmd -and (& $dbCmd.Source version 2>$null)) {
+    $ver = & $dbCmd.Source version 2>$null
+    Log-Info "DevBridge CLI 已安装: $ver"
+    $script:DevbridgeBin = $dbCmd.Source
+} else {
+    # 确保 tar 可用（DevBridge 安装脚本需要 tar 解压 .tar.gz）
+    $tarOk = $true
+    if (-not (Get-Command tar -ErrorAction SilentlyContinue)) {
+        Log-Info "tar 未在 PATH 中，尝试定位 System32\tar.exe..."
+        $sysTar = Join-Path $env:SystemRoot "System32\tar.exe"
+        if (Test-Path $sysTar) {
+            $env:PATH = "$(Split-Path $sysTar);$env:PATH"
+            Log-Info "已将 $sysTar 加入 PATH"
+        } else {
+            $tarOk = $false
+        }
+    }
+
+    if ($tarOk) {
+        # tar 可用，走正常安装流程
+        Log-Info "从 OBS 源安装 DevBridge CLI..."
+        $installScript = (Invoke-WebRequest -Uri $InstallUrl -UseBasicParsing).Content
+        if ($installScript -is [byte[]]) {
+            $installScript = [System.Text.Encoding]::UTF8.GetString($installScript)
+        }
+        $installScript = $installScript -replace 'Read-Host', 'Write-Output "y"'
+        $tempInstall = [IO.Path]::GetTempFileName() + ".ps1"
+        [IO.File]::WriteAllText($tempInstall, $installScript, [Text.Encoding]::UTF8)
+        & $tempInstall
+        Remove-Item $tempInstall -ErrorAction SilentlyContinue
+    } else {
+        # tar 不可用，手动下载并解压 devbridge.exe
+        Log-Info "tar 不可用，手动下载并解压 DevBridge..."
+        # 从安装脚本解析版本号和下载源，避免硬编码
+        $installScriptContent = (Invoke-WebRequest -Uri $InstallUrl -UseBasicParsing).Content
+        if ($installScriptContent -is [byte[]]) {
+            $installScriptContent = [System.Text.Encoding]::UTF8.GetString($installScriptContent)
+        }
+        $verMatch = [regex]::Match($installScriptContent, 'DEFAULT_VERSION\s*=\s*"([^"]+)"')
+        $dbVer = if ($verMatch.Success) { $verMatch.Groups[1].Value } else { "0.2.2-release" }
+        $urlMatch = [regex]::Match($installScriptContent, 'DEFAULT_ARTIFACT_URL\s*=\s*"([^"]+)"')
+        $artifactUrl = if ($urlMatch.Success) { $urlMatch.Groups[1].Value } else { "https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge" }
+        $arch = if ($env:PROCESSOR_ARCHITECTURE -match 'ARM') { 'arm64' } else { 'amd64' }
+        $pkgUrl = "${artifactUrl}/devbridge_windows_${arch}_${dbVer}.exe.tar.gz"
+        Log-Info "下载: $pkgUrl"
+        $tmpGz = [IO.Path]::GetTempFileName()
+        Invoke-WebRequest -Uri $pkgUrl -OutFile $tmpGz -UseBasicParsing
+
+        # GZip 解压
+        $tmpTar = [IO.Path]::GetTempFileName()
+        $gzStream = [IO.Compression.GZipStream]::new([IO.File]::OpenRead($tmpGz), [IO.Compression.CompressionMode]::Decompress)
+        $outStream = [IO.File]::Create($tmpTar)
+        $gzStream.CopyTo($outStream)
+        $outStream.Close(); $gzStream.Close()
+
+        # 解析 tar 格式，提取 .exe
+        $tarBytes = [IO.File]::ReadAllBytes($tmpTar)
+        $offset = 0
+        New-Item -ItemType Directory -Force -Path "$HuaweiDir\bin" | Out-Null
+        while ($offset -lt $tarBytes.Length) {
+            $name = [Text.Encoding]::ASCII.GetString($tarBytes, $offset, 100).TrimEnd([char]0)
+            if ($name -eq '') { break }
+            $sizeStr = [Text.Encoding]::ASCII.GetString($tarBytes, $offset + 124, 12).TrimEnd([char]0).Trim()
+            $fileSize = [Convert]::ToInt64($sizeStr, 8)
+            $dataOffset = $offset + 512
+            if ($name -match '\.exe$') {
+                $exeBytes = $tarBytes[$dataOffset..($dataOffset + $fileSize - 1)]
+                [IO.File]::WriteAllBytes("$HuaweiDir\bin\devbridge.exe", $exeBytes)
+                Log-Info "已提取 devbridge.exe 到 $HuaweiDir\bin"
+            }
+            $offset = $dataOffset + [math]::Ceiling($fileSize / 512.0) * 512
+        }
+        Remove-Item $tmpGz, $tmpTar -ErrorAction SilentlyContinue
+    }
+
+    $env:PATH = "$HuaweiDir\bin;$env:PATH"
+    $dbCmd = Get-Command devbridge -ErrorAction SilentlyContinue
+    if (-not $dbCmd) {
+        Log-Error "安装失败，devbridge 命令未找到"
+        throw "脚本终止，请查看上方错误信息"
+    }
+    $script:DevbridgeBin = $dbCmd.Source
+    $ver = & $DevbridgeBin version 2>$null
+    if (-not $ver) {
+        Log-Error "devbridge version 命令执行失败"
+        throw "脚本终止，请查看上方错误信息"
+    }
+    Log-Info "安装成功: $ver"
+}
+
+function db { & $DevbridgeBin @args }
+
+# ========== Step 2.5: 安装 OpenSSH Server ==========
+Log-Step "2.5/7 安装 OpenSSH Server（Windows 内置 SSH）"
+$sshdService = Get-Service sshd -ErrorAction SilentlyContinue
+if ($sshdService -and $sshdService.Status -eq "Running") {
+    Log-Info "OpenSSH Server 已安装且运行中"
+} else {
+    Log-Info "安装 OpenSSH Server..."
+    try {
+        $capOk = $false
+
+        # 方式1（优先）：从 GitCode 仓库下载 OpenSSH-Win64.zip（最快）
+        Log-Info "从仓库下载 OpenSSH-Win64.zip..."
+        try {
+            $apiUrl = "https://gitcode.com/api/v5/repos/anruostyle/devbridge-ssh-setup/contents/OpenSSH-Win64.zip?ref=main"
+            $resp = Invoke-RestMethod -Uri $apiUrl -UseBasicParsing
+            $zipBytes = [Convert]::FromBase64String($resp.content)
+            $tmpZip = [IO.Path]::GetTempFileName() + ".zip"
+            [IO.File]::WriteAllBytes($tmpZip, $zipBytes)
+            Log-Info "下载完成 $([math]::Round($zipBytes.Length/1MB, 1)) MB)"
+
+            # 解压到 C:\Program Files\OpenSSH
+            $sshDir = "C:\Program Files\OpenSSH"
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            [IO.Compression.ZipFile]::ExtractToDirectory($tmpZip, $sshDir)
+            # zip 内有 OpenSSH-Win64 子目录，把文件移上来
+            $subDir = Join-Path $sshDir "OpenSSH-Win64"
+            if (Test-Path $subDir) {
+                Get-ChildItem $subDir | Move-Item -Destination $sshDir -Force
+                Remove-Item $subDir -Force -Recurse
+            }
+            Remove-Item $tmpZip -ErrorAction SilentlyContinue
+            Log-Info "已解压到 $sshDir"
+
+            # 加入 PATH
+            $env:PATH = "$sshDir;$env:PATH"
+
+            # 安装 sshd 服务
+            $installSshd = Join-Path $sshDir "install-sshd.ps1"
+            if (Test-Path $installSshd) {
+                & $installSshd 2>&1 | ForEach-Object { Log-Info $_ }
+                Log-Info "sshd 服务已安装"
+                $capOk = $true
+            } else {
+                # 手动注册
+                $sshdExe = Join-Path $sshDir "sshd.exe"
+                & $sshdExe install -f 2>&1 | Out-Null
+                $capOk = $true
+                Log-Info "sshd 服务已手动注册"
+            }
+        } catch {
+            Log-Info "从仓库下载失败: $($_.Exception.Message)，尝试其他方式..."
+        }
+
+        # 方式2（fallback）：通过 Windows Capability 安装
+        if (-not $capOk) {
+            $cap = Get-WindowsCapability -Online | Where-Object { $_.Name -like "OpenSSH.Server*" }
+            if ($cap -and $cap.State -ne "Installed") {
+                Log-Info "通过 Windows Capability 安装..."
+                Add-WindowsCapability -Online -Name $cap.Name | Out-Null
+                $capOk = $true
+                Log-Info "OpenSSH Server 安装完成"
+            } elseif ($cap -and $cap.State -eq "Installed") {
+                $capOk = $true
+                Log-Info "OpenSSH Server 已安装（服务未运行）"
+            }
+        }
+
+        # 方式3（fallback）：DISM
+        if (-not $capOk) {
+            Log-Info "Windows Capability 不可用，尝试 DISM..."
+            $dismResult = dism /online /Add-Capability /CapabilityName:OpenSSH.Server~~~~0.0.1.0 2>&1 | Out-String
+            if ($dismResult -match "成功|Success") {
+                $capOk = $true
+                Log-Info "DISM 安装 OpenSSH Server 成功"
+            }
+        }
+
+        # 方式4（fallback）：本地 sshd.exe 手动注册
+        if (-not $capOk) {
+            Log-Info "检查本地是否已有 sshd.exe..."
+            $sshdPaths = @(
+                "$env:SystemRoot\System32\OpenSSH\sshd.exe",
+                "$env:SystemRoot\SysWOW64\OpenSSH\sshd.exe",
+                "C:\Program Files\OpenSSH\sshd.exe"
+            )
+            $sshdExe = $null
+            foreach ($p in $sshdPaths) {
+                if (Test-Path $p) {
+                    $sshdExe = $p
+                    break
+                }
+            }
+            if ($sshdExe) {
+                Log-Info "找到 sshd.exe: $sshdExe，手动注册服务..."
+                & $sshdExe install -f 2>&1 | Out-Null
+                $capOk = $true
+                Log-Info "sshd 服务已手动注册"
+            }
+        }
+
+        if (-not $capOk) {
+            Log-Error "无法安装 OpenSSH Server，请手动安装后重试"
+            throw "脚本终止，请查看上方错误信息"
+        }
+
+        # 配置允许密码登录
+        $sshdConfig = "$env:ProgramData\ssh\sshd_config"
+        if (Test-Path $sshdConfig) {
+            $configContent = Get-Content $sshdConfig
+            $changed = $false
+            if ($configContent -notmatch "(?m)^PasswordAuthentication yes") {
+                $configContent = $configContent -replace "(?m)^#?PasswordAuthentication.*", "PasswordAuthentication yes"
+                $changed = $true
+            }
+            # 移除 Match group administrators 阻止密码登录的行（如果有）
+            if ($configContent -match "Match Group administrators") {
+                $configContent = $configContent | Where-Object { $_ -notmatch "AuthorizedKeysFile" -and $_ -notmatch "Match Group administrators" }
+                $changed = $true
+            }
+            if ($changed) {
+                $configContent | Set-Content $sshdConfig -Encoding UTF8
+                Log-Info "已配置 sshd_config 允许密码登录"
+            }
+        }
+
+        Start-Service sshd -ErrorAction SilentlyContinue
+        Set-Service -Name sshd -StartupType Automatic -ErrorAction SilentlyContinue
+
+        # 防火墙放行 3389 (RDP)
+        $fwRule = Get-NetFirewallRule -Name "OpenSSH-Server-In-TCP" -ErrorAction SilentlyContinue
+        if (-not $fwRule) {
+            New-NetFirewallRule -Name "OpenSSH-Server-In-TCP" -DisplayName "OpenSSH Server (sshd)" `
+                -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 3389 | Out-Null
+            Log-Info "已添加防火墙规则放行 3389 端口 (RDP)"
+        }
+
+        Log-Info "sshd 服务已启动并设为自动启动"
+    } catch {
+        Log-Error "安装 OpenSSH Server 失败: $($_.Exception.Message)"
+    }
+}
+
+# ========== Step 3: 登录 ==========
+Log-Step "3/7 登录 DevBridge"
+
+$authOutput = db auth status 2>&1 | Out-String
+$alreadyLoggedIn = ($authOutput -notmatch "not logged in|未登录")
+
+$keyChanged = $false
+$oldTunnelId = ""
+if (Test-Path $ConfigFile) {
+    try { $savedCfg = Get-Content $ConfigFile -Raw | ConvertFrom-Json } catch { $savedCfg = $null }
+    $storedKey = ""
+    if ($savedCfg.apiKeyEnc) {
+        try { $storedKey = Decrypt-Secret $savedCfg.apiKeyEnc } catch { $storedKey = "" }
+        if (-not $storedKey) { Log-Warn "旧 key 解密失败，按 key 变更处理"; $keyChanged = $true }
+    }
+    elseif ($savedCfg.apiKeyPlain) { $storedKey = $savedCfg.apiKeyPlain }
+    if ($storedKey -and ($storedKey -ne $ApiKey)) { $keyChanged = $true }
+    $oldTunnelId = $savedCfg.tunnelId
+}
+
+if ($keyChanged -and $oldTunnelId) {
+    Log-Warn "检测到 API Key 变更，旧隧道 $oldTunnelId 属旧账号，将无法访问，30 天后自动过期"
+    Log-Warn "如需立即清理：用旧账号登录后 devbridge delete $oldTunnelId"
+}
+
+if ($alreadyLoggedIn -and $keyChanged) {
+    Log-Info "检测到 API Key 变更，切换账号..."
+    db auth logout 2>$null
+    db auth login --api-key $ApiKey
+} elseif ($alreadyLoggedIn -and -not $keyChanged) {
+    Log-Info "已登录且 key 未变，跳过登录"
+} else {
+    Log-Info "使用 API Key 登录..."
+    db auth login --api-key $ApiKey
+}
+
+$authOutput = db auth status 2>&1 | Out-String
+if ($authOutput -match "not logged in|未登录") {
+    Log-Error "登录失败，请检查 API Key 是否有效"
+    throw "脚本终止，请查看上方错误信息"
+}
+Log-Info "登录成功"
+
+# ========== Step 4: 创建/复用隧道 + 端口 ==========
+Log-Step "4/7 创建隧道和端口"
+
+if (-not (Test-Path $ConfigDir)) { New-Item -ItemType Directory -Path $ConfigDir -Force | Out-Null }
+# Save C# helper for wrapper to load (avoids nested here-string in wrapper)
+$DbCryptoPath = "$ConfigDir\dbcrypto.cs"
+$DbCryptoCode | Set-Content $DbCryptoPath -Encoding UTF8
+
+$uuidRaw = (Get-WmiObject Win32_ComputerSystemProduct -ErrorAction SilentlyContinue).UUID
+$uuidClean = if ($uuidRaw -and $uuidRaw -notmatch '^0{8}-0{4}-0{4}-0{4}-0{12}$' -and $uuidRaw -notmatch '^F{8}-F{4}-F{4}-F{4}-F{12}$') { ($uuidRaw -replace '-','') } else { $env:COMPUTERNAME }
+$uuidShort = $uuidClean.Substring(0, [Math]::Min(8, $uuidClean.Length))
+$TunnelName = "ecs-ssh-$env:COMPUTERNAME-$uuidShort"
+Log-Info "原始 COMPUTERNAME: $env:COMPUTERNAME"
+Log-Info "原始隧道名: $TunnelName"
+$TunnelName = $TunnelName -replace '[^a-zA-Z0-9\-]', ''
+$TunnelName = $TunnelName.Trim('-')
+if ($TunnelName.Length -lt 5) { $TunnelName = "ecs-ssh-win" }
+if ($TunnelName.Length -gt 50) { $TunnelName = $TunnelName.Substring(0, 50) }
+$TunnelName = $TunnelName.Trim('-')
+Log-Info "最终隧道名: $TunnelName"
+$TunnelDesc = "ECSSSHtunnel"
+
+$TunnelId = ""
+if (Test-Path $ConfigFile) {
+    $savedConfig = Get-Content $ConfigFile -Raw | ConvertFrom-Json
+    $TunnelId = $savedConfig.tunnelId
+}
+
+if ($TunnelId) {
+    db show $TunnelId 2>$null | Out-Null
+    if ($LASTEXITCODE -eq 0) {
+        Log-Info "复用已有隧道: $TunnelId"
+    } else {
+        Log-Warn "已保存的隧道 $TunnelId 已失效，将创建新隧道"
+        $TunnelId = ""
+    }
+}
+
+if (-not $TunnelId) {
+    Log-Info "创建隧道: $TunnelName (有效期 ${TunnelExpiration}h)"
+    $output = db create $TunnelName -d $TunnelDesc -e $TunnelExpiration 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        $TunnelName = "$TunnelName-$(Get-Random -Minimum 1000 -Maximum 9999)"
+        $output = db create $TunnelName -d $TunnelDesc -e $TunnelExpiration 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Log-Error "创建隧道失败: $output"
+            throw "脚本终止，请查看上方错误信息"
+        }
+    }
+    $idLine = $output | Where-Object { $_ -match "Tunnel ID" }
+    if ($idLine) {
+        $TunnelId = ($idLine -split '\s+' | Select-Object -Last 1).Trim()
+    }
+    if (-not $TunnelId) {
+        Log-Error "无法提取 Tunnel ID: $output"
+        throw "脚本终止，请查看上方错误信息"
+    }
+    Log-Info "隧道创建成功: $TunnelId"
+}
+
+$portOutput = db port list $TunnelId 2>$null
+$portExists = $portOutput -match "\b$SshPort\b"
+
+if ($portExists) {
+    Log-Info "端口 $SshPort 已配置"
+} else {
+    Log-Info "添加端口 $SshPort (协议 auto, 禁止匿名访问)..."
+    db port create $TunnelId -p $SshPort --protocol auto --deny-anonymous
+    Log-Info "端口 $SshPort 添加成功"
+}
+
+if ($PlainText) {
+    $apiKeyPlain = $ApiKey
+    $apiKeyEnc = ""
+    Log-Warn "API Key 以明文存储（用户选择 -PlainText）"
+} else {
+    $apiKeyEnc = Encrypt-Secret $ApiKey
+    $apiKeyPlain = ""
+    if (-not $apiKeyEnc) {
+        Log-Error "API Key 加密失败"
+        throw "脚本终止，请查看上方错误信息"
+    }
+    Log-Info "API Key 已加密 (AES-256-GCM + PBKDF2-SHA256, 机器 UUID 派生密钥)"
+}
+
+$config = @{
+    tunnelId       = $TunnelId
+    tunnelName     = $TunnelName
+    tunnelExpiration = $TunnelExpiration
+    renewThreshold = $RenewThreshold
+    sshPort        = $SshPort
+    apiKeyEnc      = $apiKeyEnc
+    apiKeyPlain    = $apiKeyPlain
+    lastRenewed    = (Get-Date).ToString("o")
+    devbridgePath  = $DevbridgeBin
+}
+# 备份旧配置，便于换 key 出错时回滚
+if (Test-Path $ConfigFile) {
+    Copy-Item $ConfigFile "$ConfigFile.bak" -Force
+    Log-Info "已备份旧配置: $ConfigFile.bak"
+}
+
+$config | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+
+$acl = Get-Acl $ConfigFile
+$acl.SetAccessRuleProtection($true, $false)
+$adminRule = New-Object System.Security.AccessControl.FileSystemAccessRule("Administrators","FullControl","Allow")
+$systemRule = New-Object System.Security.AccessControl.FileSystemAccessRule("SYSTEM","FullControl","Allow")
+$acl.AddAccessRule($adminRule)
+$acl.AddAccessRule($systemRule)
+Set-Acl $ConfigFile $acl
+Log-Info "配置已保存: $ConfigFile (ACL: Admin+SYSTEM only)"
+
+# ========== Step 5: 创建 wrapper 脚本 ==========
+Log-Step "5/7 创建 wrapper 脚本"
+
+$wrapperContent = @"
+#=============================================================================
+# DevBridge SSH Tunnel Wrapper (由 Windows 计划任务调用)
+# 职责：解密API Key → 检查登录 → 检查隧道 → 自动续期 → 启动 host
+#=============================================================================
+`$ErrorActionPreference = "Stop"
+
+`$ConfigFile = "$ConfigFile"
+`$DbCryptoPath = "$DbCryptoPath"
+`$DevbridgeBin = "$DevbridgeBin"
+`$EncryptionSalt = "$EncryptionSalt"
+`$LogPrefix = "[devbridge-ssh]"
+
+# ---------- 加解密 (AES-256-GCM + PBKDF2-SHA256) ----------
+if (-not ("DbCrypto" -as [type])) {
+    Add-Type -Path `$DbCryptoPath
+}
+function Get-MachineKey {
+    `$uuid = (Get-WmiObject Win32_ComputerSystemProduct -ErrorAction SilentlyContinue).UUID
+    if (-not `$uuid -or `$uuid -match '^0{8}-0{4}-0{4}-0{4}-0{12}$' -or `$uuid -match '^F{8}-F{4}-F{4}-F{4}-F{12}$') {
+        `$uuid = `$env:COMPUTERNAME
+    }
+    return "`$uuid`$EncryptionSalt"
+}
+function Decrypt-Secret(`$enc) {
+    `$pass = Get-MachineKey
+    return [DbCrypto]::Decrypt(`$enc, `$pass)
+}
+function db { & `$DevbridgeBin @args }
+
+# ---------- 加载配置 ----------
+if (-not (Test-Path `$ConfigFile)) {
+    Write-Error "`$LogPrefix 配置文件不存在: `$ConfigFile"; exit 1
+}
+`$cfg = Get-Content `$ConfigFile -Raw | ConvertFrom-Json
+`$TunnelId = `$cfg.tunnelId
+`$TunnelExpiration = `$cfg.tunnelExpiration
+`$RenewThreshold = `$cfg.renewThreshold
+`$SshPort = `$cfg.sshPort
+`$ApiKeyEnc = `$cfg.apiKeyEnc
+`$ApiKeyPlain = `$cfg.apiKeyPlain
+`$LastRenewed = `$cfg.lastRenewed
+
+if (-not `$TunnelId) { Write-Error "`$LogPrefix 无 TUNNEL_ID"; exit 1 }
+
+# 解密 API Key（或直接使用明文）
+`$ApiKey = ""
+if (`$ApiKeyEnc) {
+    `$ApiKey = Decrypt-Secret `$ApiKeyEnc
+    if (-not `$ApiKey) {
+        Write-Error "`$LogPrefix API Key 解密失败（机器 UUID 不匹配？）"; exit 1
+    }
+} elseif (`$ApiKeyPlain) {
+    `$ApiKey = `$ApiKeyPlain
+}
+
+# ---- Step A: 检查登录 ----
+Write-Host "`$LogPrefix 检查登录状态..."
+`$authOut = db auth status 2>&1 | Out-String
+if (`$authOut -match "not logged in|未登录") {
+    Write-Host "`$LogPrefix 登录已过期，用 API Key 重新登录..."
+    if (-not `$ApiKey) { Write-Error "`$LogPrefix 无 API Key"; exit 1 }
+    db auth login --api-key `$ApiKey 2>`$null
+    if (`$LASTEXITCODE -ne 0) { Write-Error "`$LogPrefix API Key 登录失败"; exit 1 }
+    Write-Host "`$LogPrefix 重新登录成功"
+} else {
+    Write-Host "`$LogPrefix 登录正常"
+}
+
+# ---- Step B: 检查隧道是否存在 ----
+db show `$TunnelId 2>`$null | Out-Null
+if (`$LASTEXITCODE -ne 0) {
+    Write-Host "`$LogPrefix 隧道 `$TunnelId 不存在，重建..."
+    `$hn = `$env:COMPUTERNAME -replace '[^a-zA-Z0-9-]', ''
+    if (`$hn.Length -gt 20) { `$hn = `$hn.Substring(0,20) }
+    `$uuidRaw2 = (Get-WmiObject Win32_ComputerSystemProduct -ErrorAction SilentlyContinue).UUID
+    `$uuidClean2 = if (`$uuidRaw2 -and `$uuidRaw2 -notmatch '^0{8}-0{4}-0{4}-0{4}-0{12}$' -and `$uuidRaw2 -notmatch '^F{8}-F{4}-F{4}-F{4}-F{12}$') { (`$uuidRaw2 -replace '-','') } else { `$env:COMPUTERNAME }
+    `$uuidShort2 = `$uuidClean2.Substring(0, [Math]::Min(8, `$uuidClean2.Length))
+    `$tn = "ecs-ssh-`$hn-`$uuidShort2"
+    `$out = db create `$tn -d "ECSSSHtunnel" -e `$TunnelExpiration 2>&1
+    if (`$LASTEXITCODE -ne 0) {
+        `$tn = "`$tn-`$(Get-Random -Min 1000 -Max 9999)"
+        `$out = db create `$tn -d "ECSSSHtunnel" -e `$TunnelExpiration 2>&1
+    }
+    `$idLine = `$out | Where-Object { `$_ -match "Tunnel ID" }
+    `$newId = if (`$idLine) { (`$idLine -split '\s+' | Select-Object -Last 1).Trim() } else { "" }
+    if (-not `$newId) { Write-Error "`$LogPrefix 重建失败: `$out"; exit 1 }
+    `$TunnelId = `$newId
+    db port create `$TunnelId -p `$SshPort --protocol auto --deny-anonymous 2>`$null | Out-Null
+    `$cfg.tunnelId = `$TunnelId
+    `$cfg.tunnelName = `$tn
+    `$cfg.lastRenewed = (Get-Date).ToString("o")
+    `$cfg | ConvertTo-Json | Set-Content `$ConfigFile -Encoding UTF8
+    Write-Host "`$LogPrefix 隧道已重建: `$TunnelId"
+} else {
+    # ---- Step C: 检查续期 ----
+    `$needRenew = `$false
+    if (`$LastRenewed) {
+        try {
+            `$lastDate = [DateTime]::Parse(`$LastRenewed)
+            `$elapsed = (Get-Date) - `$lastDate
+            `$remaining = `$TunnelExpiration - `$elapsed.TotalHours
+            Write-Host "`$LogPrefix 剩余约 `$([int]`$remaining)h"
+            if (`$remaining -lt `$RenewThreshold) { `$needRenew = `$true }
+        } catch {
+            `$needRenew = `$true
+        }
+    } else {
+        `$needRenew = `$true
+    }
+    if (`$needRenew) {
+        Write-Host "`$LogPrefix 续期到 `${TunnelExpiration}h..."
+        db update `$TunnelId -e `$TunnelExpiration 2>`$null | Out-Null
+        if (`$LASTEXITCODE -eq 0) {
+            `$cfg.lastRenewed = (Get-Date).ToString("o")
+            `$cfg | ConvertTo-Json | Set-Content `$ConfigFile -Encoding UTF8
+            Write-Host "`$LogPrefix 续期成功"
+        } else {
+            Write-Host "`$LogPrefix 续期失败，继续 host..."
+        }
+    }
+}
+
+# ---- Step D: 启动 host（阻塞）----
+Write-Host "`$LogPrefix 启动 host，隧道: `$TunnelId"
+db host `$TunnelId
+"@
+
+$wrapperContent | Set-Content $WrapperScript -Encoding UTF8
+Log-Info "Wrapper 脚本已创建: $WrapperScript"
+
+# ========== Step 6: 创建计划任务 ==========
+Log-Step "6/7 创建计划任务（开机自启）"
+Log-Info "调试: WrapperScript = $WrapperScript"
+Log-Info "调试: DevbridgeBin = $DevbridgeBin"
+Log-Info "调试: ConfigFile = $ConfigFile"
+Log-Info "调试: Wrapper存在 = $(Test-Path $WrapperScript)"
+Log-Info "调试: DevbridgeBin存在 = $(Test-Path $DevbridgeBin)"
+Log-Info "调试: ConfigFile存在 = $(Test-Path $ConfigFile)"
+if (-not (Test-Path $WrapperScript)) {
+    Log-Error "Wrapper脚本不存在! 无法创建计划任务"
+    exit 1
+}
+
+$existingTask = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+if ($existingTask) {
+    Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
+    Log-Info "已删除旧的计划任务"
+}
+
+$psExe = "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe"
+Log-Info "调试: psExe = $psExe, 存在 = $(Test-Path $psExe)"
+$action = New-ScheduledTaskAction `
+    -Execute $psExe `
+    -Argument ("-NoProfile -ExecutionPolicy Bypass -File " + $WrapperScript)
+
+$trigger = New-ScheduledTaskTrigger -AtStartup
+
+$settings = New-ScheduledTaskSettingsSet `
+    -RestartCount 999 `
+    -RestartInterval (New-TimeSpan -Minutes 1) `
+    -DontStopIfGoingOnBatteries `
+    -StartWhenAvailable `
+    -ExecutionTimeLimit (New-TimeSpan -Days 365)
+
+$principal = New-ScheduledTaskPrincipal `
+    -UserId "SYSTEM" `
+    -LogonType ServiceAccount `
+    -RunLevel Highest
+
+try {
+    Register-ScheduledTask `
+        -TaskName $TaskName `
+        -Action $action `
+        -Trigger $trigger `
+        -Settings $settings `
+        -Principal $principal `
+        -Description "DevBridge SSH Tunnel" | Out-Null
+    Log-Info "计划任务已创建: $TaskName (开机自启, SYSTEM 权限)"
+} catch {
+    Log-Error "创建计划任务失败: $($_.Exception.Message)"
+    Log-Error "完整错误: $($_ | Out-String)"
+    exit 1
+}
+
+# ========== Step 7: 启动并验证 ==========
+Log-Step "7/7 启动并验证"
+
+# 先杀掉可能残留的 devbridge host 进程（隧道只允许一个 Host 连接）
+$oldProcs = Get-Process -Name "devbridge" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -match "host" -or $_.CommandLine -match "tunnel" }
+if ($oldProcs) {
+    Log-Info "发现残留 devbridge 进程，正在清理..."
+    $oldProcs | Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 2
+    Log-Info "已清理旧进程"
+}
+# 更彻底的方式：杀掉所有 devbridge 进程（CLI 短命令已执行完，剩下的都是后台 host）
+$allDbProcs = Get-Process -Name "devbridge" -ErrorAction SilentlyContinue
+if ($allDbProcs) {
+    Log-Info "清理所有 devbridge 后台进程..."
+    $allDbProcs | Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 2
+}
+
+Start-ScheduledTask -TaskName $TaskName
+
+Start-Sleep -Seconds 5
+$taskInfo = Get-ScheduledTaskInfo -TaskName $TaskName
+$taskState = (Get-ScheduledTask -TaskName $TaskName).State
+
+if ($taskState -eq "Running") {
+    Log-Info "任务已启动并运行中"
+} else {
+    Log-Error "任务启动失败 (状态: $taskState)"
+    Log-Error "最近日志请查看事件查看器:"
+    Log-Error "  事件查看器 → 应用程序和服务日志 → Microsoft → Windows → TaskScheduler"
+    throw "任务启动失败"
+}
+
+# ========== 输出汇总 ==========
+Write-Host ""
+Write-Host "============================================================" -ForegroundColor Cyan
+Write-Host "   DevBridge SSH Tunnel 安装完成" -ForegroundColor Cyan
+Write-Host "============================================================" -ForegroundColor Cyan
+Write-Host ""
+Write-Host " 隧道 ID:    $TunnelId"
+Write-Host " RDP 端口:   $SshPort"
+Write-Host " 有效期:     ${TunnelExpiration}h (剩余 < ${RenewThreshold}h 自动续期)"
+Write-Host " 任务名:     $TaskName"
+Write-Host " 运行身份:   SYSTEM"
+if ($PlainText) {
+    Write-Host " API Key:    明文存储 (-PlainText)" -ForegroundColor Yellow
+} else {
+    Write-Host " API Key:    已加密存储 (AES-256-GCM + PBKDF2-SHA256)"
+}
+Write-Host ""
+Write-Host "------------------------------------------------------------"
+Write-Host " 从另一台设备连接此 ECS 的 SSH："
+Write-Host "------------------------------------------------------------"
+Write-Host ""
+Write-Host "   1. 在你的设备上安装 DevBridge CLI"
+Write-Host "      PowerShell: irm https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install.ps1 | iex"
+Write-Host "      Bash:       curl -fsSL https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install.sh | bash"
+Write-Host ""
+Write-Host "   2. 登录"
+Write-Host "      devbridge auth login"
+Write-Host ""
+Write-Host "   3. 连接隧道"
+Write-Host "      devbridge connect $TunnelId"
+Write-Host "      # 注意输出中的端口映射: localhost:XXXXX -> tunnel port: 3389"
+Write-Host ""
+Write-Host "   4. RDP 连接"
+Write-Host "      # RDP 连接: mstsc /v:localhost:XXXXX"
+Write-Host "      # 或使用步骤3输出的端口号"
+Write-Host ""
+Write-Host "------------------------------------------------------------"
+Write-Host " 服务管理："
+Write-Host "------------------------------------------------------------"
+Write-Host ""
+Write-Host "   查看状态:   Get-ScheduledTask -TaskName $TaskName"
+Write-Host "   停止:       Stop-ScheduledTask  -TaskName $TaskName"
+Write-Host "   启动:       Start-ScheduledTask -TaskName $TaskName"
+Write-Host "   查看隧道:   devbridge show $TunnelId"
+Write-Host "   回滚:       Copy-Item $ConfigFile.bak $ConfigFile -Force"
+Write-Host "   查看日志:   事件查看器 → TaskScheduler"
+Write-Host ""
+Write-Host "============================================================" -ForegroundColor Cyan
+
+# ========== 完成 ==========
+Log-Step "全部完成！"
+Log-Info "隧道已创建，SSH 已配置，开机自启已设置"
+Write-Host ""
+Write-Host "按回车键退出..." -NoNewline -ForegroundColor Yellow
+Read-Host | Out-Null

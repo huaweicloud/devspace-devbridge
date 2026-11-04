@@ -6,6 +6,7 @@ package sdk
 
 import (
 	"errors"
+	"net/http"
 	"testing"
 
 	"github.com/coder/websocket"
@@ -38,9 +39,9 @@ func TestParseSSHCloseError(t *testing.T) {
 			want: websocket.CloseError{Code: websocket.StatusInternalError, Reason: "connect session failed"},
 		},
 		{
-			name: "policy violation no longer mapped to duplicate host",
+			name: "policy violation mapping for concurrent connections over quota",
 			err:  websocket.CloseError{Code: websocket.StatusPolicyViolation, Reason: "too many concurrent connections"},
-			want: websocket.CloseError{Code: websocket.StatusPolicyViolation, Reason: "too many concurrent connections"},
+			want: ErrQuotaExceeded,
 		},
 		{
 			name: "non close error passes through",
@@ -53,7 +54,6 @@ func TestParseSSHCloseError(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := parseSSHCloseError(tt.err)
 
-			// Sentinel error cases: compare by identity.
 			if errors.Is(tt.want, ErrQuotaExceeded) ||
 				errors.Is(tt.want, ErrTunnelNotFound) ||
 				errors.Is(tt.want, ErrDuplicateHost) {
@@ -63,7 +63,6 @@ func TestParseSSHCloseError(t *testing.T) {
 				return
 			}
 
-			// Pass-through cases: compare by concrete value.
 			var gotCE, wantCE websocket.CloseError
 			gotOK := errors.As(got, &gotCE)
 			wantOK := errors.As(tt.want, &wantCE)
@@ -77,5 +76,30 @@ func TestParseSSHCloseError(t *testing.T) {
 				t.Fatalf("parseSSHCloseError() = %v (AsCloseErr=%v), want %v (AsCloseErr=%v)", got, gotOK, tt.want, wantOK)
 			}
 		})
+	}
+}
+
+func TestBuildWSHeader(t *testing.T) {
+	hdr, sub := buildWSHeader("jwt-token", "api-key", http.Header{
+		"User-Agent": []string{"devbridge-cli/test (Linux/amd64; stable)"},
+	})
+
+	if got := hdr.Get("X-API-Key"); got != "api-key" {
+		t.Fatalf("X-API-Key = %q, want %q", got, "api-key")
+	}
+	if got := hdr.Get("User-Agent"); got != "devbridge-cli/test (Linux/amd64; stable)" {
+		t.Fatalf("User-Agent = %q, want version header injected", got)
+	}
+	if len(sub) != 2 || sub[0] != subprotocolDevBridge || sub[1] != "jwt-token" {
+		t.Fatalf("subprotocols = %v, want [%q jwt-token]", sub, subprotocolDevBridge)
+	}
+
+	// A nil extra map adds nothing and keeps the header minimal.
+	hdr2, _ := buildWSHeader("", "api-key", nil)
+	if _, ok := hdr2["User-Agent"]; ok {
+		t.Fatalf("nil extra headers must not add User-Agent, got %v", hdr2)
+	}
+	if hdr2.Get("X-API-Key") != "api-key" {
+		t.Fatalf("X-API-Key = %q, want %q", hdr2.Get("X-API-Key"), "api-key")
 	}
 }

@@ -1,140 +1,140 @@
 ---
-title: 问题排查
-description: 排查 DevBridge 安装、登录、隧道、Host 和 Connect 问题。
+title: Troubleshooting
+description: Troubleshoot DevBridge installation, login, tunnel, Host, and Connect issues.
 ---
 
-# 问题排查
+# Troubleshooting
 
-<p class="lead">先确认本地命令、身份、隧道状态和端口配置，再检查 Host 与 Connect 的网络连接。</p>
+<p class="lead">First confirm the local command, identity, tunnel status, and port configuration, then check the network connectivity of Host and Connect.</p>
 
-## 找不到 devbridge 命令
+## devbridge command not found
 
-确认默认安装目录存在，并加入当前终端的 `PATH`：
+Confirm the default install directory exists and add it to the current terminal's `PATH`:
 
 ```bash
 export PATH="$HOME/.huawei/bin:$PATH"
 devbridge version
 ```
 
-如果你使用 PowerShell，则执行：
+If you use PowerShell, run:
 
 ```powershell
 $env:Path = "$HOME/.huawei/bin;$env:Path"
 devbridge version
 ```
 
-如果仍然失败，重新运行[官方安装命令](../guide/install.md)并检查安装输出。
+If it still fails, rerun the [official installation command](../guide/install.md) and check the output.
 
-## 安装脚本下载失败
+## Install script fails to download
 
-检查：
+Check:
 
-1. 当前网络是否允许访问安装地址；
-2. DNS 和 HTTPS 代理是否正常；
-3. 如果使用 Bash 安装方式，`curl` 是否可用；
-4. 如果使用 PowerShell 安装方式，`irm` 是否可用；
-5. 安装地址是否完整且没有被换行或截断。
+1. whether the current network can reach the install address
+2. whether DNS and the HTTPS proxy work
+3. if you're using the Bash method, whether `curl` is available
+4. if you're using the PowerShell method, whether `irm` is available
+5. whether the install address is complete and not wrapped or truncated
 
-不要在下载失败时改用来源不明的安装脚本。
+Don't switch to an install script of unknown origin when a download fails.
 
-## 登录失败或凭证过期
+## Login fails or credentials expire
 
-先查看状态：
+First check the status:
 
 ```bash
 devbridge auth status
 ```
 
-然后重新登录：
+Then log in again:
 
 ```bash
 devbridge auth logout
 devbridge auth login
 ```
 
-使用 API Key 登录时，确认 API Key 有效且未过期。通过环境变量传入时，检查 `HW_API_KEY` 是否已正确设置。
+When logging in with an API key, confirm the key is valid and hasn't expired. When passing it via an environment variable, check that `HW_API_KEY` is set correctly.
 
-## 找不到隧道
+## Tunnel not found
 
 ```bash
 devbridge list
 devbridge show <tunnelId>
 ```
 
-常见原因：
+Common causes:
 
-- 隧道 ID 输入错误；
-- 当前登录身份不属于隧道工作空间；
-- 隧道已过期或删除；
-- 当前环境连接到了不同集群或区域。
+- tunnel ID entered incorrectly
+- the current login identity doesn't belong to the tunnel's workspace
+- the tunnel has expired or been deleted
+- the current environment is connected to a different cluster or region
 
-## 无法创建更多隧道
+## Can't create more tunnels
 
-每个工作空间默认最多拥有 10 条有效隧道。使用：
+Each workspace holds up to 10 valid tunnels by default. Run:
 
 ```bash
 devbridge list
 ```
 
-复用已有隧道，或删除不再使用的隧道。
+Reuse an existing tunnel, or delete tunnels you no longer need.
 
-## Host 无法连接
+## Host can't connect
 
-依次确认：
+Confirm in order:
 
-1. `devbridge auth status` 显示凭证有效；
-2. `devbridge show <tunnelId>` 能读取隧道；
-3. `devbridge port list <tunnelId>` 包含需要托管的端口；
-4. 本地服务确实监听该端口；
-5. 当前网络允许访问 DevBridge。
+1. `devbridge auth status` shows valid credentials
+2. `devbridge show <tunnelId>` can read the tunnel
+3. `devbridge port list <tunnelId>` includes the ports to host
+4. the local service is actually listening on that port
+5. the current network can reach DevBridge
 
-检查本地端口：
+Check the local port:
 
 ```bash
 curl -v http://127.0.0.1:8080
 ```
 
-如果端口使用 `https`，应使用 HTTPS 检查，并确认证书和本地服务配置正确。
+If the port uses `https`, check over HTTPS and confirm the certificate and local service configuration are correct.
 
-## Connect 无法访问服务
+## Connect can't access the service
 
-确认：
+Confirm:
 
-- Host 进程仍在运行；
-- Connect 与 Host 使用同一条隧道；
-- 端口仍然存在；
-- 当前身份可以访问禁止匿名的端口；
-- Connect 设备上的本地端口没有被占用；
-- 端口协议与 Host 本地服务一致。
+- the Host process is still running
+- Connect and Host use the same tunnel
+- the port still exists
+- the current identity can access the non-anonymous port
+- the local port on the Connect device isn't in use
+- the port protocol matches the local service on the Host side
 
-Connect 自动重连只处理短暂网络中断，不能恢复已删除或已过期的隧道。
+Connect's automatic reconnection only handles brief network interruptions; it can't recover tunnels that have been deleted or expired.
 
-## HTTP 与 HTTPS 行为不正确
+## Incorrect HTTP and HTTPS behavior
 
-查看端口协议：
+View the port protocol:
 
 ```bash
 devbridge port show <tunnelId> -p 8080
 ```
 
-如果本地服务是普通 HTTP，协议应为 `http`；本地服务自身完成 TLS 时使用 `https`；只有确实需要自动识别时使用 `auto`。
+If the local service is plain HTTP, the protocol should be `http`; use `https` when the local service handles TLS itself; use `auto` only when auto-detection is genuinely needed.
 
-当前 CLI 不支持直接修改已有端口的协议。需要修改时，删除端口并使用正确协议重新创建：
+The current CLI doesn't support changing an existing port's protocol directly. To change it, delete the port and recreate it with the correct protocol:
 
 ```bash
 devbridge port delete <tunnelId> -p 8080
 devbridge port create <tunnelId> -p 8080 --protocol http
 ```
 
-## 仍然无法解决
+## Still unresolved
 
-收集以下非敏感信息：
+Collect the following non-sensitive information:
 
-- `devbridge version`；
-- 操作系统和架构；
-- 执行的命令，不包含 API Key 和令牌；
-- 隧道 ID、端口和协议；
-- 错误发生时间；
-- 已脱敏的错误信息。
+- `devbridge version`
+- operating system and architecture
+- the commands you ran, excluding API keys and tokens
+- tunnel ID, port, and protocol
+- the time the error occurred
+- the error message, already redacted
 
-不要提交完整凭证、JWT、配置目录或带密钥的终端记录。
+Don't submit full credentials, JWTs, the configuration directory, or terminal transcripts containing secrets.

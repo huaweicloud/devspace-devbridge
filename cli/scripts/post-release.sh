@@ -48,8 +48,8 @@ ls -la "${GITCODE_DIR}"/
 
 # ---- Upload to GitCode Release ----
 # upload-gitcode-release.sh re-bakes the install scripts to point at the GitCode URL.
-# Release display name: 0.1.0-release → cli-release-0.1.0
-DISPLAY_NAME="cli-release-$(echo "${VERSION}" | sed 's/-release$//')"
+# Release display name: 0.1.0-release → devbridge-cli-0.1.0
+DISPLAY_NAME="devbridge-cli-$(echo "${VERSION}" | sed 's/-release$//')"
 "${SCRIPT_DIR}/upload-gitcode-release.sh" \
     -t "${GITCODE_TOKEN}" \
     -o CloudDeveloperDepartment \

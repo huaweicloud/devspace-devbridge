@@ -1,73 +1,73 @@
 ---
-title: 创建并托管隧道
-description: 安装 DevBridge CLI，登录并通过开发隧道托管本地服务，再从另一台设备连接。
+title: Create and host a tunnel
+description: Install the DevBridge CLI, log in, host a local service through DevBridge, and then connect from another device.
 ---
 
-# 创建并托管隧道
+# Create and host a tunnel
 
-<p class="lead">在本快速入门中，你将托管本机的 `8080` 端口，然后从另一台设备连接隧道。</p>
+<p class="lead">In this quickstart, you'll host port `8080` on your local machine, then connect to the tunnel from another device.</p>
 
-## 准备工作
+## Prerequisites
 
-- 已安装 DevBridge CLI，并确认 `devbridge version` 可以正常执行，参阅[安装 DevBridge CLI](./install.md)；
-- 已完成登录：个人环境使用交互登录，自动化环境使用 API Key，参阅[登录与凭证](./authentication.md)；
-- 另一台设备可用于验证 Connect 模式（需同样安装并登录）。
+- Install the DevBridge CLI and confirm that `devbridge version` runs properly. See [Install the DevBridge CLI](./install.md).
+- Log in: use interactive login for personal environments and an API key for automated environments. See [Login and credentials](./authentication.md).
+- Have a second device ready to verify Connect mode (it must also have the CLI installed and be logged in).
 
-::: info 适用场景
-开发隧道用于开发、联调和临时共享。不要把它作为生产服务的长期入口。
+::: info When to use DevBridge
+DevBridge is for development, integration testing, and temporary sharing. Don't use it as a long-term way to expose production services.
 :::
 
-## 托管本地服务
+## Host a local service
 
-### 1. 启动测试服务
+### 1. Start a test service
 
-在终端 1 启动一个本地 HTTP 服务：
+Start a local HTTP server in terminal 1:
 
 ```bash
 python3 -m http.server 8080
 ```
 
-### 2. 启动 Host
+### 2. Start Host
 
-在终端 2 创建一条有效期为 8 小时的隧道，并托管本地端口：
+In terminal 2, create a tunnel that's valid for 8 hours and host the local port:
 
 ```bash
 devbridge host -p 8080 -e 8
 ```
 
-Host 成功后会输出隧道 ID 和访问地址。隧道地址采用以下格式：
+After Host starts successfully, it prints the tunnel ID and access URL. The tunnel URL uses the following format:
 
 ```text
-https://<tunnelId>.<clusterId>.myhuaweicloud.com
+https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com
 ```
 
-保持 Host 进程运行。网络短暂中断时，CLI 会自动尝试恢复连接；按 `Ctrl+C` 停止本次托管。
+Keep the Host process running. If the network drops briefly, the CLI automatically tries to reconnect; press `Ctrl+C` to end this hosting session.
 
-::: tip 重复使用隧道
-需要保留固定地址或配置多个端口时，先创建持久隧道，再使用
-`devbridge host <tunnelId>` 托管其中配置的全部端口。详见[管理隧道](./tunnels.md)。
+::: tip Reuse a tunnel
+When you need a fixed address or want to configure multiple ports, first create a persistent tunnel, then use
+`devbridge host <tunnelId>` to host all the ports configured for it. See [Manage tunnels](./tunnels.md).
 :::
 
-## 从另一台设备连接
+## Connect from another device
 
-在另一台已安装并登录 DevBridge CLI 的设备上运行：
+On the other device, run:
 
 ```bash
 devbridge connect <tunnelId>
 ```
 
-Connect 会读取隧道端口配置并建立本地映射。连接建立后，通过本机对应端口访问 Host 设备上的服务：
+Connect reads the tunnel's port configuration and sets up local mappings. Once the connection is established, access the service on the Host device through the corresponding local port:
 
 ```text
 http://localhost:8080
 ```
 
-保持 Connect 进程运行；按 `Ctrl+C` 停止连接。有关多端口和重连行为，请参阅
-[Connect：连接远程服务](./connect.md)。
+Keep the Connect process running; press `Ctrl+C` to stop the connection. For details about multiple ports and reconnection behavior, see
+[Connect: connect to remote services](./connect.md).
 
-## 下一步
+## Next steps
 
-- [创建和管理持久隧道](./tunnels.md)
-- [配置端口协议与匿名访问](./ports.md)
-- [最佳实践：托管与公网访问](./best-practices/host-public-access.md)
-- [查看 CLI 命令参考](../reference/cli.md)
+- [Create and manage persistent tunnels](./tunnels.md)
+- [Configure port protocols and anonymous access](./ports.md)
+- [Best practices: hosting and public access](./best-practices/host-public-access.md)
+- [View the CLI command reference](../reference/cli.md)

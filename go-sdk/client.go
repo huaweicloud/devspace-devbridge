@@ -12,6 +12,7 @@ import (
 	"io"
 	"log/slog"
 	"net"
+	"net/http"
 	"os"
 	"regexp"
 
@@ -19,9 +20,14 @@ import (
 )
 
 const (
-	DefaultAPIBaseURL  = "https://bridge.developer.myhuaweicloud.com/open-api-inner/v1/relay-controller"
+	DefaultAPIBaseURL  = "https://bridge.developer.myhuaweicloud.com"
 	DefaultGatewayAddr = "gateway.devbridge-s2.hwtunnel.com:443"
 	DefaultGatewayHost = "devbridge-s2.hwtunnel.com"
+
+	// apiVersionPrefix is the REST API version segment, prepended to every
+	// request path so the server can route by version without relying on the
+	// caller to prepend it to the base URL.
+	apiVersionPrefix = "/v1"
 )
 
 // DefaultClusterID is the cluster used when creating new tunnels.
@@ -59,10 +65,21 @@ type Config struct {
 	// Defaults to DefaultGatewayHost.
 	GatewayHost string
 
+	// WSHeaders are extra headers merged into every WebSocket handshake
+	// (host/connect). The SDK does not interpret them; it only forwards them,
+	// so a caller like the CLI can inject e.g. a User-Agent without the SDK
+	// knowing its meaning. A nil map adds nothing.
+	WSHeaders http.Header
+
 	// OutputWriter receives user-facing output (connection progress,
 	// hosted ports, forwarding info). Defaults to os.Stdout; set it to
 	// io.Discard to silence these outputs.
 	OutputWriter io.Writer
+
+	// HTTPClient, when non-nil, is used for REST API requests instead of the
+	// SDK default client. It allows the caller (e.g. the CLI) to inject a
+	// custom transport or headers without changing other SDK behavior.
+	HTTPClient *http.Client
 }
 
 // resolve returns a copy with defaults and env-var fallbacks applied.
@@ -91,6 +108,7 @@ type Devbridge struct {
 	apiKey          string
 	gatewayAddr     string
 	gatewayHost     string
+	wsHeaders       http.Header
 	logger          *slog.Logger
 	outputWriter    io.Writer
 	api             *httpclient.Client
@@ -111,9 +129,10 @@ func New(cfg Config) *Devbridge {
 		apiKey:          resolved.APIKey,
 		gatewayAddr:     resolved.GatewayAddr,
 		gatewayHost:     resolved.GatewayHost,
+		wsHeaders:       resolved.WSHeaders,
 		logger:          slog.Default(),
 		outputWriter:    resolved.OutputWriter,
-		api:             httpclient.New(resolved.APIKey, resolved.APIBaseURL, slog.Default()),
+		api:             httpclient.New(resolved.APIKey, resolved.APIBaseURL, resolved.HTTPClient, slog.Default()),
 		tlsSessionCache: tls.NewLRUClientSessionCache(32),
 	}
 	go warmDNS(d.gatewayAddr)

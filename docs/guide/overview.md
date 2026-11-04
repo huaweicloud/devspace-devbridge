@@ -1,78 +1,77 @@
 ---
-title: 什么是开发隧道
-description: 了解 DevBridge 隧道、端口、Host 和 Connect 的关系。
+title: What is DevBridge
+description: Understand the relationships between DevBridge tunnels, ports, Host, and Connect.
 ---
 
-# 什么是开发隧道
+# What is DevBridge
 
-<p class="lead">开发隧道通过 DevBridge 中继服务连接 Host 与 Connect，使本地服务无需直接接受公网入站连接。</p>
+<p class="lead">DevBridge connects Host and Connect through a relay service, so your local services don't need to accept inbound connections directly from the public internet.</p>
 
-开发隧道适合远程联调、共享开发中的 Web 页面、接收 Webhook，以及从另一台设备访问本地服务。
+DevBridge is suited to remote integration testing, sharing web pages under development, receiving webhooks, and accessing local services from another device.
 
-## 视频介绍
+## Video
 
 <VideoPlayer
   src="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/video/promotion-video.mp4"
   poster="/images/videos/promotion-video.png"
-  title="DevBridge 推广视频"
+  title="DevBridge promotional video"
   :caption="false"
 />
 
-## 工作方式
+## How it works
 
-一次完整连接包含以下部分：
+A complete connection involves the following parts:
 
-1. **隧道**保存名称、描述、有效期、所属集群和稳定访问地址。
-2. **端口策略**声明允许访问的端口、协议和匿名访问策略。
-3. **Host**从服务所在设备建立到中继服务的出站连接，并转发本地端口。
-4. **Connect**从访问设备连接同一条隧道，并在本地建立端口映射。
+1. **Tunnel** stores the name, description, expiration time, assigned cluster, and stable access URL.
+2. **Port policy** declares the allowed ports, protocols, and anonymous-access rules.
+3. **Host** establishes an outbound connection to the relay service from the device running the local service, and forwards local ports.
+4. **Connect** connects to the same tunnel from the device accessing it, and sets up local port mappings.
 
-Host 和 Connect 都主动连接 DevBridge，因此 Host 所在设备通常不需要开放公网入站端口。
+Both Host and Connect initiate outbound connections to DevBridge, so the device running Host typically doesn't need to open public inbound ports.
 
-## 核心概念
+## Core concepts
 
-| 概念         | 说明                                               |
-| ------------ | -------------------------------------------------- |
-| 隧道 ID      | 八位小写 Base32 标识，用于 CLI 命令和隧道地址。    |
-| 集群         | 隧道所在的隔离和路由范围。                         |
-| 端口         | 隧道允许转发的端口，范围为 `1` 到 `65535`。        |
-| 协议         | 端口的应用协议，可以是 `http`、`https` 或 `auto`。 |
-| 有效期       | 隧道保持有效的时间窗口，过期后不可继续使用。       |
-| Host         | 托管本地服务的一端。                               |
-| Connect      | 访问远程服务的一端。                               |
-| Host 令牌    | 只允许建立 Host 连接的短期凭证。                   |
-| Connect 令牌 | 只允许建立 Connect 连接的短期凭证。                |
+| Concept       | Description                                                                          |
+| ------------- | ------------------------------------------------------------------------------------ |
+| Tunnel ID     | An eight-character lowercase Base32 identifier used in CLI commands and tunnel URLs. |
+| Cluster       | The isolation and routing scope the tunnel belongs to.                               |
+| Port          | A port the tunnel is allowed to forward, from `1` to `65535`.                        |
+| Protocol      | The application protocol for a port: `http`, `https`, or `auto`.                     |
+| Expiration    | How long the tunnel stays valid; once it expires, it can no longer be used.          |
+| Host          | The side that hosts local services.                                                  |
+| Connect       | The side that accesses remote services.                                              |
+| Host token    | A short-lived credential that only allows establishing Host connections.             |
+| Connect token | A short-lived credential that only allows establishing Connect connections.          |
 
-## 主要能力
+## Key capabilities
 
-- 一条隧道可以配置多个端口；
-- Host 可以同时托管多个本地端口；
-- Connect 可以建立对应的本地端口映射；
-- 端口可以按需禁止匿名访问；
-- 登录凭证保存在本地受保护的凭证存储中；
-- Host 和 Connect 支持网络中断后的自动重连；
-- 持久隧道可以重复使用相同的隧道 ID 和访问地址。
+- A tunnel can be configured with multiple ports.
+- Host can host multiple local ports at the same time.
+- Connect can set up the corresponding local port mappings.
+- Ports can deny anonymous access on demand.
+- Login credentials are stored in a protected local credential store.
+- Host and Connect support automatic reconnection after network interruptions.
+- Persistent tunnels can reuse the same tunnel ID and access URL.
 
-## 隔离与访问
+## Isolation and access
 
-隧道归属于当前登录身份对应的工作空间。CLI 只显示该工作空间中仍然有效的隧道。
+Tunnels belong to the workspace associated with the currently logged-in identity. The CLI only shows tunnels that are still valid within that workspace.
 
-每条隧道同时属于一个集群。Host、Connect 和网关必须使用与隧道一致的集群，避免跨集群访问。
+Each tunnel also belongs to a cluster. Host, Connect, and the gateway must use the same cluster as the tunnel to avoid cross-cluster access.
 
-端口是否允许匿名访问由端口策略决定。管理后台、调试端点和包含用户数据的服务应使用
-`--deny-anonymous`。
+Whether a port allows anonymous access is determined by its port policy. Admin consoles, debugging endpoints, and services that handle user data should use `--deny-anonymous`.
 
-## 使用边界
+## Usage boundaries
 
-开发隧道面向开发和测试工作流。使用时仍需遵守以下边界：
+DevBridge is intended for development and testing workflows. When using it, follow these boundaries:
 
-- 不在隧道中传输不必要的生产数据；
-- 不为管理接口开放匿名访问；
-- 不在脚本、日志或代码仓库中保存 API Key 和隧道令牌；
-- 不把短期令牌当作长期身份凭证；
-- 完成共享后停止 Host，并删除不再使用的隧道。
+- Don't transfer unnecessary production data through the tunnel.
+- Don't enable anonymous access for management interfaces.
+- Don't store API keys or tunnel tokens in scripts, logs, or code repositories.
+- Don't treat short-lived tokens as long-term identity credentials.
+- When you're done sharing, stop Host and delete any tunnels you no longer use.
 
-## 下一步
+## Next steps
 
-- [安装 DevBridge CLI](./install.md)
-- [创建并托管第一条隧道](./quickstart.md)（已完成安装可直达）
+- [Install the DevBridge CLI](./install.md)
+- [Create and host your first tunnel](./quickstart.md) (skip ahead if already installed)

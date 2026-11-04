@@ -14,7 +14,8 @@ import (
 var DefaultServerDomain = "https://bridge.developer.myhuaweicloud.com"
 
 // RelayControllerPath is the REST API path prefix for the relay controller.
-const RelayControllerPath = "/open-api-inner/v1/relay-controller"
+// /v1: new-style API path (open-api-inner and relay-controller segments removed).
+const RelayControllerPath = "/v1"
 
 var errKeyNotFound = errors.New(i18n.T(i18n.Msg.Config.KeyNotFound))
 

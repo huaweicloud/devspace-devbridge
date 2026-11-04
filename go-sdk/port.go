@@ -11,8 +11,8 @@ import (
 
 // REST API path patterns for port management.
 const (
-	tunnelPortsPath = "/tunnels/%s/ports"
-	tunnelPortPath  = "/tunnels/%s/ports/%d"
+	tunnelPortsPath = apiVersionPrefix + "/tunnels/%s/ports"
+	tunnelPortPath  = apiVersionPrefix + "/tunnels/%s/ports/%d"
 )
 
 // CreatePort creates a port on a tunnel.

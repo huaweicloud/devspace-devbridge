@@ -50,12 +50,58 @@
   letter-spacing: 0;
 }
 
+/* Thin scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--vp-c-divider);
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--vp-c-border);
+}
+
+/* 左侧栏：平时几乎透明，hover 才显示 */
+.VPSidebar::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+.VPSidebar:hover::-webkit-scrollbar-thumb {
+  background: var(--vp-c-divider);
+}
+
+.VPSidebar:hover::-webkit-scrollbar-thumb:hover {
+  background: var(--vp-c-border);
+}
+
+.VPSidebar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.VPSidebar:hover {
+  scrollbar-color: var(--vp-c-divider) transparent;
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--vp-c-divider) transparent;
+}
+
 html {
   scroll-padding-top: calc(var(--vp-nav-height) + 24px);
 }
 
 body {
-  font-synthesis: none;
+  font-synthesis: weight;
   text-rendering: optimizeLegibility;
 }
 
@@ -64,12 +110,17 @@ body {
 }
 
 .VPNavBar {
-  background: rgb(255 255 255 / 92%);
-  backdrop-filter: blur(12px);
+  background: rgb(255 255 255 / 40%) !important;
+  -webkit-backdrop-filter: blur(4px) saturate(120%);
+  backdrop-filter: blur(4px) saturate(120%);
+}
+
+.VPNavBar .content-body {
+  background-color: transparent !important;
 }
 
 .dark .VPNavBar {
-  background: rgb(23 24 25 / 92%);
+  background: rgb(23 24 25 / 40%) !important;
 }
 
 .VPNavBarTitle .title {
@@ -87,22 +138,68 @@ body {
   color: var(--vp-c-brand-1);
 }
 
+/* 导航图标（Font Awesome，仿 E2B） */
+.VPNavBarMenuLink {
+  display: flex;
+  align-items: center;
+}
+
+.VPNavBarMenuLink::before {
+  content: "";
+  width: 15px;
+  height: 15px;
+  flex: none;
+  margin-right: 6px;
+  background-color: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+}
+
+.VPNavBarMenuLink[href="/devspace-devbridge/"]::before,
+.VPNavBarMenuLink[href="/devspace-devbridge/zh/"]::before {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20576.1%20550.459285481771%22%3E%3Cpath%20fill%3D%22currentColor%22%20d%3D%22M312%20114.4l41.5-14.8C389.8%2086.6%20428%2080%20466.5%2080l61.5%200%200%20288-61.5%200c-49.5%200-98.7%208.5-145.3%2025.2l-9.2%203.3%200-282.1zM264%20396.5l-9.2-3.3C208.2%20376.5%20159%20368%20109.5%20368l-61.5%200%200-288%2061.5%200c38.5%200%2076.7%206.6%20113%2019.6l41.5%2014.8%200%20282.1zM288%2072L238.6%2054.4C197.2%2039.6%20153.5%2032%20109.5%2032L48%2032C21.5%2032%200%2053.5%200%2080L0%20368c0%2026.5%2021.5%2048%2048%2048l61.5%200c44%200%2087.7%207.6%20129.2%2022.4l38.6%2013.8c7%202.5%2014.6%202.5%2021.5%200l38.6-13.8c41.5-14.8%2085.1-22.4%20129.2-22.4l61.5%200c26.5%200%2048-21.5%2048-48l0-288c0-26.5-21.5-48-48-48l-61.5%200c-44%200-87.7%207.6-129.2%2022.4L288%2072zM0%20488c0%2013.3%2010.7%2024%2024%2024l67.7%200c32.6%200%2065%204.4%2096.4%2013.1l83.8%2023.3c11.1%203.1%2022.9%202.7%2033.8-1.2L345.4%20533c38.9-13.9%2079.8-21%20121.1-21l85.5%200c13.3%200%2024-10.7%2024-24s-10.7-24-24-24l-85.5%200c-46.8%200-93.2%208-137.2%2023.8L289.5%20502c-1.6%20.6-3.2%20.6-4.8%20.2l-83.8-23.3C165.3%20469%20128.6%20464%2091.7%20464L24%20464c-13.3%200-24%2010.7-24%2024z%22%2F%3E%3C%2Fsvg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20576.1%20550.459285481771%22%3E%3Cpath%20fill%3D%22currentColor%22%20d%3D%22M312%20114.4l41.5-14.8C389.8%2086.6%20428%2080%20466.5%2080l61.5%200%200%20288-61.5%200c-49.5%200-98.7%208.5-145.3%2025.2l-9.2%203.3%200-282.1zM264%20396.5l-9.2-3.3C208.2%20376.5%20159%20368%20109.5%20368l-61.5%200%200-288%2061.5%200c38.5%200%2076.7%206.6%20113%2019.6l41.5%2014.8%200%20282.1zM288%2072L238.6%2054.4C197.2%2039.6%20153.5%2032%20109.5%2032L48%2032C21.5%2032%200%2053.5%200%2080L0%20368c0%2026.5%2021.5%2048%2048%2048l61.5%200c44%200%2087.7%207.6%20129.2%2022.4l38.6%2013.8c7%202.5%2014.6%202.5%2021.5%200l38.6-13.8c41.5-14.8%2085.1-22.4%20129.2-22.4l61.5%200c26.5%200%2048-21.5%2048-48l0-288c0-26.5-21.5-48-48-48l-61.5%200c-44%200-87.7%207.6-129.2%2022.4L288%2072zM0%20488c0%2013.3%2010.7%2024%2024%2024l67.7%200c32.6%200%2065%204.4%2096.4%2013.1l83.8%2023.3c11.1%203.1%2022.9%202.7%2033.8-1.2L345.4%20533c38.9-13.9%2079.8-21%20121.1-21l85.5%200c13.3%200%2024-10.7%2024-24s-10.7-24-24-24l-85.5%200c-46.8%200-93.2%208-137.2%2023.8L289.5%20502c-1.6%20.6-3.2%20.6-4.8%20.2l-83.8-23.3C165.3%20469%20128.6%20464%2091.7%20464L24%20464c-13.3%200-24%2010.7-24%2024z%22%2F%3E%3C%2Fsvg%3E");
+}
+
+.VPNavBarMenuLink[href$="/reference/cli"]::before {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Cpath%20fill%3D%22currentColor%22%20d%3D%22M9.4%20118.6c-12.5-12.5-12.5-32.8%200-45.3s32.8-12.5%2045.3%200l160%20160c12.5%2012.5%2012.5%2032.8%200%2045.3l-160%20160c-12.5%2012.5-32.8%2012.5-45.3%200s-12.5-32.8%200-45.3L146.7%20256%209.4%20118.6zM224%20384l256%200c17.7%200%2032%2014.3%2032%2032s-14.3%2032-32%2032l-256%200c-17.7%200-32-14.3-32-32s14.3-32%2032-32z%22%2F%3E%3C%2Fsvg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Cpath%20fill%3D%22currentColor%22%20d%3D%22M9.4%20118.6c-12.5-12.5-12.5-32.8%200-45.3s32.8-12.5%2045.3%200l160%20160c12.5%2012.5%2012.5%2032.8%200%2045.3l-160%20160c-12.5%2012.5-32.8%2012.5-45.3%200s-12.5-32.8%200-45.3L146.7%20256%209.4%20118.6zM224%20384l256%200c17.7%200%2032%2014.3%2032%2032s-14.3%2032-32%2032l-256%200c-17.7%200-32-14.3-32-32s14.3-32%2032-32z%22%2F%3E%3C%2Fsvg%3E");
+}
+
+.VPNavBarMenuLink[href$="/reference/api"]::before {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%22-0.050000000000000266%200%20576.0999999999999%20512%22%3E%3Cpath%20fill%3D%22currentColor%22%20d%3D%22M337.1%2016.9c3.9-12.7%2017.4-19.7%2030-15.8s19.7%2017.4%2015.8%2030l-144%20464c-3.9%2012.7-17.4%2019.7-30%2015.8s-19.7-17.4-15.8-30l144-464zM145%20135c9.4%209.4%209.4%2024.6%200%2033.9l-87%2087%2087%2087c9.4%209.4%209.4%2024.6%200%2033.9s-24.6%209.4-33.9%200L7%20273c-9.4-9.4-9.4-24.6%200-33.9L111%20135c9.4-9.4%2024.6-9.4%2033.9%200zM431%20135c9.4-9.4%2024.6-9.4%2033.9%200L569%20239c9.4%209.4%209.4%2024.6%200%2033.9L465%20377c-9.4%209.4-24.6%209.4-33.9%200s-9.4-24.6%200-33.9l87-87-87-87c-9.4-9.4-9.4-24.6%200-33.9z%22%2F%3E%3C%2Fsvg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%22-0.050000000000000266%200%20576.0999999999999%20512%22%3E%3Cpath%20fill%3D%22currentColor%22%20d%3D%22M337.1%2016.9c3.9-12.7%2017.4-19.7%2030-15.8s19.7%2017.4%2015.8%2030l-144%20464c-3.9%2012.7-17.4%2019.7-30%2015.8s-19.7-17.4-15.8-30l144-464zM145%20135c9.4%209.4%209.4%2024.6%200%2033.9l-87%2087%2087%2087c9.4%209.4%209.4%2024.6%200%2033.9s-24.6%209.4-33.9%200L7%20273c-9.4-9.4-9.4-24.6%200-33.9L111%20135c9.4-9.4%2024.6-9.4%2033.9%200zM431%20135c9.4-9.4%2024.6-9.4%2033.9%200L569%20239c9.4%209.4%209.4%2024.6%200%2033.9L465%20377c-9.4%209.4-24.6%209.4-33.9%200s-9.4-24.6%200-33.9l87-87-87-87c-9.4-9.4-9.4-24.6%200-33.9z%22%2F%3E%3C%2Fsvg%3E");
+}
+
+.VPNavBarMenuLink[href$="/changelog"]::before {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Cpath%20fill%3D%22currentColor%22%20d%3D%22M48%20106.7L48%2056c0-13.3-10.7-24-24-24S0%2042.7%200%2056L0%20168c0%2013.3%2010.7%2024%2024%2024l112%200c13.3%200%2024-10.7%2024-24s-10.7-24-24-24l-55.3%200c37-57.8%20101.7-96%20175.3-96%20114.9%200%20208%2093.1%20208%20208S370.9%20464%20256%20464c-42.5%200-81.9-12.7-114.7-34.5-11-7.3-25.9-4.3-33.3%206.7s-4.3%2025.9%206.7%2033.3c40.5%2026.8%2089.1%2042.5%20141.3%2042.5%20141.4%200%20256-114.6%20256-256S397.4%200%20256%200C170.3%200%2094.4%2042.1%2048%20106.7zM256%20128c-13.3%200-24%2010.7-24%2024l0%20104c0%206.4%202.5%2012.5%207%2017l72%2072c9.4%209.4%2024.6%209.4%2033.9%200s9.4-24.6%200-33.9l-65-65%200-94.1c0-13.3-10.7-24-24-24z%22%2F%3E%3C%2Fsvg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Cpath%20fill%3D%22currentColor%22%20d%3D%22M48%20106.7L48%2056c0-13.3-10.7-24-24-24S0%2042.7%200%2056L0%20168c0%2013.3%2010.7%2024%2024%2024l112%200c13.3%200%2024-10.7%2024-24s-10.7-24-24-24l-55.3%200c37-57.8%20101.7-96%20175.3-96%20114.9%200%20208%2093.1%20208%20208S370.9%20464%20256%20464c-42.5%200-81.9-12.7-114.7-34.5-11-7.3-25.9-4.3-33.3%206.7s-4.3%2025.9%206.7%2033.3c40.5%2026.8%2089.1%2042.5%20141.3%2042.5%20141.4%200%20256-114.6%20256-256S397.4%200%20256%200C170.3%200%2094.4%2042.1%2048%20106.7zM256%20128c-13.3%200-24%2010.7-24%2024l0%20104c0%206.4%202.5%2012.5%207%2017l72%2072c9.4%209.4%2024.6%209.4%2033.9%200s9.4-24.6%200-33.9l-65-65%200-94.1c0-13.3-10.7-24-24-24z%22%2F%3E%3C%2Fsvg%3E");
+}
+
 @media (min-width: 768px) {
   .DocSearch-Button {
     border-color: var(--vp-c-divider);
     border-radius: 6px;
     width: 220px;
     height: 34px;
-    background: var(--vp-c-bg);
+    background: transparent;
   }
 
   .DocSearch-Button:hover {
     border-color: var(--vp-c-border);
-    background: var(--vp-c-bg-soft);
+    background: rgb(255 255 255 / 40%);
   }
 
   .DocSearch-Button-Key {
     background: var(--vp-c-bg-soft);
+  }
+
+  .dark .DocSearch-Button:hover {
+    background: rgb(23 24 25 / 40%);
   }
 }
 
@@ -119,13 +216,16 @@ body {
 .VPSidebarItem.level-0 > .item .text {
   color: var(--vp-c-text-3);
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .VPSidebarItem.level-1 .text {
-  padding: 5px 10px;
-  font-size: 13px;
+  padding: 5px 8px;
+  font-size: 13.5px;
   line-height: 20px;
+  color: var(--vp-c-text-2);
+  font-weight: 450;
 }
 
 .VPSidebarItem.level-1 > .item {
@@ -133,16 +233,23 @@ body {
 }
 
 .VPSidebarItem.level-1 > .item:hover {
-  background: var(--vp-c-bg-soft);
+  background: transparent;
+}
+
+.VPSidebarItem.level-1 > .item:hover .text {
+  color: var(--vp-c-text-1);
 }
 
 .VPSidebarItem.level-1.is-active > .item {
-  background: var(--vp-c-brand-soft);
+  background: transparent;
 }
 
 .VPSidebarItem.level-1.is-active > .item .text {
   color: var(--vp-c-brand-1);
   font-weight: 600;
+  text-shadow:
+    -0.15px 0 0 currentColor,
+    0.15px 0 0 currentColor;
 }
 
 .VPSidebarItem.level-1 > .item .indicator {
@@ -204,6 +311,11 @@ body {
   color: var(--vp-c-text-2);
   font-size: 17px;
   line-height: 1.7;
+}
+
+.vp-doc strong,
+.vp-doc b {
+  font-weight: 700;
 }
 
 .vp-doc a {

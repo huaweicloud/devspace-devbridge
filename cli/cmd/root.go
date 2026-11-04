@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"huawei.com/devbridge/internal/i18n"
+	"huawei.com/devbridge/internal/updater"
 
 	"github.com/spf13/cobra"
 )
@@ -42,7 +43,7 @@ func runError(fn func(cmd *cobra.Command, args []string) error) func(cmd *cobra.
 		if err != nil {
 			cmd.SilenceUsage = true
 			cmd.SilenceErrors = true
-			cmd.PrintErrln(err)
+			cmd.PrintErrln(updater.FormatError(err))
 		}
 		return err
 	}

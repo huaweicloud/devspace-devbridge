@@ -1,76 +1,75 @@
 ---
-title: 登录与凭证
-description: 使用交互登录或 API Key 登录 DevBridge。
+title: Login and credentials
+description: Log in to DevBridge interactively or with an API key.
 ---
 
-# 登录与凭证
+# Login and credentials
 
-<p class="lead">在创建、托管或连接隧道前，先使用 DevBridge CLI 建立登录状态。</p>
+<p class="lead">Before you create, host, or connect to a tunnel, log in with the DevBridge CLI.</p>
 
-## 交互登录
+## Interactive login
 
-个人开发环境优先使用交互登录：
+For personal development environments, prefer interactive login:
 
 ```bash
 devbridge auth login
 ```
 
-CLI 会打开浏览器引导你完成身份认证，并将登录凭证保存到本地受保护的凭证存储中。凭证存储优先使用
-系统密钥环（keyring），密钥环不可用时降级到配置文件。
+The CLI opens a browser to walk you through authentication and saves your login credentials to a protected local credential store. This store uses the system keyring; when the keyring is unavailable, it falls back to a configuration file.
 
-## 使用 API Key
+## Using an API key
 
-固定服务账号或自动化任务可以使用 API Key 直接登录：
+For dedicated service accounts or automated tasks, you can log in directly with an API key:
 
 ```bash
 devbridge auth login --api-key "$HW_API_KEY"
 ```
 
-也可以通过环境变量注入，CLI 会自动读取：
+You can also inject it through an environment variable, and the CLI reads it automatically:
 
 ```bash
 export HW_API_KEY="your-api-key"
 devbridge auth login
 ```
 
-不要把真实 API Key 直接写进命令、脚本或流水线定义。应通过受保护的环境变量或密钥服务注入。
+Don't write a real API key directly into commands, scripts, or pipeline definitions. Inject it through a protected environment variable or a secrets service instead.
 
-### 获取 API Key
+### Get an API key
 
-你可以在 DevBridge 管理页面创建和管理 API Key：
+You can create and manage API keys on the DevBridge management page:
 
-> **API Key 管理页面**：<https://devstation.connect.huaweicloud.com/space/devbridge/apikey>
+> **API key management page**: <https://devstation.connect.huaweicloud.com/space/devbridge?tab=apikey>
 
-在该页面创建新的 API Key 后，将其复制并通过环境变量 `HW_API_KEY` 注入 CLI 即可使用。
+After creating a new API key on that page, copy it and inject it through the `HW_API_KEY` environment variable.
 
-## 查看登录状态
+## Check login status
 
 ```bash
 devbridge auth status
 ```
 
-状态命令用于确认当前身份和凭证是否有效，不应输出完整 API Key。
+The status command confirms whether the current identity and credentials are valid; it does not print the full API key.
 
-## 退出登录
+## Log out
 
 ```bash
 devbridge auth logout
 ```
 
-退出会清除 CLI 保存的登录凭证，但不会删除已创建的隧道。
+Logging out clears the login credentials saved by the CLI, but does not delete the tunnels you've created.
 
-不要通过直接删除配置目录代替正常退出，除非 CLI 已无法运行且你确认不需要保留本地状态。
+Don't delete the configuration directory as a substitute for logging out, unless the CLI no longer runs and you're sure you don't need to preserve local state.
 
-## 凭证使用原则
+## Credential usage principles
 
-- 个人终端使用交互登录；
-- 自动化任务使用 API Key，通过环境变量注入；
-- 不通过聊天、日志或工单传递 API Key；
-- 不提交 `~/.huawei/devbridge`；
-- 怀疑凭证泄露时立即退出、撤销并重新签发；
-- Host 和 Connect 令牌只用于对应隧道和对应连接方向。
+- Use interactive login on personal terminals.
+- Use an API key for automated tasks, injected through an environment variable.
+- Don't pass API keys through chat, logs, or support tickets.
+- Don't commit `~/.huawei/devbridge`.
+- If you suspect credentials have leaked, log out, revoke them, and reissue immediately.
+- Host and Connect tokens are scoped to their corresponding tunnel and connection direction.
 
-## 下一步
+## Next steps
 
-- [创建和管理隧道](./tunnels.md)
-- [托管本地服务](./host.md)
+- [Create and manage tunnels](./tunnels.md)
+- [Host local services](./host.md)

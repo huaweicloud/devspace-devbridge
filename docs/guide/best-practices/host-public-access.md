@@ -1,192 +1,191 @@
 ---
-title: 托管与公网访问
-description: 启动本地服务并通过 Host 托管，在浏览器中直接访问隧道地址。
+title: Hosting and public access
+description: Start a local service, host it with Host, and access the tunnel URL directly in a browser.
 ---
 
-# 托管与公网访问
+# Hosting and public access
 
-<p class="lead">在本地启动服务，使用 Host 托管端口生成公网访问地址，直接在浏览器中打开地址即可访问。</p>
+<p class="lead">Start a service locally, host the port with Host to generate a public access URL, then simply open the URL in a browser.</p>
 
-## 视频演示
+## Video demos
 
 <VideoPlayer
   src="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/video/ci-best-practice.mp4"
   poster="/images/videos/ci-best-practice-video.png"
-  title="CI 最佳实践演示"
+  title="CI best practices demo"
   :caption="false"
 />
 
 <VideoPlayer
   src="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/video/ai-developer-space-best-practice.mp4"
   poster="/images/videos/ai-developer-space-best-practice-video.png"
-  title="AI 开发者空间最佳实践演示"
+  title="AI Developer Space best practices demo"
   :caption="false"
 />
 
-## 场景说明
+## Scenario overview
 
-目标：在本地启动一个 HTTP 服务，通过 DevBridge 隧道托管，获得公网访问地址后在浏览器中直接访问。
+Goal: start an HTTP service locally, host it through a DevBridge tunnel, get a public access URL, and access it directly in a browser.
 
-无需另一台设备安装 CLI 或建立 Connect 连接，适合快速分享本地开发内容。
+You don't need to install the CLI or establish a Connect connection on another device — this is ideal for quickly sharing local development content.
 
-## 第一步：启动本地服务
+## Step 1: Start the local service
 
-在终端 1 启动一个监听 `8080` 端口的 HTTP 服务：
+In terminal 1, start an HTTP service listening on port `8080`:
 
 ```bash
 python3 -m http.server 8080
 ```
 
-启动后该终端会持续运行，服务默认监听 `0.0.0.0:8080`。保持此终端不要关闭。
+Once started, this terminal keeps running; the service listens on `0.0.0.0:8080` by default. Keep this terminal open.
 
-![启动本地 HTTP 服务](/images/host-connect/python-http-server.png)
+![Start the local HTTP service](/images/host-connect/python-http-server.png)
 
-验证服务可用：
+Verify the service works:
 
 ```bash
 curl http://127.0.0.1:8080
 ```
 
-能返回当前目录的文件列表即表示服务正常。
+If it returns a listing of the files in the current directory, the service is working.
 
-## 第二步：启动 Host 托管端口
+## Step 2: Start Host to host the port
 
-Host 有两种方式，根据是否复用已有隧道选择。
+There are two ways to run Host, depending on whether you reuse an existing tunnel.
 
-### 方式一：使用临时隧道
+### Option 1: Use a temporary tunnel
 
-没有可复用隧道时，让 Host 自动创建一条临时隧道并托管 `8080` 端口：
+If you don't have a reusable tunnel, let Host automatically create a temporary tunnel and host port `8080`:
 
 ```bash
 devbridge host -p 8080
 ```
 
-如需设置描述和有效期：
+To set a description and expiration:
 
 ```bash
-devbridge host -p 8080 -d "隧道描述信息" -e 8
+devbridge host -p 8080 -d "tunnel description" -e 8
 ```
 
-- `-p 8080`：托管本地 `8080` 端口。
-- `-d`：隧道描述，可选。
-- `-e`：有效期小时数，可选，默认 72 小时。
+- `-p 8080`: hosts local port `8080`.
+- `-d`: tunnel description, optional.
+- `-e`: expiration in hours, optional, defaults to 72 hours.
 
-Host 成功后会输出隧道 ID 和访问地址，形如：
+After Host succeeds, it prints the tunnel ID and access URL, in the following format:
 
 ```text
-https://<tunnelId>.<clusterId>.myhuaweicloud.com
+https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com
 ```
 
-![使用临时隧道启动 Host](/images/host-connect/host-temporary-tunnel.png)
+![Start Host with a temporary tunnel](/images/host-connect/host-temporary-tunnel.png)
 
-上图展示的是 `devbridge host -p 8080` 的实际输出：自动创建隧道 `yf7oqwea` 并托管 `8080` 端口，输出对应的 Tunnel URL。
+The image above shows the actual output of `devbridge host -p 8080`: it automatically creates tunnel `yf7oqwea`, hosts port `8080`, and prints the corresponding tunnel URL.
 
-::: tip 临时隧道生命周期
-`devbridge host -p 8080` 创建的隧道在停止 Host 后仍然保留，不会自动删除。不再使用时应通过
-`devbridge delete <tunnelId>` 清理。
+::: tip Temporary tunnel lifecycle
+A tunnel created by `devbridge host -p 8080` is retained after you stop Host — it isn't deleted automatically. Clean it up with `devbridge delete <tunnelId>` when you no longer need it.
 :::
 
-### 方式二：使用已有隧道
+### Option 2: Use an existing tunnel
 
-复用已有隧道前，必须确认该隧道存在，且已配置 `8080` 端口。
+Before reusing an existing tunnel, confirm that it exists and that port `8080` is already configured.
 
-1. 列出当前工作空间的有效隧道：
+1. List the valid tunnels in the current workspace:
 
    ```bash
    devbridge list
    ```
 
-   确认目标隧道 ID 在列表中。
+   Confirm the target tunnel ID is in the list.
 
-2. 查看隧道的端口配置：
+2. View the tunnel's port configuration:
 
    ```bash
    devbridge port list <tunnelId>
    ```
 
-   确认 `8080` 端口已经存在。如果不存在，先创建：
+   Confirm port `8080` already exists. If it doesn't, create it first:
 
    ```bash
    devbridge port create <tunnelId> -p 8080 --protocol http
    ```
 
-3. 启动 Host 托管该隧道的全部端口：
+3. Start Host to host all the ports of that tunnel:
 
    ```bash
    devbridge host <tunnelId>
    ```
 
-   Host 会加载隧道中配置的全部端口并开始转发，不需要再指定 `-p`。
+   Host loads all the ports configured in the tunnel and begins forwarding; you don't need to specify `-p` again.
 
-   ![使用已有隧道启动 Host](/images/host-connect/host-existing-tunnel.png)
+   ![Start Host with an existing tunnel](/images/host-connect/host-existing-tunnel.png)
 
-   上图展示的是 `devbridge host ghirszae` 的实际输出：Host 成功托管 `8080` 端口并输出隧道地址，运行过程中触发了一次自动重连，恢复后继续转发。
+   The image above shows the actual output of `devbridge host ghirszae`: Host successfully hosts port `8080` and prints the tunnel URL; during the run it triggers an automatic reconnection and resumes forwarding after recovering.
 
-无论哪种方式，Host 都在前台持续运行。保持终端 2 不要关闭，按 `Ctrl+C` 可停止托管。
+Either way, Host keeps running in the foreground. Keep terminal 2 open; press `Ctrl+C` to stop hosting.
 
-## 第三步：在浏览器中访问隧道地址
+## Step 3: Access the tunnel URL in a browser
 
-Host 输出的隧道地址形如：
+The tunnel URL that Host prints looks like:
 
 ```text
-https://<tunnelId>.<clusterId>.myhuaweicloud.com
+https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com
 ```
 
-在任意设备的浏览器中直接打开该地址即可访问本地服务。访问行为取决于端口的匿名访问策略：
+Open the URL directly in a browser on any device to access the local service. The behavior depends on the port's anonymous-access policy:
 
-| 端口策略             | 浏览器访问行为                                      |
-| -------------------- | --------------------------------------------------- |
-| 允许匿名访问（`-a`） | 直接打开地址即可访问，不需要 DevBridge 身份或凭证。 |
-| 禁止匿名访问（默认） | 跳转到登录页，完成认证获取凭证后即可访问。          |
+| Port policy                       | Browser behavior                                                                                            |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Allows anonymous access (`-a`)    | Open the URL directly to access it — no DevBridge identity or credentials required.                         |
+| Denies anonymous access (default) | You're redirected to a sign-in page; complete authentication to obtain credentials, then you can access it. |
 
-端口的匿名访问策略在创建端口时通过 `-a` 或 `--deny-anonymous` 指定，详见[管理端口](../ports.md)。
+A port's anonymous-access policy is set at creation time with `-a` or `--deny-anonymous`. See [Manage ports](../ports.md).
 
-## 完整流程速查
+## Quick reference
 
-| 步骤 | 终端   | 命令                                               | 说明                     |
-| ---- | ------ | -------------------------------------------------- | ------------------------ |
-| 1    | 终端 1 | `python3 -m http.server 8080`                      | 启动本地 HTTP 服务。     |
-| 2    | 终端 2 | `devbridge host -p 8080`                           | 临时隧道托管（方式一）。 |
-| 2    | 终端 2 | `devbridge host <tunnelId>`                        | 已有隧道托管（方式二）。 |
-| 3    | 浏览器 | `https://<tunnelId>.<clusterId>.myhuaweicloud.com` | 直接访问隧道地址。       |
+| Step | Terminal   | Command                                               | Description                              |
+| ---- | ---------- | ----------------------------------------------------- | ---------------------------------------- |
+| 1    | Terminal 1 | `python3 -m http.server 8080`                         | Start the local HTTP service.            |
+| 2    | Terminal 2 | `devbridge host -p 8080`                              | Host with a temporary tunnel (Option 1). |
+| 2    | Terminal 2 | `devbridge host <tunnelId>`                           | Host with an existing tunnel (Option 2). |
+| 3    | Browser    | `https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com` | Access the tunnel URL directly.          |
 
-## 常见问题
+## FAQ
 
-### Host 启动后立即退出
+### Host exits immediately after starting
 
-确认终端 1 的本地服务仍在运行。Host 检测到本地端口无服务监听时会报错退出。
+Confirm the local service in terminal 1 is still running. Host exits with an error when it detects that nothing is listening on the local port.
 
-### 浏览器访问返回登录页
+### Browser access returns a sign-in page
 
-端口配置为禁止匿名访问时，浏览器会跳转到登录页。完成认证后即可访问，或创建端口时使用 `-a` 允许匿名访问。
+When the port is configured to deny anonymous access, the browser redirects to a sign-in page. Complete authentication to access it, or use `-a` when creating the port to allow anonymous access.
 
-### 隧道 ID 遗忘
+### Forgot the tunnel ID
 
-查看：
+To look it up:
 
 ```bash
 devbridge list
 ```
 
-临时隧道和持久隧道都会出现在有效隧道列表中。
+Both temporary and persistent tunnels appear in the valid tunnel list.
 
-## 清理
+## Cleanup
 
-完成验证后，按顺序停止：
+After verification, stop things in this order:
 
-1. 在 Host 终端按 `Ctrl+C`；
-2. 在服务终端按 `Ctrl+C` 停止 `python3 -m http.server`。
+1. Press `Ctrl+C` in the Host terminal.
+2. Press `Ctrl+C` in the service terminal to stop `python3 -m http.server`.
 
-临时隧道停止 Host 后不会自动删除。确认不再使用后清理：
+A temporary tunnel isn't deleted automatically after you stop Host. Clean it up once you're sure you no longer need it:
 
 ```bash
 devbridge delete <tunnelId>
 ```
 
-## 相关内容
+## Related content
 
-- [托管与远程连接](./host-remote-connect.md)
-- [Host：托管本地服务](../host.md)
-- [管理端口](../ports.md)
-- [什么是开发隧道](../overview.md)
-- [排查 Host 连接问题](../../reference/troubleshooting.md)
+- [Hosting and remote connection](./host-remote-connect.md)
+- [Host: expose local services](../host.md)
+- [Manage ports](../ports.md)
+- [What is DevBridge](../overview.md)
+- [Troubleshoot Host connection issues](../../reference/troubleshooting.md)

@@ -15,7 +15,11 @@ import (
 )
 
 const (
-	authCheckPath = config.RelayControllerPath + "/auth/check"
+	// authCheckPath points at the dedicated API-key validation endpoint on the
+	// v1 backend. /v1/api-keys/check is implemented by mgmt-service and shared
+	// with relay-gateway and bridge-service; it validates the X-API-Key header
+	// and returns 200 when the key is valid and 401 when it is not.
+	authCheckPath = config.RelayControllerPath + "/api-keys/check"
 	headerXAPIKey = "X-API-Key"
 )
 
@@ -26,14 +30,14 @@ var verifyClient = &http.Client{
 	Timeout: 10 * time.Second,
 }
 
-// VerifyAPIKey validates the API Key; a 204 response means it is valid.
+// VerifyAPIKey validates the API Key; a 200 response means it is valid.
 func VerifyAPIKey(apiKey string) error {
 	if apiKey == "" {
 		return errAPIKeyInvalid
 	}
 
 	url := strings.TrimRight(config.DefaultServerDomain, "/") + authCheckPath
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequest(http.MethodPost, url, nil)
 	if err != nil {
 		return fmt.Errorf("%s: %w", i18n.T(i18n.Msg.Auth.VerifyRequestFailed), err)
 	}
@@ -55,7 +59,7 @@ func VerifyAPIKey(apiKey string) error {
 	logVerifyResponse(resp, body, time.Since(start))
 
 	switch resp.StatusCode {
-	case http.StatusNoContent:
+	case http.StatusOK, http.StatusNoContent:
 		return nil
 	case http.StatusUnauthorized:
 		return errAPIKeyInvalid

@@ -63,7 +63,7 @@ type Limits struct {
 type createTunnelRequest struct {
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
-	ClusterID   string `json:"ClusterId"`
+	ClusterID   string `json:"clusterId"`
 	Expiration  int    `json:"expiration,omitempty"`
 }
 

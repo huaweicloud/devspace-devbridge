@@ -11,6 +11,8 @@ func init() {
 	Msg.Common.FlagEchoPort = Message{ZH: "本地服务器端口号 (未指定则自动分配随机端口)", EN: "Local server port number (auto-assign random port if not specified)"}
 	Msg.Common.FlagInterface = Message{ZH: "本地接口地址", EN: "Local interface address"}
 	Msg.Common.FlagPingInterval = Message{ZH: "消息间隔(毫秒)", EN: "Interval between messages in ms"}
+	Msg.Common.UpdateLabel = Message{ZH: "更新方式：", EN: "Update:"}
+	Msg.Common.UpgradeRequiredHint = Message{ZH: "当前 CLI 版本过低，请升级后重试", EN: "your CLI version is too old, please upgrade and retry"}
 
 	Msg.Auth.LoginSuccess = Message{ZH: "登录成功", EN: "Login successful"}
 	Msg.Auth.LogoutSuccess = Message{ZH: "注销成功", EN: "Logout successful"}
@@ -91,6 +93,7 @@ func init() {
 	Msg.Port.FlagProtocol = Message{ZH: "端口协议 (选项: http/https/auto)", EN: "Port protocol (options: http/https/auto)"}
 	Msg.Port.FlagAllowAnon = Message{ZH: "允许匿名客户端访问", EN: "Allow anonymous client access"}
 	Msg.Port.FlagDenyAnon = Message{ZH: "禁止匿名客户端访问", EN: "Deny anonymous client access"}
+	Msg.Port.FlagAllowAnonConflict = Message{ZH: "不能同时使用 --allow-anonymous 和 --deny-anonymous", EN: "cannot combine --allow-anonymous and --deny-anonymous"}
 	Msg.Port.DeleteSuccess = Message{ZH: "端口 %d 已从隧道 %s 删除。\n", EN: "Port %d removed from tunnel %s.\n"}
 	Msg.Port.InvalidProtocol = Message{ZH: "协议必须是 http、https、auto 之一，当前为: %s", EN: "protocol must be one of http, https, auto, got: %s"}
 	Msg.Port.AddFailed = Message{ZH: "添加端口 %d 失败: %w", EN: "failed to add port %d: %w"}
@@ -118,19 +121,15 @@ func init() {
 	Msg.Echo.Headers = Message{ZH: "请求头", EN: "Headers"}
 
 	Msg.Ping.PingShort = Message{ZH: "测试到服务器的连通性", EN: "Test connectivity to the server"}
+	Msg.Ping.Disconnected = Message{ZH: "隧道连接断开", EN: "tunnel disconnected"}
+	Msg.Ping.NotServedByTun = Message{ZH: "请求未到达隧道服务，域名可能被防火墙/负载均衡拦截", EN: "request did not reach the tunnel service; the domain may be blocked by a firewall/load balancer"}
+	Msg.Ping.GatewayError = Message{ZH: "网关错误: HTTP %s", EN: "gateway error: HTTP %s"}
+	Msg.Ping.ServiceError = Message{ZH: "隧道内服务错误: %s", EN: "tunneled service error: %s"}
 	Msg.Echo.PingResultOK = Message{ZH: "HTTP %s -- %d ms\n", EN: "HTTP %s -- %d ms\n"}
 	Msg.Echo.PingResultErr = Message{ZH: "HTTP %s -- %d ms（错误: %v）\n", EN: "HTTP %s -- %d ms (err: %v)\n"}
 	Msg.Echo.InvalidPortNumber = Message{ZH: "无效端口号 %d（端口需在 1-65535 之间）", EN: "invalid port number %d (port must be between 1 and 65535)"}
 	Msg.Echo.IntervalMustBePositive = Message{ZH: "间隔必须为正数，当前为 %d 毫秒", EN: "interval must be positive, got %d ms"}
 
-	Msg.Config.ConfigCommands = Message{ZH: "配置命令", EN: "Configuration commands"}
-	Msg.Config.GetShort = Message{ZH: "查看网关配置", EN: "Show gateway configuration"}
-	Msg.Config.SetShort = Message{ZH: "设置网关配置", EN: "Set gateway configuration"}
-	Msg.Config.UnsetShort = Message{ZH: "清空网关配置（恢复编译时默认值）", EN: "Clear gateway configuration (restore build defaults)"}
-	Msg.Config.GatewayAddr = Message{ZH: "网关地址", EN: "Gateway Address"}
-	Msg.Config.GatewayHost = Message{ZH: "网关SNI域名", EN: "Gateway SNI Host"}
-	Msg.Config.SetSuccess = Message{ZH: "配置已保存", EN: "Configuration saved"}
-	Msg.Config.NothingToSet = Message{ZH: "没有可设置的项，请用 --gateway-addr / --gateway-host", EN: "Nothing to set, use --gateway-addr / --gateway-host"}
 	Msg.Config.NoDefaultTunnel = Message{ZH: "未指定隧道 ID 且未设置默认隧道，请通过参数指定，或使用 'devbridge set' 设置默认隧道", EN: "tunnel ID not specified and no default tunnel set, please specify via argument or use 'devbridge set' to set default"}
 	Msg.Config.KeyNotFound = Message{ZH: "配置项不存在", EN: "key not found"}
 

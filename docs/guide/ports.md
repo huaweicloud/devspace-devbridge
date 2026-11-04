@@ -1,125 +1,124 @@
 ---
-title: 管理端口
-description: 配置隧道端口、协议和匿名访问策略。
+title: Manage ports
+description: Configure tunnel ports, protocols, and anonymous-access policies.
 ---
 
-# 管理端口
+# Manage ports
 
-<p class="lead">隧道只转发已经配置的端口。每个端口拥有独立的协议和匿名访问策略。</p>
+<p class="lead">A tunnel only forwards ports that have been configured. Each port has its own protocol and anonymous-access policy.</p>
 
-## 创建端口
+## Create a port
 
-创建一个明确禁止匿名访问的 HTTP 端口。端口默认也是禁止匿名访问：
+Create an HTTP port that explicitly denies anonymous access (the default):
 
 ```bash
 devbridge port create <tunnelId> -p 8080 --protocol http --deny-anonymous
 ```
 
-创建一个允许匿名访问的 HTTP 端口：
+Create an HTTP port that allows anonymous access:
 
 ```bash
 devbridge port create <tunnelId> -p 8080 --protocol http -a
 ```
 
-创建一个使用默认 `auto` 协议的端口：
+Create a port that uses the default `auto` protocol:
 
 ```bash
 devbridge port create <tunnelId> -p 3000
 ```
 
-创建时必须提供端口，协议默认为 `auto`。端口范围为 `1` 到 `65535`，同一条隧道内不能重复。
+You must provide a port when creating; the protocol defaults to `auto`. Ports range from `1` to `65535` and cannot be duplicated within the same tunnel.
 
-## 选择协议
+## Choose a protocol
 
-| 协议    | 使用场景                 |
-| ------- | ------------------------ |
-| `http`  | 本地服务接收普通 HTTP。  |
-| `https` | 本地服务自身提供 HTTPS。 |
-| `auto`  | 由连接端自动识别协议。   |
+| Protocol | Use case                                                |
+| -------- | ------------------------------------------------------- |
+| `http`   | The local service receives plain HTTP.                  |
+| `https`  | The local service itself serves HTTPS.                  |
+| `auto`   | The connecting side detects the protocol automatically. |
 
-协议描述的是 Host 侧本地服务。选择错误可能导致握手失败、连接中断或返回不可识别的数据。
+The protocol declares the local service on the Host side. Choosing the wrong one can cause handshake failures, dropped connections, or unrecognizable data in responses.
 
-## 控制匿名访问
+## Control anonymous access
 
-`-a`、`--allow-anonymous` 表示该端口可匿名访问：
+`-a` and `--allow-anonymous` mean the port can be accessed anonymously:
 
 ```bash
 devbridge port create <tunnelId> -p 8080 --protocol http -a
 ```
 
-`--deny-anonymous` 表示该端口必须经过身份认证：
+`--deny-anonymous` means the port requires authentication:
 
 ```bash
 devbridge port create <tunnelId> -p 8080 --protocol http --deny-anonymous
 ```
 
-以下服务应始终禁止匿名访问：
+The following services should always deny anonymous access:
 
-- 管理后台；
-- 调试和诊断端点；
-- 包含用户数据的服务；
-- 具备数据修改能力的接口。
+- admin consoles
+- debugging and diagnostic endpoints
+- services that contain user data
+- interfaces capable of modifying data
 
 ::: warning
-匿名访问意味着持有隧道地址的访问者不需要 DevBridge 身份即可访问端口。只对明确需要公开的开发内容启用。
+Anonymous access means a visitor who has the tunnel URL can access the port without a DevBridge identity. Enable it only for development content that clearly needs to be public.
 :::
 
-### 浏览器访问行为
+### Browser access behavior
 
-在浏览器中直接打开隧道地址 `https://<tunnelId>.<clusterId>.myhuaweicloud.com` 时，行为取决于端口的匿名访问策略：
+When you open the tunnel URL `https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com` directly in a browser, the behavior depends on the port's anonymous-access policy:
 
-- **允许匿名访问**：直接打开地址即可访问，不需要登录或凭证。
-- **禁止匿名访问**：跳转到登录页，完成认证获取凭证后即可访问。
+- **Allows anonymous access**: you can access it directly — no login or credentials required.
+- **Denies anonymous access**: you're redirected to a sign-in page; complete authentication to obtain credentials, then you can access it.
 
-不需要在本地安装 CLI 或建立 Connect 连接，即可通过浏览器直接访问隧道地址。详见
-[Host：托管本地服务](./host.md#访问隧道地址)。
+You can access the tunnel URL directly through a browser without installing the CLI locally or establishing a Connect connection. See
+[Host: expose local services](./host.md#access-the-tunnel-url).
 
-## 列出端口
+## List ports
 
 ```bash
 devbridge port list <tunnelId>
 ```
 
-如果已经设置默认隧道，可以省略隧道 ID：
+If a default tunnel is set, you can omit the tunnel ID:
 
 ```bash
 devbridge port list
 ```
 
-## 查看端口
+## View a port
 
 ```bash
 devbridge port show <tunnelId> -p 8080
 ```
 
-结果包含隧道 ID、端口、协议和匿名访问状态。
+The result includes the tunnel ID, port, protocol, and anonymous-access status.
 
-## 更新端口
+## Update a port
 
-将端口改为禁止匿名访问：
+Change a port to deny anonymous access:
 
 ```bash
 devbridge port update <tunnelId> -p 8080 --deny-anonymous
 ```
 
-将端口改为允许匿名访问：
+Change a port to allow anonymous access:
 
 ```bash
 devbridge port update <tunnelId> -p 8080 -a
 ```
 
-更新命令只修改匿名访问策略。当前 CLI 不支持直接修改已有端口的协议；需要变更协议时，
-先删除端口，再使用新协议重新创建。端口不支持描述字段，因此端口命令中没有 `-d`。
+The update command only changes the anonymous-access policy. The current CLI doesn't support changing an existing port's protocol directly; to change it, delete the port and recreate it with the new protocol.
 
-## 删除端口
+## Delete a port
 
 ```bash
 devbridge port delete <tunnelId> -p 8080
 ```
 
-端口没有公开的批量删除命令。需要移除整条隧道及其端口时，删除隧道。
+There's no bulk-delete command for ports. To remove a whole tunnel and its ports, delete the tunnel.
 
-## 下一步
+## Next steps
 
-- [使用 Host 托管本地端口](./host.md)
-- [使用 Connect 建立本地映射](./connect.md)
+- [Use Host to forward local ports](./host.md)
+- [Use Connect to set up local mappings](./connect.md)

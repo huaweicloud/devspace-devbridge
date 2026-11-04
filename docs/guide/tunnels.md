@@ -1,119 +1,119 @@
 ---
-title: 管理隧道
-description: 创建、查询、更新、选择和删除 DevBridge 隧道。
+title: Manage tunnels
+description: Create, query, update, and delete DevBridge tunnels, and set a default tunnel.
 ---
 
-# 管理隧道
+# Manage tunnels
 
-<p class="lead">持久隧道适合重复托管、保留稳定地址或预先配置多个端口的场景。</p>
+<p class="lead">Persistent tunnels are useful when you need to host services repeatedly, keep a stable address, or pre-configure multiple ports.</p>
 
-## 创建隧道
+## Create a tunnel
 
 ```bash
-devbridge create frontend -d "隧道描述信息" -e 24
+devbridge create frontend -d "tunnel description" -e 24
 ```
 
-参数含义：
+Parameters:
 
-| 参数       | 说明                     |
-| ---------- | ------------------------ |
-| `frontend` | 隧道名称。               |
-| `-d`       | 可选描述。               |
-| `-e`       | 有效期规格，单位为小时。 |
+| Parameter  | Description                |
+| ---------- | -------------------------- |
+| `frontend` | Tunnel name.               |
+| `-d`       | Optional description.      |
+| `-e`       | Expiration time, in hours. |
 
-未指定 `-e` 时使用 72 小时，允许范围为 1 到 720 小时。有效期是允许的非活动窗口。
+If `-e` is omitted, it defaults to 72 hours; the allowed range is 1 to 720 hours.
 
-过期隧道不会出现在有效隧道列表中，也不能继续签发令牌或操作端口。系统会在保留期后清理过期数据。
+Expired tunnels don't appear in the list of valid tunnels, and you can no longer issue tokens for them or manage their ports. The system cleans up expired data after a retention period.
 
-创建成功后会返回隧道 ID、名称、描述和过期时间。
+On success, the command returns the tunnel ID, name, description, and expiration time.
 
-一个工作空间默认最多拥有 10 条有效隧道。达到配额后，应复用或删除已有隧道。
+A workspace can hold up to 10 valid tunnels by default. Once you reach the quota, reuse or delete existing tunnels.
 
-## 列出隧道
+## List tunnels
 
 ```bash
 devbridge list
 ```
 
-列表只包含当前工作空间中未删除且未过期的隧道，主要信息包括：
+The list only includes tunnels in the current workspace that haven't been deleted and haven't expired. The list shows:
 
-- 隧道 ID 和名称；
-- 描述；
-- 过期时间；
-- 已配置的端口数量。
+- tunnel ID and name
+- description
+- expiration time
+- the number of configured ports
 
-## 查看详情
+## View details
 
 ```bash
 devbridge show <tunnelId>
 ```
 
-详情用于查看指定隧道的隧道 ID、名称、描述、过期时间，以及当前 Host 和 Connect 连接数、上传和下载流量统计。过期或不属于当前工作空间的隧道不会作为有效资源返回。
+The details show the tunnel ID, name, description, and expiration time of the specified tunnel, as well as the current Host and Connect connection counts and upload/download traffic statistics. Tunnels that have expired or don't belong to the current workspace are not returned as valid resources.
 
-## 更新隧道
+## Update a tunnel
 
 ```bash
-devbridge update <tunnelId> -n "frontend-v2" -d "隧道描述信息" -e 48
+devbridge update <tunnelId> -n "frontend-v2" -d "tunnel description" -e 48
 ```
 
-只传需要修改的选项。`-e` 仍以小时为单位，最大为 720 小时。成功修改隧道或端口会刷新当前到期时间。
+Pass only the options you want to change. `-e` is still in hours, with a maximum of 720 hours. Updating a tunnel or port refreshes the current expiration time.
 
-## 设置默认隧道
+## Set a default tunnel
 
-频繁操作同一条隧道时，可以保存本机默认上下文：
+If you often work with the same tunnel, you can save a local default context:
 
 ```bash
 devbridge set <tunnelId>
 ```
 
-后续部分命令可以省略隧道 ID：
+Some subsequent commands can then omit the tunnel ID:
 
 ```bash
 devbridge port list
 devbridge host -p 8080
 ```
 
-清除默认上下文：
+Clear the default context:
 
 ```bash
 devbridge unset
 ```
 
-默认隧道只保存在本机，不会改变隧道归属，也不会影响其他用户。
+The default tunnel is stored only on your local machine. It doesn't change tunnel ownership or affect other users.
 
-## 签发连接令牌
+## Issue connection tokens
 
-Host 和 Connect 通常会自动获取对应令牌。集成其他客户端时，可以手动签发：
+Host and Connect usually obtain their corresponding tokens automatically. When integrating other clients, you can issue tokens manually:
 
 ```bash
 devbridge token <tunnelId> -s host
 devbridge token <tunnelId> -s connect
 ```
 
-每次执行都会生成一个新令牌。令牌具有固定的短期有效期，不会随隧道有效期改变。
+Each execution generates a new token. Tokens have a fixed, short validity period that doesn't change with the tunnel's expiration time.
 
-::: warning 保护令牌
-令牌只应交给对应的 Host 或 Connect 使用。不要写入日志、URL、代码仓库或长期配置文件。
+::: warning Protect tokens
+Tokens should only be given to the corresponding Host or Connect. Don't write them into logs, URLs, code repositories, or long-term configuration files.
 :::
 
-## 删除隧道
+## Delete a tunnel
 
-删除一条隧道：
+Delete a tunnel:
 
 ```bash
 devbridge delete <tunnelId>
 ```
 
-删除当前工作空间的全部隧道：
+Delete all tunnels in the current workspace:
 
 ```bash
 devbridge delete-all
 ```
 
-`delete-all` 会影响当前工作空间的所有隧道。删除隧道会同时移除其端口配置，现有 Host 和 Connect 连接也应停止使用该隧道。
+`delete-all` affects every tunnel in the current workspace. Deleting a tunnel also removes its port configuration, and any existing Host or Connect connections to that tunnel will stop working.
 
-## 下一步
+## Next steps
 
-- [为隧道配置端口](./ports.md)
-- [使用 Host 托管端口](./host.md)
-- [查看完整 CLI 参考](../reference/cli.md)
+- [Configure ports for a tunnel](./ports.md)
+- [Use Host to forward ports](./host.md)
+- [View the full CLI reference](../reference/cli.md)

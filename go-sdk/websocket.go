@@ -7,6 +7,7 @@ package sdk
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -57,7 +58,7 @@ type sessionParams struct {
 // Authentication is exclusive:
 //   - JWT: passed via Sec-WebSocket-Protocol
 //   - API Key: passed via the X-API-Key header
-func buildWSHeader(jwtToken, apiKey string) (http.Header, []string) {
+func buildWSHeader(jwtToken, apiKey string, extra http.Header) (http.Header, []string) {
 	header := http.Header{}
 	subprotocols := []string{subprotocolDevBridge}
 	if apiKey != "" {
@@ -65,6 +66,11 @@ func buildWSHeader(jwtToken, apiKey string) (http.Header, []string) {
 	}
 	if jwtToken != "" {
 		subprotocols = append(subprotocols, jwtToken)
+	}
+	for k, vs := range extra {
+		for _, v := range vs {
+			header.Add(k, v)
+		}
 	}
 	return header, subprotocols
 }
@@ -110,6 +116,7 @@ func (d *Devbridge) dialWithRetry(ctx context.Context, url string, opts *websock
 	const maxDelay = 30 * time.Second
 
 	var lastErr error
+	var lastResp *http.Response
 	for attempt := 0; attempt <= maxRetries; attempt++ {
 		d.logger.Debug("WebSocket handshake attempt",
 			"attempt", attempt+1, "maxRetries", maxRetries, "url", url)
@@ -120,6 +127,9 @@ func (d *Devbridge) dialWithRetry(ctx context.Context, url string, opts *websock
 			return conn, nil
 		}
 		lastErr = err
+		if resp != nil {
+			lastResp = resp
+		}
 
 		// 409 Conflict: this tunnel already has a host
 		if resp != nil && resp.StatusCode == http.StatusConflict {
@@ -127,7 +137,17 @@ func (d *Devbridge) dialWithRetry(ctx context.Context, url string, opts *websock
 			return nil, ErrDuplicateHost
 		}
 
+		// 426 Upgrade Required: CLI version below the gateway minimum.
+		// Terminal — retrying does not change the version, so return a clear
+		// error immediately instead of entering the retry loop.
+		if resp != nil && resp.StatusCode == http.StatusUpgradeRequired {
+			body, _ := io.ReadAll(resp.Body)
+			_ = resp.Body.Close()
+			return nil, &UpgradeRequiredError{Message: gatewayMessage(body)}
+		}
+
 		// 429 Too Many Requests: rate limited
+		// Kept for future handshake throttling; today 429 only comes from the visitor HTTP path.
 		if resp != nil && resp.StatusCode == http.StatusTooManyRequests {
 			body, _ := io.ReadAll(resp.Body)
 			_ = resp.Body.Close()
@@ -157,7 +177,22 @@ func (d *Devbridge) dialWithRetry(ctx context.Context, url string, opts *websock
 		case <-time.After(jittered):
 		}
 	}
-	return nil, fmt.Errorf(i18n.T(i18n.MsgDialFailedRetries), maxRetries, lastErr)
+	finalErr := lastErr
+	if suffix := respMetaSuffix(lastResp); suffix != "" {
+		finalErr = fmt.Errorf("%w%s", lastErr, suffix)
+	}
+	return nil, fmt.Errorf(i18n.T(i18n.MsgDialFailedRetries), maxRetries, finalErr)
+}
+
+// respMetaSuffix returns a user-facing origin suffix for a failed handshake
+// response, or the empty string when the response never reached the gateway (no
+// X-Served-By header). A nil response has no headers and also yields "".
+func respMetaSuffix(resp *http.Response) string {
+	if resp == nil || resp.Header.Get("X-Served-By") == "" {
+		return ""
+	}
+	return fmt.Sprintf(i18n.T(i18n.MsgWSResponseOrigin),
+		resp.Header.Get("X-Served-By"), resp.Header.Get("X-Request-Id"))
 }
 
 // sshTraceFunc returns a trace function that logs SSH protocol events: errors
@@ -202,7 +237,23 @@ func parseSSHCloseError(err error) error {
 			return ErrTunnelNotFound
 		case "tunnel already registered":
 			return ErrDuplicateHost
+		// Old gateways use 1008+reason for concurrency overflow; treat it as a quota rejection so reconnectLoop stops.
+		case "too many concurrent connections":
+			return ErrQuotaExceeded
 		}
 	}
 	return err
+}
+
+// gatewayMessage extracts the human-readable message from a gateway rejection
+// body (e.g. {"code":"42600","message":"CLI version ... please upgrade"}),
+// falling back to the raw body when the JSON shape is absent or empty.
+func gatewayMessage(body []byte) string {
+	var b struct {
+		Message string `json:"message"`
+	}
+	if json.Unmarshal(body, &b) == nil && strings.TrimSpace(b.Message) != "" {
+		return b.Message
+	}
+	return strings.TrimSpace(string(body))
 }
