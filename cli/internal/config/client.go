@@ -48,6 +48,9 @@ func NewClient(apiKey, version string) *devbridge.Devbridge {
 		GatewayAddr: ResolveGatewayAddr(),
 		GatewayHost: ResolveGatewayHost(apiKey),
 		APIKey:      apiKey,
+		WSHeaders: http.Header{
+			"User-Agent": {userAgent(version)},
+		},
 		HTTPClient: &http.Client{
 			Timeout: 30 * time.Second,
 			Transport: versionTransport{

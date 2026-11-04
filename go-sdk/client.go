@@ -65,6 +65,12 @@ type Config struct {
 	// Defaults to DefaultGatewayHost.
 	GatewayHost string
 
+	// WSHeaders are extra headers merged into every WebSocket handshake
+	// (host/connect). The SDK does not interpret them; it only forwards them,
+	// so a caller like the CLI can inject e.g. a User-Agent without the SDK
+	// knowing its meaning. A nil map adds nothing.
+	WSHeaders http.Header
+
 	// OutputWriter receives user-facing output (connection progress,
 	// hosted ports, forwarding info). Defaults to os.Stdout; set it to
 	// io.Discard to silence these outputs.
@@ -102,6 +108,7 @@ type Devbridge struct {
 	apiKey          string
 	gatewayAddr     string
 	gatewayHost     string
+	wsHeaders       http.Header
 	logger          *slog.Logger
 	outputWriter    io.Writer
 	api             *httpclient.Client
@@ -122,6 +129,7 @@ func New(cfg Config) *Devbridge {
 		apiKey:          resolved.APIKey,
 		gatewayAddr:     resolved.GatewayAddr,
 		gatewayHost:     resolved.GatewayHost,
+		wsHeaders:       resolved.WSHeaders,
 		logger:          slog.Default(),
 		outputWriter:    resolved.OutputWriter,
 		api:             httpclient.New(resolved.APIKey, resolved.APIBaseURL, resolved.HTTPClient, slog.Default()),

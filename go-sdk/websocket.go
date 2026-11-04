@@ -57,7 +57,7 @@ type sessionParams struct {
 // Authentication is exclusive:
 //   - JWT: passed via Sec-WebSocket-Protocol
 //   - API Key: passed via the X-API-Key header
-func buildWSHeader(jwtToken, apiKey string) (http.Header, []string) {
+func buildWSHeader(jwtToken, apiKey string, extra http.Header) (http.Header, []string) {
 	header := http.Header{}
 	subprotocols := []string{subprotocolDevBridge}
 	if apiKey != "" {
@@ -65,6 +65,11 @@ func buildWSHeader(jwtToken, apiKey string) (http.Header, []string) {
 	}
 	if jwtToken != "" {
 		subprotocols = append(subprotocols, jwtToken)
+	}
+	for k, vs := range extra {
+		for _, v := range vs {
+			header.Add(k, v)
+		}
 	}
 	return header, subprotocols
 }
