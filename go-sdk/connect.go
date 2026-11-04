@@ -61,7 +61,7 @@ func (d *Devbridge) Connect(ctx context.Context, cfg ConnectConfig) error {
 		}
 	}
 
-	header, subprotocols := buildWSHeader(cfg.JWTToken, apiKey)
+	header, subprotocols := buildWSHeader(cfg.JWTToken, apiKey, d.version)
 	sniHost := cfg.TunnelID + "." + d.gatewayHost
 	wsURL := "wss://" + sniHost + "/"
 

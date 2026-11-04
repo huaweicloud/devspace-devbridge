@@ -14,6 +14,7 @@ import (
 	"math/rand/v2"
 	"net"
 	"net/http"
+	"runtime"
 	"strings"
 	"time"
 
@@ -57,7 +58,11 @@ type sessionParams struct {
 // Authentication is exclusive:
 //   - JWT: passed via Sec-WebSocket-Protocol
 //   - API Key: passed via the X-API-Key header
-func buildWSHeader(jwtToken, apiKey string) (http.Header, []string) {
+//
+// When version is non-empty, it is sent in the User-Agent header using the same
+// shape as REST requests (devbridge-cli/<version> (<os>/<arch>; stable)) so the
+// gateway can enforce a minimum supported CLI version on the WebSocket path.
+func buildWSHeader(jwtToken, apiKey, version string) (http.Header, []string) {
 	header := http.Header{}
 	subprotocols := []string{subprotocolDevBridge}
 	if apiKey != "" {
@@ -65,6 +70,14 @@ func buildWSHeader(jwtToken, apiKey string) (http.Header, []string) {
 	}
 	if jwtToken != "" {
 		subprotocols = append(subprotocols, jwtToken)
+	}
+	if version != "" {
+		osName := runtime.GOOS
+		if osName != "" {
+			osName = strings.ToUpper(osName[:1]) + osName[1:]
+		}
+		header.Set("User-Agent",
+			fmt.Sprintf("devbridge-cli/%s (%s/%s; stable)", version, osName, runtime.GOARCH))
 	}
 	return header, subprotocols
 }
