@@ -82,8 +82,13 @@ func (d *Devbridge) reconnectLoop(ctx context.Context, run reconnectSession, dec
 }
 
 // reconnectDelay returns the exponential backoff for the nth consecutive
-// failure: base 3s doubling each time, capped at 30s.
+// failure: base 3s doubling each time, capped at 30s. A zero (or negative)
+// count is clamped to the base delay so a session that connected and then
+// dropped does not trigger an infinite no-interval reconnect storm.
 func reconnectDelay(failureCount int) time.Duration {
+	if failureCount < 1 {
+		failureCount = 1
+	}
 	shift := min(failureCount-1, 4)
 	return min(baseReconnectDelay<<uint(shift), maxReconnectDelay)
 }
