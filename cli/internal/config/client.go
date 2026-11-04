@@ -48,7 +48,6 @@ func NewClient(apiKey, version string) *devbridge.Devbridge {
 		GatewayAddr: ResolveGatewayAddr(),
 		GatewayHost: ResolveGatewayHost(apiKey),
 		APIKey:      apiKey,
-		Version:     version,
 		HTTPClient: &http.Client{
 			Timeout: 30 * time.Second,
 			Transport: versionTransport{

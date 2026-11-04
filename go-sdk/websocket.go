@@ -7,7 +7,6 @@ package sdk
 import (
 	"context"
 	"crypto/tls"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -15,7 +14,6 @@ import (
 	"math/rand/v2"
 	"net"
 	"net/http"
-	"runtime"
 	"strings"
 	"time"
 
@@ -59,11 +57,7 @@ type sessionParams struct {
 // Authentication is exclusive:
 //   - JWT: passed via Sec-WebSocket-Protocol
 //   - API Key: passed via the X-API-Key header
-//
-// When version is non-empty, it is sent in the User-Agent header using the same
-// shape as REST requests (devbridge-cli/<version> (<os>/<arch>; stable)) so the
-// gateway can enforce a minimum supported CLI version on the WebSocket path.
-func buildWSHeader(jwtToken, apiKey, version string) (http.Header, []string) {
+func buildWSHeader(jwtToken, apiKey string) (http.Header, []string) {
 	header := http.Header{}
 	subprotocols := []string{subprotocolDevBridge}
 	if apiKey != "" {
@@ -71,14 +65,6 @@ func buildWSHeader(jwtToken, apiKey, version string) (http.Header, []string) {
 	}
 	if jwtToken != "" {
 		subprotocols = append(subprotocols, jwtToken)
-	}
-	if version != "" {
-		osName := runtime.GOOS
-		if osName != "" {
-			osName = strings.ToUpper(osName[:1]) + osName[1:]
-		}
-		header.Set("User-Agent",
-			fmt.Sprintf("devbridge-cli/%s (%s/%s; stable)", version, osName, runtime.GOARCH))
 	}
 	return header, subprotocols
 }
@@ -143,15 +129,6 @@ func (d *Devbridge) dialWithRetry(ctx context.Context, url string, opts *websock
 		if resp != nil && resp.StatusCode == http.StatusConflict {
 			_ = resp.Body.Close()
 			return nil, ErrDuplicateHost
-		}
-
-		// 426 Upgrade Required: CLI version below the gateway minimum.
-		// Terminal — retrying will not change the version, so return a clear
-		// error immediately rather than entering the retry loop.
-		if resp != nil && resp.StatusCode == http.StatusUpgradeRequired {
-			body, _ := io.ReadAll(resp.Body)
-			_ = resp.Body.Close()
-			return nil, &UpgradeRequiredError{Message: gatewayMessage(body)}
 		}
 
 		// 429 Too Many Requests: rate limited
@@ -251,17 +228,4 @@ func parseSSHCloseError(err error) error {
 		}
 	}
 	return err
-}
-
-// gatewayMessage extracts the human-readable message from a gateway rejection
-// body (e.g. {"code":"42600","message":"CLI version ... please upgrade"}),
-// falling back to the raw body when the JSON shape is absent or empty.
-func gatewayMessage(body []byte) string {
-	var b struct {
-		Message string `json:"message"`
-	}
-	if json.Unmarshal(body, &b) == nil && strings.TrimSpace(b.Message) != "" {
-		return b.Message
-	}
-	return strings.TrimSpace(string(body))
 }

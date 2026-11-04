@@ -92,7 +92,7 @@ func (d *Devbridge) Host(ctx context.Context, cfg HostConfig) error {
 		}
 	}
 
-	header, subprotocols := buildWSHeader(cfg.JWTToken, apiKey, d.version)
+	header, subprotocols := buildWSHeader(cfg.JWTToken, apiKey)
 	header.Set("Cookie", "APP_COOKIE=7")
 
 	sniHost := cfg.TunnelID + "." + d.gatewayHost

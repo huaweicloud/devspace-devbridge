@@ -65,11 +65,6 @@ type Config struct {
 	// Defaults to DefaultGatewayHost.
 	GatewayHost string
 
-	// Version is the CLI version, sent in the User-Agent header of both REST
-	// requests and WebSocket handshakes so the gateway can enforce a minimum
-	// supported version. Empty means no version header is sent.
-	Version string
-
 	// OutputWriter receives user-facing output (connection progress,
 	// hosted ports, forwarding info). Defaults to os.Stdout; set it to
 	// io.Discard to silence these outputs.
@@ -107,7 +102,6 @@ type Devbridge struct {
 	apiKey          string
 	gatewayAddr     string
 	gatewayHost     string
-	version         string
 	logger          *slog.Logger
 	outputWriter    io.Writer
 	api             *httpclient.Client
@@ -128,7 +122,6 @@ func New(cfg Config) *Devbridge {
 		apiKey:          resolved.APIKey,
 		gatewayAddr:     resolved.GatewayAddr,
 		gatewayHost:     resolved.GatewayHost,
-		version:         resolved.Version,
 		logger:          slog.Default(),
 		outputWriter:    resolved.OutputWriter,
 		api:             httpclient.New(resolved.APIKey, resolved.APIBaseURL, resolved.HTTPClient, slog.Default()),
