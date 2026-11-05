@@ -74,6 +74,10 @@ func init() {
 	Msg.Tunnel.FlagExpiration = Message{ZH: "过期时间(小时, 1-720)", EN: "Expiration hours (1-720)"}
 	Msg.Tunnel.FlagName = Message{ZH: "隧道名称", EN: "Tunnel name"}
 	Msg.Tunnel.FlagScope = Message{ZH: "令牌范围, 选项: host, connect (必填)", EN: "Token scope, options: host, connect (required)"}
+	Msg.Tunnel.FlagYes = Message{ZH: "跳过确认直接执行", EN: "Skip confirmation and execute directly"}
+	Msg.Tunnel.ConfirmDeleteAll = Message{ZH: "将删除账号下所有隧道，此操作不可恢复。确认删除？[y/N] ", EN: "This will delete ALL tunnels under your account and cannot be undone. Continue? [y/N] "}
+	Msg.Tunnel.DeleteAborted = Message{ZH: "已取消操作，未删除任何隧道", EN: "Operation aborted, no tunnels deleted"}
+	Msg.Tunnel.ConfirmNonInteractive = Message{ZH: "非交互环境无法确认，删除全部隧道请加 --yes 参数", EN: "cannot confirm deletion in a non-interactive environment; re-run with --yes to delete all tunnels"}
 
 	Msg.Port.Protocol = Message{ZH: "协议", EN: "Protocol"}
 	Msg.Port.AllowAnonymous = Message{ZH: "允许匿名", EN: "Allow Anonymous"}
