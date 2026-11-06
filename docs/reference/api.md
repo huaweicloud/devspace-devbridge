@@ -328,6 +328,15 @@ Example quotas are for illustration only; use the actual response. `activeTunnel
 `quotaBytes` and `remainingBytes` are also account-shared monthly quota and balance, reset at 00:00 Beijing time on the 1st of each month;
 `resetAt` is the Unix time (in seconds) of the next reset.
 
+`maxTunnelBandwidthBytesPerSecond`, `maxHttpRequestsPerMinutePerPort`, and `maxConnectionsPerPort` are optional in the response:
+
+- **Field omitted** — the server did not deliver the limit. `devbridge limits` reports `not provided by server` for that row instead of `0`, so a missing limit is never mistaken for an actual zero.
+- **Explicit `0`** — shown exactly as returned. The meaning of `0` is defined by the server contract; the CLI does not reinterpret it.
+- **Negative value (for example `-1`)** — the resource is not limited; `devbridge limits` reports `unlimited`.
+- **Positive value** — shown as the real limit (bandwidth in bytes per second, rendered with a unit such as `5 MB/s`; request rate and connections as plain numbers).
+
+These three fields are not guaranteed to be present in every deployment; when they are absent the effective limit is unknown, and the server-side delivery is tracked as an external dependency of this repository.
+
 ## Field conventions
 
 - `tunnelId` is the tunnel identifier; pass it in the same-named path parameter.
