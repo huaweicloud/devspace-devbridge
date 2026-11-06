@@ -6,11 +6,39 @@ package sdk
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/huaweicloud/devspace-devbridge/go-sdk/internal/httpclient"
+	"github.com/huaweicloud/devspace-devbridge/go-sdk/internal/i18n"
 )
 
 var ErrMissingAPIKey = errors.New("missing API key: set it via Config.APIKey or HW_API_KEY env var")
+
+// ErrAuthFailed is the sentinel for terminal authentication failures
+// (expired/invalid token or API key). It is matched with errors.Is so callers
+// can stop retrying immediately instead of treating it as a network flap.
+var ErrAuthFailed = errors.New("authentication failed")
+
+// AuthFailedError carries the gateway's authentication detail while still
+// unwrapping to ErrAuthFailed. StatusCode is the handshake HTTP status when the
+// failure happened during the WebSocket handshake (401/403), or 0 for a
+// session-level close reason.
+type AuthFailedError struct {
+	StatusCode int
+	Message    string
+}
+
+func (e *AuthFailedError) Error() string {
+	base := i18n.T(i18n.MsgAuthFailed)
+	if detail := strings.TrimSpace(e.Message); detail != "" {
+		return fmt.Sprintf("%s: %s", base, detail)
+	}
+	return base
+}
+
+// Unwrap lets errors.Is(err, ErrAuthFailed) succeed.
+func (e *AuthFailedError) Unwrap() error { return ErrAuthFailed }
 
 var ErrTunnelNotFound = errors.New("tunnel not found")
 

@@ -57,6 +57,12 @@ func (d *Devbridge) reconnectLoop(ctx context.Context, run reconnectSession, dec
 			return err
 		}
 		if connected {
+			// A session that ended on an auth error is not a healthy connect:
+			// abort instead of resetting the retry budget and reconnecting
+			// forever.
+			if errors.Is(err, ErrAuthFailed) {
+				return err
+			}
 			consecutiveFailures = 0
 			if decision.onConnected != nil {
 				decision.onConnected()

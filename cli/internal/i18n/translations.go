@@ -154,4 +154,5 @@ func init() {
 	Msg.Connect.TunnelIDRequired = Message{ZH: "必须提供隧道 ID（未设置默认隧道）", EN: "tunnelID is required (no default tunnel set)"}
 	Msg.Connect.TunnelCreated = Message{ZH: "隧道创建成功: %s\n", EN: "Created tunnel: %s\n"}
 	Msg.Connect.TokenModePortsNote = Message{ZH: "注意：--token 模式下 --ports 会被忽略，端口将从网关获取", EN: "Note: --ports is ignored in --token mode, ports will be fetched from gateway"}
+	Msg.Connect.AuthFailed = Message{ZH: "鉴权失败，API key 已过期或 token 无效；请重新登录或更新令牌", EN: "authentication failed: API key expired or invalid token; please log in again or refresh the token"}
 }
