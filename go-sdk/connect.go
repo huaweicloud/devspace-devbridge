@@ -6,6 +6,7 @@ package sdk
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -82,6 +83,11 @@ func (d *Devbridge) Connect(ctx context.Context, cfg ConnectConfig) error {
 		shouldStop: func(err error) bool {
 			if gatewayRejectedError(err) {
 				d.logger.Debug("connection rejected by gateway", "tunnelID", cfg.TunnelID, "err", err)
+				return true
+			}
+			// Expired/invalid credentials cannot be fixed by retrying.
+			if errors.Is(err, ErrAuthFailed) {
+				d.logger.Debug("authentication failed, not retrying", "tunnelID", cfg.TunnelID, "err", err)
 				return true
 			}
 			return false

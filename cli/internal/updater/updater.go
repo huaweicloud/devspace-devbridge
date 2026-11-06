@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"runtime"
+	"strings"
 
 	devbridge "github.com/huaweicloud/devspace-devbridge/go-sdk"
 	"huawei.com/devbridge/internal/i18n"
@@ -42,6 +43,19 @@ func FormatError(err error) string {
 			msg = i18n.T(i18n.Msg.Common.UpgradeRequiredHint)
 		}
 		return fmt.Sprintf("\n%s\n%s\n%s\n", msg, i18n.T(i18n.Msg.Common.UpdateLabel), installCommand())
+	}
+
+	// Authentication failures are terminal: render a stable, localized hint
+	// (with the gateway detail when present) instead of the retry wording.
+	var ae *devbridge.AuthFailedError
+	if errors.As(err, &ae) {
+		if detail := strings.TrimSpace(ae.Message); detail != "" {
+			return fmt.Sprintf("%s: %s", i18n.T(i18n.Msg.Connect.AuthFailed), detail)
+		}
+		return i18n.T(i18n.Msg.Connect.AuthFailed)
+	}
+	if errors.Is(err, devbridge.ErrAuthFailed) {
+		return i18n.T(i18n.Msg.Connect.AuthFailed)
 	}
 	return err.Error()
 }

@@ -60,6 +60,30 @@ Logging out clears the login credentials saved by the CLI, but does not delete t
 
 Don't delete the configuration directory as a substitute for logging out, unless the CLI no longer runs and you're sure you don't need to preserve local state.
 
+## Expired or invalid tokens
+
+`devbridge host` and `devbridge connect` accept a tunnel token via `-t/--token`.
+If that token is expired or invalid, the command fails fast instead of retrying
+forever:
+
+- The gateway handshake returns HTTP `401`/`403`, or the session is closed with
+  an authentication reason. Either is treated as terminal.
+- The command exits with a non-zero status (normally `1`) within a few seconds
+  and prints a message containing `API key expired` or `invalid token`
+  semantics, for example:
+
+  ```text
+  authentication failed: API key expired or invalid token: API key expired
+  ```
+
+- Listeners and session resources are released before exit; no background
+  reconnect goroutine is left running.
+
+This is intentionally different from network failures (DNS errors, gateway
+unreachable, `5xx`), which keep the existing reconnect behavior: retries start
+at 3 seconds and back off up to 30 seconds. To recover from an expired token,
+run `devbridge auth login` again or issue a fresh tunnel token.
+
 ## Credential usage principles
 
 - Use interactive login on personal terminals.

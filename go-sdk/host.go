@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -122,6 +123,11 @@ func (d *Devbridge) Host(ctx context.Context, cfg HostConfig) error {
 				d.logger.Debug("connection rejected by gateway", "tunnelID", cfg.TunnelID, "err", err)
 				return true
 			}
+			// Expired/invalid credentials cannot be fixed by retrying.
+			if errors.Is(err, ErrAuthFailed) {
+				d.logger.Debug("authentication failed, not retrying", "tunnelID", cfg.TunnelID, "err", err)
+				return true
+			}
 			return false
 		},
 		onReconnect: func(err error) {
@@ -165,7 +171,10 @@ func (d *Devbridge) runHostSession(ctx context.Context, params sessionParams, on
 
 	if len(params.ports) == 0 {
 		if err := d.waitForGatewayPorts(ctx, outerSession, params.tunnelID, pn, diag); err != nil {
-			return true, err
+			// The session never became usable, so it is not a successful
+			// connect. Counting it as a failure prevents a "handshake succeeds
+			// then immediately closes" loop from resetting the retry budget.
+			return false, err
 		}
 	}
 
@@ -236,9 +245,15 @@ func (d *Devbridge) waitForGatewayPorts(ctx context.Context, outerSession *ssh.C
 		d.logger.Warn("timeout waiting for port notification from gateway")
 	case <-diag.disconnected:
 		d.logDiagnosticClose(tunnelID, diag)
+		if err := diag.authError(); err != nil {
+			return err
+		}
 		return fmt.Errorf(i18n.T(i18n.MsgSessionDisconnected))
 	case <-outerSession.Session.Done():
 		d.logDiagnosticClose(tunnelID, diag)
+		if err := diag.authError(); err != nil {
+			return err
+		}
 		return fmt.Errorf(i18n.T(i18n.MsgSessionClosed))
 	}
 	return nil
@@ -268,9 +283,15 @@ func (d *Devbridge) waitSessionEnd(ctx context.Context, outerSession *ssh.Client
 		select {
 		case <-diag.disconnected:
 			d.logDiagnosticClose(tunnelID, diag)
+			if err := diag.authError(); err != nil {
+				return false, err
+			}
 			return true, fmt.Errorf(i18n.T(i18n.MsgSessionDisconnected))
 		case <-outerSession.Session.Done():
 			d.logDiagnosticClose(tunnelID, diag)
+			if err := diag.authError(); err != nil {
+				return false, err
+			}
 			return true, fmt.Errorf(i18n.T(i18n.MsgSessionClosed))
 		case <-ctx.Done():
 			return true, nil
@@ -292,6 +313,28 @@ func (d *Devbridge) logDiagnosticClose(tunnelID string, diag *hostSessionDiagnos
 		"reason", a.Reason,
 		"message", a.Message,
 		"err", a.Err)
+}
+
+// authError returns a typed authentication error when the captured session
+// close reason indicates expired/invalid credentials, otherwise nil. This
+// converts a post-connect auth close into a terminal error instead of a
+// recoverable "connection lost" retry.
+func (diag *hostSessionDiagnostics) authError() error {
+	diag.closedMu.Lock()
+	a := diag.closedArgs
+	diag.closedMu.Unlock()
+	if a == nil {
+		return nil
+	}
+	reason := fmt.Sprint(a.Reason)
+	detail := strings.TrimSpace(a.Message)
+	if detail == "" {
+		detail = strings.TrimSpace(reason)
+	}
+	if isAuthCloseReason(reason + " " + a.Message) {
+		return &AuthFailedError{Message: detail}
+	}
+	return nil
 }
 
 type portNotifier struct {

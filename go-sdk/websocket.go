@@ -137,6 +137,15 @@ func (d *Devbridge) dialWithRetry(ctx context.Context, url string, opts *websock
 			return nil, ErrDuplicateHost
 		}
 
+		// 401 Unauthorized / 403 Forbidden: expired or invalid credentials.
+		// Terminal — retrying cannot fix the token, so return immediately
+		// instead of entering the backoff loop.
+		if resp != nil && (resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden) {
+			body, _ := io.ReadAll(resp.Body)
+			_ = resp.Body.Close()
+			return nil, &AuthFailedError{StatusCode: resp.StatusCode, Message: gatewayMessage(body)}
+		}
+
 		// 426 Upgrade Required: CLI version below the gateway minimum.
 		// Terminal — retrying does not change the version, so return a clear
 		// error immediately instead of entering the retry loop.
@@ -242,7 +251,40 @@ func parseSSHCloseError(err error) error {
 			return ErrQuotaExceeded
 		}
 	}
+	if isAuthCloseReason(ce.Reason) {
+		return &AuthFailedError{Message: ce.Reason}
+	}
 	return err
+}
+
+// isAuthCloseReason reports whether a WebSocket close reason describes an
+// authentication failure (expired/invalid token or API key). Matching is
+// case-insensitive and substring-based because gateway wording varies across
+// versions and locales.
+func isAuthCloseReason(reason string) bool {
+	r := strings.ToLower(strings.TrimSpace(reason))
+	if r == "" {
+		return false
+	}
+	for _, keyword := range []string{
+		"invalid token",
+		"token invalid",
+		"token expired",
+		"expired token",
+		"jwt expired",
+		"jwt invalid",
+		"invalid jwt",
+		"unauthorized",
+		"api key",
+		"api-key",
+		"authentication failed",
+		"auth failed",
+	} {
+		if strings.Contains(r, keyword) {
+			return true
+		}
+	}
+	return false
 }
 
 // gatewayMessage extracts the human-readable message from a gateway rejection
