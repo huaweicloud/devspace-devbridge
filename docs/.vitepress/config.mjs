@@ -5,6 +5,7 @@ const base = "/devspace-devbridge/";
 const enSidebar = [
   {
     text: "Getting started",
+    collapsed: false,
     items: [
       { text: "What is DevBridge", link: "/guide/overview" },
       { text: "Install the DevBridge CLI", link: "/guide/install" },
@@ -14,6 +15,7 @@ const enSidebar = [
   },
   {
     text: "Working with tunnels",
+    collapsed: false,
     items: [
       { text: "Manage tunnels", link: "/guide/tunnels" },
       { text: "Manage ports", link: "/guide/ports" },
@@ -24,6 +26,7 @@ const enSidebar = [
   },
   {
     text: "Best practices",
+    collapsed: false,
     items: [
       {
         text: "Hosting and public access",
@@ -37,10 +40,12 @@ const enSidebar = [
   },
   {
     text: "Integrations",
+    collapsed: false,
     items: [{ text: "AI Agent Skill", link: "/integrations/skill" }],
   },
   {
     text: "Reference",
+    collapsed: false,
     items: [
       { text: "CLI command reference", link: "/reference/cli" },
       { text: "REST API", link: "/reference/api" },
@@ -55,6 +60,7 @@ const enSidebar = [
 const zhSidebar = [
   {
     text: "开始使用",
+    collapsed: false,
     items: [
       { text: "什么是开发隧道", link: "/zh/guide/overview" },
       { text: "安装 DevBridge CLI", link: "/zh/guide/install" },
@@ -64,6 +70,7 @@ const zhSidebar = [
   },
   {
     text: "使用隧道",
+    collapsed: false,
     items: [
       { text: "管理隧道", link: "/zh/guide/tunnels" },
       { text: "管理端口", link: "/zh/guide/ports" },
@@ -74,6 +81,7 @@ const zhSidebar = [
   },
   {
     text: "最佳实践",
+    collapsed: false,
     items: [
       {
         text: "托管与公网访问",
@@ -87,10 +95,12 @@ const zhSidebar = [
   },
   {
     text: "集成",
+    collapsed: false,
     items: [{ text: "AI Agent Skill", link: "/zh/integrations/skill" }],
   },
   {
     text: "参考",
+    collapsed: false,
     items: [
       { text: "CLI 命令参考", link: "/zh/reference/cli" },
       { text: "REST API", link: "/zh/reference/api" },
