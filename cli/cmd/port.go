@@ -82,6 +82,7 @@ var portCreateCmd = &cobra.Command{
 			return fmt.Errorf(i18n.T(i18n.Msg.Port.AddFailed), portNumber, err)
 		}
 		fmt.Println(i18n.T(i18n.Msg.Port.PortCreated))
+		printPortChangeHint(tunnelID)
 		return nil
 	}),
 }
@@ -166,6 +167,7 @@ var portUpdateCmd = &cobra.Command{
 			return err
 		}
 		fmt.Println(i18n.T(i18n.Msg.Port.PortUpdated))
+		printPortChangeHint(tunnelID)
 		return nil
 	}),
 }
@@ -183,9 +185,19 @@ var portDeleteCmd = &cobra.Command{
 		if err := client.DeletePort(context.Background(), tunnelID, portNumber); err != nil {
 			return fmt.Errorf(i18n.T(i18n.Msg.Port.DeleteFailed), portNumber, err)
 		}
+		// Do not report a silent success: a Host started with explicit ports
+		// does not pick this change up until it is restarted.
 		fmt.Printf(i18n.T(i18n.Msg.Port.DeleteSuccess), portNumber, tunnelID)
+		printPortChangeHint(tunnelID)
 		return nil
 	}),
+}
+
+// printPortChangeHint tells the user how the port change reaches a running
+// Host. Dynamic port mode picks it up at runtime; explicit-port (static) mode
+// requires a restart, and the exact restart command is shown.
+func printPortChangeHint(tunnelID string) {
+	fmt.Printf(i18n.T(i18n.Msg.Port.PortChangeHint)+"\n", tunnelID)
 }
 
 func init() {

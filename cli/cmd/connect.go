@@ -93,7 +93,10 @@ func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelID string,
 		if len(ports) == 0 {
 			return "", nil, fmt.Errorf(i18n.T(i18n.Msg.Connect.NoPortsConfigured), tunnelID)
 		}
-		return tunnelID, ports, nil
+		// Ports resolved from the API are not pinned (nil): the Host then keeps the
+		// port set up to date at runtime through the REST API, so ports added
+		// with `devbridge port create` reach the running Host without a restart.
+		return tunnelID, nil, nil
 	}
 
 	if !cmd.Flags().Changed("ports") {
@@ -110,7 +113,9 @@ func resolveHostTunnelPorts(cmd *cobra.Command, args []string) (tunnelID string,
 		if len(ports) == 0 {
 			return "", nil, fmt.Errorf(i18n.T(i18n.Msg.Connect.NoPortsConfigured), tunnelID)
 		}
-		return tunnelID, ports, nil
+		// Same as above: API-resolved ports stay dynamic so the running Host keeps
+		// refreshing them instead of pinning a static snapshot.
+		return tunnelID, nil, nil
 	}
 
 	if err := validatePorts(hostPorts); err != nil {
