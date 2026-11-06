@@ -91,6 +91,10 @@ type TunnelMessages struct {
 	ClientConnectionCount Message
 	TotalUploadBytes      Message
 	TotalDownloadBytes    Message
+	ReportedAt            Message
+	StatusNotReported     Message
+	StatusReportedAtMiss  Message
+	StatusStale           Message
 	Name                  Message
 	Description           Message
 	CreateFailed          Message

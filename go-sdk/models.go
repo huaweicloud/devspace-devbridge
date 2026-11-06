@@ -29,6 +29,9 @@ type TunnelStatus struct {
 	HostConnectionCount   int   `json:"hostConnectionCount"`
 	TotalUploadBytes      int64 `json:"totalUploadBytes"`
 	TotalDownloadBytes    int64 `json:"totalDownloadBytes"`
+	// ReportedAt is when the statistics were last reported, in Unix seconds.
+	// It is 0 when the server omits the field (older servers or missing report).
+	ReportedAt int64 `json:"reportedAt"`
 }
 
 // Port represents a port configuration.

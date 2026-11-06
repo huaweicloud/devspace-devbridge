@@ -50,6 +50,8 @@ devbridge show <tunnelId>
 
 The details show the tunnel ID, name, description, and expiration time of the specified tunnel, as well as the current Host and Connect connection counts and upload/download traffic statistics. Tunnels that have expired or don't belong to the current workspace are not returned as valid resources.
 
+Statistics are reported by the server roughly every minute and include a report time (`reportedAt`). If the server has not reported statistics yet, or the last report is older than 120 seconds, `show` prints an explicit "statistics not reported" or "statistics are stale" warning and shows `-` for unavailable values instead of a misleading `0`.
+
 ## Update a tunnel
 
 ```bash

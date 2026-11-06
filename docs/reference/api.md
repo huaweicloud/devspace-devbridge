@@ -169,8 +169,13 @@ plus the optional runtime `status`. Here is what `status` contains:
 }
 ```
 
-`reportedAt` is the time the status was updated, and `clientConnectionCount` is the number of client connections.
+`reportedAt` is the time the status was updated (Unix seconds), and `clientConnectionCount` is the number of client connections.
 The `bandwidthUsed` in details is the settled total upload and download traffic, updated every minute.
+
+`status` is optional. When the server has not collected statistics for a tunnel, it is either absent or `null`;
+when it is present but `reportedAt` is missing (`0`), the report time is unknown. Treat absent, `null`, or a
+`reportedAt` older than 120 seconds as "statistics not current" rather than as real zeros: the connection counts
+and traffic in such a response must not be interpreted as an idle tunnel.
 
 ## Update and delete a tunnel
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	devbridge "github.com/huaweicloud/devspace-devbridge/go-sdk"
 	"huawei.com/devbridge/internal/config"
@@ -15,6 +16,28 @@ import (
 
 // TunnelNotFoundCode is the "tunnel not found" error code agreed with the server.
 const TunnelNotFoundCode = "10002"
+
+// tunnelStatusStaleAfter is how old a reportedAt timestamp may be before the
+// statistics are considered stale. The server collects status every minute,
+// so 120s tolerates one missed collection cycle.
+const tunnelStatusStaleAfter = 120 * time.Second
+
+// tunnelStatusWarning returns a non-empty user-facing warning when the status
+// is missing, has no reportedAt, or has not been refreshed within the stale
+// threshold. It returns "" for fresh status.
+func tunnelStatusWarning(status *devbridge.TunnelStatus, now time.Time) string {
+	if status == nil {
+		return i18n.T(i18n.Msg.Tunnel.StatusNotReported)
+	}
+	if status.ReportedAt == 0 {
+		return i18n.T(i18n.Msg.Tunnel.StatusReportedAtMiss)
+	}
+	age := now.Unix() - status.ReportedAt
+	if age > int64(tunnelStatusStaleAfter/time.Second) {
+		return fmt.Sprintf(i18n.T(i18n.Msg.Tunnel.StatusStale), (time.Duration(age) * time.Second).String())
+	}
+	return ""
+}
 
 var (
 	tunnelDescription string
@@ -103,20 +126,31 @@ var showCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		var status devbridge.TunnelStatus
-		if result.Status != nil {
-			status = *result.Status
+		status := result.Status
+		clientCount, hostCount, upload, download := "-", "-", "-", "-"
+		if status != nil {
+			clientCount = strconv.Itoa(status.ClientConnectionCount)
+			hostCount = strconv.Itoa(status.HostConnectionCount)
+			upload = formatBytes(status.TotalUploadBytes)
+			download = formatBytes(status.TotalDownloadBytes)
 		}
-		printKV([][2]string{
+		kv := [][2]string{
 			{i18n.T(i18n.Msg.Tunnel.TunnelID), result.ID},
 			{i18n.T(i18n.Msg.Tunnel.Name), result.Name},
 			{i18n.T(i18n.Msg.Tunnel.TunnelExpiration), formatTunnelRemaining(int64(result.TunnelExpiration))},
 			{i18n.T(i18n.Msg.Tunnel.Description), result.Description},
-			{i18n.T(i18n.Msg.Tunnel.ClientConnectionCount), fmt.Sprintf("%d", status.ClientConnectionCount)},
-			{i18n.T(i18n.Msg.Tunnel.HostConnectionCount), fmt.Sprintf("%d", status.HostConnectionCount)},
-			{i18n.T(i18n.Msg.Tunnel.TotalUploadBytes), formatBytes(status.TotalUploadBytes)},
-			{i18n.T(i18n.Msg.Tunnel.TotalDownloadBytes), formatBytes(status.TotalDownloadBytes)},
-		})
+			{i18n.T(i18n.Msg.Tunnel.ClientConnectionCount), clientCount},
+			{i18n.T(i18n.Msg.Tunnel.HostConnectionCount), hostCount},
+			{i18n.T(i18n.Msg.Tunnel.TotalUploadBytes), upload},
+			{i18n.T(i18n.Msg.Tunnel.TotalDownloadBytes), download},
+		}
+		if status != nil && status.ReportedAt > 0 {
+			kv = append(kv, [2]string{i18n.T(i18n.Msg.Tunnel.ReportedAt), formatTime(status.ReportedAt)})
+		}
+		printKV(kv)
+		if warning := tunnelStatusWarning(status, time.Now()); warning != "" {
+			fmt.Println(warning)
+		}
 		return nil
 	}),
 }

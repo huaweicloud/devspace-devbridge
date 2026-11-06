@@ -66,6 +66,10 @@ func init() {
 	Msg.Tunnel.ClientConnectionCount = Message{ZH: "Client 连接数", EN: "Client Connection Count"}
 	Msg.Tunnel.TotalUploadBytes = Message{ZH: "总上传字节", EN: "Total Upload Bytes"}
 	Msg.Tunnel.TotalDownloadBytes = Message{ZH: "总下载字节", EN: "Total Download Bytes"}
+	Msg.Tunnel.ReportedAt = Message{ZH: "统计上报时间", EN: "Status Reported At"}
+	Msg.Tunnel.StatusNotReported = Message{ZH: "统计状态未上报：服务端未返回 status，连接计数与流量不可用。", EN: "Statistics not reported: the server returned no status, so connection counts and traffic are unavailable."}
+	Msg.Tunnel.StatusReportedAtMiss = Message{ZH: "统计上报时间缺失（reportedAt 未返回），连接计数与流量可能不是实时值。", EN: "Statistics report time missing (reportedAt not returned); connection counts and traffic may not be current."}
+	Msg.Tunnel.StatusStale = Message{ZH: "统计状态已过期：上次上报于 %s 前，连接计数与流量可能不是实时值。", EN: "Statistics are stale: last reported %s ago; connection counts and traffic may not be current."}
 	Msg.Tunnel.Name = Message{ZH: "名称", EN: "Name"}
 	Msg.Tunnel.Description = Message{ZH: "描述", EN: "Description"}
 	Msg.Tunnel.CreateFailed = Message{ZH: "创建隧道失败", EN: "Failed to create tunnel"}
