@@ -99,6 +99,9 @@ type TunnelMessages struct {
 	FlagExpiration        Message
 	FlagName              Message
 	FlagScope             Message
+	HostOnlineStatus      Message
+	StatusOnline          Message
+	StatusOffline         Message
 }
 
 type PortMessages struct {
@@ -125,6 +128,7 @@ type PortMessages struct {
 	InvalidProtocol       Message
 	AddFailed             Message
 	DeleteFailed          Message
+	PortChangeHint        Message
 }
 
 type CommonMessages struct {

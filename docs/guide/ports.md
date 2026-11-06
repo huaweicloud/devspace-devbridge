@@ -29,6 +29,23 @@ devbridge port create <tunnelId> -p 3000
 
 You must provide a port when creating; the protocol defaults to `auto`. Ports range from `1` to `65535` and cannot be duplicated within the same tunnel.
 
+## How port changes take effect
+
+`devbridge port create`, `port update`, and `port delete` change the tunnel's port configuration on the service side. Whether a Host that is already running picks the change up depends on how it was started:
+
+| How the Host was started | Behavior after a port change |
+| ------------------------ | ---------------------------- |
+| Dynamic, no explicit ports (`devbridge host <tunnelId>`) | The running Host refreshes the tunnel's port list through the API at most once per second and applies it to the next relayed connection. A new port is normally reachable within about one second, without restarting or reconnecting the Host. |
+| Static, explicit ports (`devbridge host <tunnelId> -p ...`, or `--token` with pinned ports) | The Host forwards only the ports given at startup. Restart it to apply the change: `devbridge host <tunnelId> -p <ports>`. |
+
+`port create`, `port update`, and `port delete` print this rule after a successful change, so a change is never reported without telling you how it reaches a running Host.
+
+SDK users can observe the refresh with `HostConfig.OnPortsChanged`, which receives the added, removed, and current port lists.
+
+::: tip
+Run `devbridge show <tunnelId>` to check the **Host Online Status** field before troubleshooting a newly added port.
+:::
+
 ## Choose a protocol
 
 | Protocol | Use case                                                |

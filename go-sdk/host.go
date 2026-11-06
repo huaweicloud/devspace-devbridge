@@ -11,6 +11,9 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"sort"
+	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -32,6 +35,13 @@ const (
 	// notification. Kept below gatewayPortTimeout so a stalled notification still
 	// leaves time for the caller's 5s path to react.
 	portNotificationReadTimeout = 2 * time.Second
+	// portRefreshMinInterval is the debounce window for refreshing the hosted
+	// port set through the REST API. A relay channel accepted within the window
+	// reuses the last fetched set instead of issuing another API call.
+	portRefreshMinInterval = 1 * time.Second
+	// portRefreshTimeout bounds a single ListPorts refresh so a slow API never
+	// blocks channel forwarding for longer than the acceptance target (<=2s).
+	portRefreshTimeout = 2 * time.Second
 )
 
 // HostConfig is the configuration for hosting a tunnel.
@@ -43,6 +53,12 @@ type HostConfig struct {
 
 	// OnReady runs once the session is ready, with the hosted ports. May be nil.
 	OnReady func(ports []int)
+
+	// OnPortsChanged is invoked whenever the hosted port set changes while the
+	// session is running, reporting added ports, removed ports, and the
+	// resulting full port set. Only fires when the Host did not pin ports
+	// (Ports is empty). May be nil.
+	OnPortsChanged func(added, removed, current []int)
 }
 
 type relayPortMessage struct {
@@ -109,7 +125,7 @@ func (d *Devbridge) Host(ctx context.Context, cfg HostConfig) error {
 
 	everConnected := false
 	return d.reconnectLoop(ctx, func() (bool, error) {
-		return d.runHostSession(ctx, params, cfg.OnReady)
+		return d.runHostSession(ctx, params, cfg.OnReady, cfg.OnPortsChanged)
 	}, reconnectDecision{
 		// Abort on gateway rejection (quota/tunnel) or a duplicate host before the first
 		// connection. onConnected runs after shouldStop, so everConnected is the prior value.
@@ -145,7 +161,7 @@ func newHostSessionDiagnostics() *hostSessionDiagnostics {
 	return &hostSessionDiagnostics{disconnected: make(chan struct{}, 1)}
 }
 
-func (d *Devbridge) runHostSession(ctx context.Context, params sessionParams, onReady func([]int)) (connected bool, err error) {
+func (d *Devbridge) runHostSession(ctx context.Context, params sessionParams, onReady func([]int), onPortsChanged func(added, removed, current []int)) (connected bool, err error) {
 	outerSession, netConn, err := d.connectOuterSession(ctx, params)
 	if err != nil {
 		return false, err
@@ -161,17 +177,26 @@ func (d *Devbridge) runHostSession(ctx context.Context, params sessionParams, on
 	d.installSessionCallbacks(outerSession, params.tunnelID, diag)
 
 	pn := newPortNotifier()
-	go d.startHostAcceptLoop(ctx, outerSession, params.ports, pn)
+	refresher := newPortSetRefresher(d, params.tunnelID, params.ports, pn, onPortsChanged)
+	go d.startHostAcceptLoop(ctx, outerSession, params, pn, refresher)
 
 	if len(params.ports) == 0 {
-		if err := d.waitForGatewayPorts(ctx, outerSession, params.tunnelID, pn, diag); err != nil {
-			return true, err
+		// Preferred path: refresh the port set through the REST API. Unlike the
+		// gateway push notification, ListPorts is a documented interface that
+		// this repository can verify end to end, so runtime port changes do not
+		// depend on unverified gateway behaviour.
+		if _, ok := refresher.Refresh(ctx, true); !ok {
+			// Fallback: the gateway may deliver the port list over the first
+			// relay channel (used by --token mode, where no API key is needed).
+			if err := d.waitForGatewayPorts(ctx, outerSession, params.tunnelID, pn, diag); err != nil {
+				return true, err
+			}
 		}
 	}
 
 	printPorts := params.ports
 	if len(params.ports) == 0 {
-		printPorts = pn.ports
+		printPorts = pn.currentPorts()
 	}
 	d.reportReady(params.tunnelID, printPorts, onReady)
 
@@ -296,6 +321,7 @@ func (d *Devbridge) logDiagnosticClose(tunnelID string, diag *hostSessionDiagnos
 
 type portNotifier struct {
 	ready    chan struct{}
+	mu       sync.Mutex
 	ports    []int
 	received atomic.Bool
 }
@@ -304,7 +330,140 @@ func newPortNotifier() *portNotifier {
 	return &portNotifier{ready: make(chan struct{})}
 }
 
-func (d *Devbridge) startHostAcceptLoop(ctx context.Context, outerSession *ssh.ClientSession, ports []int, pn *portNotifier) {
+// update applies a full port set (from the API refresh or the gateway's
+// startup notification) and returns the diff against the previous set
+// (added, removed, changed). The first update also closes ready so
+// waitForGatewayPorts can proceed.
+func (pn *portNotifier) update(ports []int) (added, removed []int, changed bool) {
+	pn.mu.Lock()
+	defer pn.mu.Unlock()
+	prev := pn.ports
+	pn.ports = ports
+	if !pn.received.Swap(true) {
+		close(pn.ready)
+		return nil, nil, false
+	}
+	added, removed = diffPorts(prev, ports)
+	changed = len(added) > 0 || len(removed) > 0
+	return added, removed, changed
+}
+
+// currentPorts returns a copy of the latest known port set.
+func (pn *portNotifier) currentPorts() []int {
+	pn.mu.Lock()
+	defer pn.mu.Unlock()
+	out := make([]int, len(pn.ports))
+	copy(out, pn.ports)
+	return out
+}
+
+// portSetRefresher keeps the hosted port set up to date at runtime by
+// querying the REST API (ListPorts) instead of relying on an unverified
+// gateway push notification. Each relay channel is forwarded with the latest
+// port set, so a port added with `devbridge port create` becomes reachable on
+// the running Host without a restart.
+//
+// A pinned port list (HostConfig.Ports non-empty) disables refreshing: the
+// operator explicitly chose the static mode, where a port change requires
+// restarting the Host.
+type portSetRefresher struct {
+	devbridge   *Devbridge
+	tunnelID    string
+	staticPorts []int
+	pn          *portNotifier
+	onChange    func(added, removed, current []int)
+	listPorts   func(ctx context.Context, tunnelID string) ([]Port, error)
+	// apiAvailable is false when the Host has no REST credential (--token
+	// mode). Refreshing would only add latency, so the port set stays whatever
+	// the gateway delivered over the first relay channel.
+	apiAvailable bool
+	minInterval  time.Duration
+	timeout      time.Duration
+	now          func() time.Time
+
+	mu     sync.Mutex
+	lastAt time.Time
+}
+
+func newPortSetRefresher(d *Devbridge, tunnelID string, staticPorts []int, pn *portNotifier, onChange func(added, removed, current []int)) *portSetRefresher {
+	return &portSetRefresher{
+		devbridge:    d,
+		tunnelID:     tunnelID,
+		staticPorts:  staticPorts,
+		pn:           pn,
+		onChange:     onChange,
+		listPorts:    d.ListPorts,
+		apiAvailable: d.apiKey != "",
+		minInterval:  portRefreshMinInterval,
+		timeout:      portRefreshTimeout,
+		now:          time.Now,
+	}
+}
+
+// Refresh fetches the tunnel's current port set and applies it to the running
+// session, invoking OnPortsChanged when the set actually changed.
+//
+// It returns the effective port set for the channel being handled and whether
+// that set comes from the API (fresh), so the caller can decide whether to wait
+// for the gateway notification fallback. In static ports mode it returns the
+// pinned ports without calling the API and always reports fresh=false.
+func (r *portSetRefresher) Refresh(ctx context.Context, force bool) ([]int, bool) {
+	if len(r.staticPorts) > 0 {
+		return r.staticPorts, false
+	}
+	if !r.apiAvailable {
+		return r.pn.currentPorts(), false
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	now := r.now()
+	if !force && now.Sub(r.lastAt) < r.minInterval {
+		return r.pn.currentPorts(), true
+	}
+	r.lastAt = now
+
+	reqCtx, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
+	ports, err := r.listPorts(reqCtx, r.tunnelID)
+	if err != nil {
+		// Fail soft: keep forwarding the last known port set. A transient API
+		// failure must not tear down a working Host session.
+		r.devbridge.logger.Debug("host: port refresh failed, keeping current port set",
+			"tunnelID", r.tunnelID, "err", err)
+		return r.pn.currentPorts(), false
+	}
+
+	added, removed, changed := r.pn.update(portNumbers(ports))
+	if !changed {
+		return r.pn.currentPorts(), true
+	}
+	current := r.pn.currentPorts()
+	r.devbridge.statusf(i18n.T(i18n.MsgPortsHotReloaded),
+		formatPortList(added), formatPortList(removed), formatPortList(current))
+	if r.onChange != nil {
+		r.onChange(added, removed, current)
+	}
+	return current, true
+}
+
+// portNumbers projects API port records onto plain port numbers.
+func portNumbers(ports []Port) []int {
+	out := make([]int, 0, len(ports))
+	for _, p := range ports {
+		out = append(out, p.Port)
+	}
+	return out
+}
+
+// startHostAcceptLoop accepts relay channels and forwards each of them with
+// the latest known port set. In dynamic ports mode the first relay channel is
+// probed for the gateway's startup port notification (existing handshake,
+// also the only port source in --token mode); every later channel refreshes
+// the port set through the REST API instead of assuming push notifications.
+func (d *Devbridge) startHostAcceptLoop(ctx context.Context, outerSession *ssh.ClientSession, params sessionParams, pn *portNotifier, refresher *portSetRefresher) {
+	probedFirst := false
 	for {
 		channel, err := outerSession.AcceptChannel(ctx)
 		if err != nil {
@@ -314,25 +473,29 @@ func (d *Devbridge) startHostAcceptLoop(ctx context.Context, outerSession *ssh.C
 		switch channel.ChannelType {
 		case relayChannelType:
 			var stream *ssh.Stream
-			if !pn.received.Load() {
-				// Treat the first relay channel as the gateway's port notification only when it
-				// parses as a RelayRequest; otherwise forward it as normal data.
+			if len(params.ports) == 0 && !probedFirst {
+				probedFirst = true
+				// The gateway may deliver the tunnel's port list over the first
+				// relay channel. Runtime port changes are NOT assumed to be
+				// pushed: they are picked up by the REST API refresh below.
 				var notifPorts []int
 				var isNotif bool
 				stream, notifPorts, isNotif = readPortNotification(channel)
 				if isNotif {
-					if len(ports) == 0 {
-						pn.ports = notifPorts
-					}
-					pn.received.Store(true)
-					close(pn.ready)
+					pn.update(notifPorts)
 					continue
 				}
 			}
 
-			effectivePorts := ports
+			effectivePorts := params.ports
 			if len(effectivePorts) == 0 {
-				effectivePorts = pn.ports
+				// Refresh in the channel goroutine so a slow API call never
+				// blocks acceptance of subsequent relay channels.
+				go func(ch *ssh.Channel, st *ssh.Stream) {
+					ports, _ := refresher.Refresh(ctx, false)
+					d.handleRelayChannel(ctx, ch, st, ports)
+				}(channel, stream)
+				continue
 			}
 			go d.handleRelayChannel(ctx, channel, stream, effectivePorts)
 		default:
@@ -340,6 +503,39 @@ func (d *Devbridge) startHostAcceptLoop(ctx context.Context, outerSession *ssh.C
 				"channelType", channel.ChannelType, "channelID", channel.ChannelID)
 		}
 	}
+}
+
+func formatPortList(ports []int) string {
+	if len(ports) == 0 {
+		return "-"
+	}
+	sort.Ints(ports)
+	parts := make([]string, len(ports))
+	for i, p := range ports {
+		parts[i] = strconv.Itoa(p)
+	}
+	return strings.Join(parts, ",")
+}
+
+// diffPorts computes which ports were added and removed going from old to new.
+func diffPorts(old, newPorts []int) (added, removed []int) {
+	oldSet := make(map[int]struct{}, len(old))
+	for _, p := range old {
+		oldSet[p] = struct{}{}
+	}
+	newSet := make(map[int]struct{}, len(newPorts))
+	for _, p := range newPorts {
+		newSet[p] = struct{}{}
+		if _, ok := oldSet[p]; !ok {
+			added = append(added, p)
+		}
+	}
+	for _, p := range old {
+		if _, ok := newSet[p]; !ok {
+			removed = append(removed, p)
+		}
+	}
+	return added, removed
 }
 
 // readPortNotification reports whether a relay channel is the gateway's port

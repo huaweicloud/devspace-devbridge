@@ -29,6 +29,23 @@ devbridge port create <tunnelId> -p 3000
 
 创建时必须提供端口，协议默认为 `auto`。端口范围为 `1` 到 `65535`，同一条隧道内不能重复。
 
+## 端口变更的生效机制
+
+`devbridge port create`、`port update`、`port delete` 修改的是服务端的隧道端口配置。已经在运行的 Host 能否立即感知，取决于它的启动方式：
+
+| Host 启动方式 | 端口变更后的行为 |
+| ------------- | ---------------- |
+| 动态端口模式（不显式指定端口：`devbridge host <tunnelId>`） | 运行中的 Host 通过 API 刷新隧道的端口列表（最多每秒一次），并应用到下一次中继连接。新增端口通常在 1 秒左右可达，无需重启或重连 Host。 |
+| 静态端口模式（`devbridge host <tunnelId> -p ...`，或使用 `--token` 且固定端口） | Host 只转发启动时指定的端口。需要重启才能生效：`devbridge host <tunnelId> -p <端口列表>`。 |
+
+`port create`、`port update`、`port delete` 成功后都会输出上述规则，不会出现"创建成功但没有任何生效提示"的情况。
+
+SDK 使用者可通过 `HostConfig.OnPortsChanged` 感知刷新结果，回调参数为新增端口、移除端口和当前全量端口列表。
+
+::: tip
+排查新增端口不可达时，先用 `devbridge show <tunnelId>` 查看 **Host 在线状态** 字段。
+:::
+
 ## 选择协议
 
 | 协议    | 使用场景                 |

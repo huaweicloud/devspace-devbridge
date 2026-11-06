@@ -50,6 +50,8 @@ devbridge show <tunnelId>
 
 The details show the tunnel ID, name, description, and expiration time of the specified tunnel, as well as the current Host and Connect connection counts and upload/download traffic statistics. Tunnels that have expired or don't belong to the current workspace are not returned as valid resources.
 
+The output also includes the **Host Online Status** field (`online` / `offline`), derived from the Host connection count. Use it to tell "no Host is serving this tunnel" apart from "the tunnel does not exist" when a public URL fails.
+
 ## Update a tunnel
 
 ```bash

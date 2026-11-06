@@ -62,6 +62,16 @@ devbridge host <tunnelId> --api-key <key>
 
 此模式仍会通过 API 查询隧道端口配置，但跳过 TunnelToken 签发步骤。
 
+## 端口刷新与 Host 在线状态
+
+未显式指定端口时，Host 会通过 API 刷新隧道的端口列表（最多每秒一次）。因此用 `devbridge port create` 新增的端口（以及用 `devbridge port delete` 移除的端口）无需重启即可应用到运行中的 Host。静态端口模式仍需重启，详见[端口变更的生效机制](./ports.md#端口变更的生效机制)。
+
+`devbridge show <tunnelId>` 会输出 **Host 在线状态** 字段：`在线` 表示当前至少有一个 Host 连接该隧道并转发流量；`离线` 表示该隧道当前没有 Host 在服务。
+
+::: tip
+`devbridge limits` 是账户级配额视图，不包含按隧道的 Host 状态；查询隧道级状态请使用 `devbridge show <tunnelId>`。
+:::
+
 ## 访问隧道地址
 
 Host 成功后会输出隧道 ID 和访问地址，形如：

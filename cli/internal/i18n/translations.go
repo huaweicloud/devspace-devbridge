@@ -63,6 +63,9 @@ func init() {
 	Msg.Tunnel.Scope = Message{ZH: "范围", EN: "Scope"}
 	Msg.Tunnel.Token = Message{ZH: "令牌", EN: "Token"}
 	Msg.Tunnel.HostConnectionCount = Message{ZH: "Host 连接数", EN: "Host Connection Count"}
+	Msg.Tunnel.HostOnlineStatus = Message{ZH: "Host 在线状态", EN: "Host Online Status"}
+	Msg.Tunnel.StatusOnline = Message{ZH: "在线", EN: "online"}
+	Msg.Tunnel.StatusOffline = Message{ZH: "离线", EN: "offline"}
 	Msg.Tunnel.ClientConnectionCount = Message{ZH: "Client 连接数", EN: "Client Connection Count"}
 	Msg.Tunnel.TotalUploadBytes = Message{ZH: "总上传字节", EN: "Total Upload Bytes"}
 	Msg.Tunnel.TotalDownloadBytes = Message{ZH: "总下载字节", EN: "Total Download Bytes"}
@@ -97,6 +100,7 @@ func init() {
 	Msg.Port.DeleteSuccess = Message{ZH: "端口 %d 已从隧道 %s 删除。\n", EN: "Port %d removed from tunnel %s.\n"}
 	Msg.Port.InvalidProtocol = Message{ZH: "协议必须是 http、https、auto 之一，当前为: %s", EN: "protocol must be one of http, https, auto, got: %s"}
 	Msg.Port.AddFailed = Message{ZH: "添加端口 %d 失败: %w", EN: "failed to add port %d: %w"}
+	Msg.Port.PortChangeHint = Message{ZH: "提示: 动态端口模式的 Host 约 1 秒内自动同步端口变更；若 Host 以 -p/--ports 显式指定端口启动，需重启生效: devbridge host %s -p <端口列表>", EN: "Hint: a Host in dynamic port mode syncs this change within about 1s; a Host started with explicit -p/--ports must be restarted to apply it: devbridge host %s -p <ports>"}
 	Msg.Port.DeleteFailed = Message{ZH: "删除端口 %d 失败: %w", EN: "failed to delete port %d: %w"}
 
 	Msg.Limits.LimitsShort = Message{ZH: "查看限制和余额", EN: "View limits and balance"}

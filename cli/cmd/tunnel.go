@@ -107,11 +107,16 @@ var showCmd = &cobra.Command{
 		if result.Status != nil {
 			status = *result.Status
 		}
+		hostOnline := i18n.T(i18n.Msg.Tunnel.StatusOffline)
+		if result.Status.HostOnline() {
+			hostOnline = i18n.T(i18n.Msg.Tunnel.StatusOnline)
+		}
 		printKV([][2]string{
 			{i18n.T(i18n.Msg.Tunnel.TunnelID), result.ID},
 			{i18n.T(i18n.Msg.Tunnel.Name), result.Name},
 			{i18n.T(i18n.Msg.Tunnel.TunnelExpiration), formatTunnelRemaining(int64(result.TunnelExpiration))},
 			{i18n.T(i18n.Msg.Tunnel.Description), result.Description},
+			{i18n.T(i18n.Msg.Tunnel.HostOnlineStatus), hostOnline},
 			{i18n.T(i18n.Msg.Tunnel.ClientConnectionCount), fmt.Sprintf("%d", status.ClientConnectionCount)},
 			{i18n.T(i18n.Msg.Tunnel.HostConnectionCount), fmt.Sprintf("%d", status.HostConnectionCount)},
 			{i18n.T(i18n.Msg.Tunnel.TotalUploadBytes), formatBytes(status.TotalUploadBytes)},
