@@ -16,6 +16,7 @@ var (
 	MsgAccessServiceAt          = Message{ZH: "服务访问地址: https://%s-<port>.%s\n", EN: "Access your service at: https://%s-<port>.%s\n"}
 	MsgHostingPort              = Message{ZH: "托管端口: %s%d%s\n", EN: "Hosting port: %s%d%s\n"}
 	MsgTunnelURL                = Message{ZH: "隧道 URL: https://%s-%d.%s\n", EN: "Tunnel URL: https://%s-%d.%s\n"}
+	MsgPortsHotReloaded         = Message{ZH: "端口集已刷新: 新增 [%s], 移除 [%s], 当前 [%s]\n", EN: "Port set refreshed: added [%s], removed [%s], current [%s]\n"}
 	MsgReadyToAccept            = Message{ZH: "已就绪，等待连接", EN: "Ready to accept connections"}
 	MsgGatewayRejected          = Message{ZH: "连接被网关拒绝: %s，正在重试...\n", EN: "Connection rejected by gateway: %s, retrying...\n"}
 	MsgConnectionFailedRetrying = Message{ZH: "连接失败，正在重试...", EN: "Connection failed, retrying..."}
