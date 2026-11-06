@@ -61,6 +61,16 @@ devbridge host <tunnelId> --api-key <key>
 
 This mode still queries the tunnel's port configuration through the API, but skips the token-issuance step.
 
+## Port refresh and Host online status
+
+When the Host is started without explicit ports, it refreshes the tunnel's port list through the API at most once per second. Ports added with `devbridge port create` (and removed with `devbridge port delete`) are therefore applied to a running Host without a restart. See [How port changes take effect](./ports.md#how-port-changes-take-effect) for the static port mode, where a restart is required.
+
+`devbridge show <tunnelId>` reports a **Host Online Status** field: `online` means at least one Host is connected to the tunnel and forwarding traffic; `offline` means the tunnel is not currently served by any Host.
+
+::: tip
+`devbridge limits` is an account-level quota view and does not include per-tunnel Host status; use `devbridge show <tunnelId>` for that.
+:::
+
 ## Access the tunnel URL
 
 After Host succeeds, it prints the tunnel ID and access URL, in the following format:

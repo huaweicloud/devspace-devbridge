@@ -136,6 +136,8 @@ Host 是前台长运行命令。`-d` 和 `-e` 只在 Host 同时创建隧道时�
 - 单端口 HTTP 请求频率上限；
 - 单端口连接数上限。
 
+`limits` 是账户级视图，不包含按隧道的 Host 状态。需要查询某条隧道当前是否有 Host 时，使用 `devbridge show <tunnelId>`，其输出包含 **Host 在线状态** 字段。
+
 ## 调试工具
 
 ### echo
