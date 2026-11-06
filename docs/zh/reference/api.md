@@ -328,6 +328,15 @@ Content-Type: application/json
 `quotaBytes` 和 `remainingBytes` 也是账户共享的月度额度和余额，
 按北京时间每月 1 日 00:00 重置，`resetAt` 为下次重置的 Unix 秒。
 
+`maxTunnelBandwidthBytesPerSecond`、`maxHttpRequestsPerMinutePerPort` 和 `maxConnectionsPerPort` 在响应中为可选字段：
+
+- **字段缺省**：服务端未下发该限额，`devbridge limits` 对应行显示「未下发」，不再显示为 `0`，避免把「未下发」误读成「限额为 0」。
+- **显式 `0`**：按服务端返回值如实展示，`0` 的含义由服务端契约定义，CLI 不做改写。
+- **负值（如 `-1`）**：表示不限制，`devbridge limits` 显示「不限制」。
+- **正值**：按真实限额展示（带宽单位为字节/秒，换算为 `5 MB/s` 等带单位形式；请求频率和连接数按原值展示）。
+
+这三个字段并非所有部署都会下发；字段缺省时实际限额未知，服务端恢复字段下发由本仓库之外的后端负责，作为外部依赖单独跟踪。
+
 ## 字段约定
 
 - `tunnelId` 是隧道标识，访问接口时填入路径的同名参数。

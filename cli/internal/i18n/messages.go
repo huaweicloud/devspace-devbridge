@@ -154,6 +154,8 @@ type LimitsMessages struct {
 	QuotaBytes                      Message
 	Current                         Message
 	MaxTunnelBandwidth              Message
+	NotProvided                     Message
+	Unlimited                       Message
 }
 
 type EchoMessages struct {

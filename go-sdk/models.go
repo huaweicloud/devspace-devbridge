@@ -4,6 +4,14 @@
 
 package sdk
 
+import "encoding/json"
+
+const (
+	maxTunnelBandwidthField              = "maxTunnelBandwidthBytesPerSecond"
+	maxHTTPRequestsPerMinutePerPortField = "maxHttpRequestsPerMinutePerPort"
+	maxConnectionsPerPortField           = "maxConnectionsPerPort"
+)
+
 // Tunnel represents a tunnel.
 type Tunnel struct {
 	ID               string `json:"tunnelId"` // 8-char lowercase Base32
@@ -58,7 +66,63 @@ type Limits struct {
 	MaxTunnelBandwidthBytesPerSecond int64 `json:"maxTunnelBandwidthBytesPerSecond"`
 	MaxHTTPRequestsPerMinutePerPort  int32 `json:"maxHttpRequestsPerMinutePerPort"`
 	MaxConnectionsPerPort            int32 `json:"maxConnectionsPerPort"`
+
+	present limitsFieldPresence
 }
+
+// limitsFieldPresence records which optional limits the server actually sent.
+// An omitted field is not the same as a field explicitly set to zero.
+type limitsFieldPresence struct {
+	maxTunnelBandwidth              bool
+	maxHTTPRequestsPerMinutePerPort bool
+	maxConnectionsPerPort           bool
+}
+
+// UnmarshalJSON decodes a Limits value while recording whether the per-port and
+// bandwidth limit fields were present in the response. The exported fields are
+// unchanged, so existing callers keep working; use the Has* methods to tell an
+// omitted field from an explicit zero.
+func (l *Limits) UnmarshalJSON(data []byte) error {
+	type limitsAlias Limits
+	var decoded limitsAlias
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		return err
+	}
+
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(data, &fields); err != nil {
+		return err
+	}
+
+	*l = Limits(decoded)
+	l.present = limitsFieldPresence{
+		maxTunnelBandwidth:              fieldDelivered(fields, maxTunnelBandwidthField),
+		maxHTTPRequestsPerMinutePerPort: fieldDelivered(fields, maxHTTPRequestsPerMinutePerPortField),
+		maxConnectionsPerPort:           fieldDelivered(fields, maxConnectionsPerPortField),
+	}
+	return nil
+}
+
+// fieldDelivered reports whether key was present with a non-null value.
+func fieldDelivered(fields map[string]json.RawMessage, key string) bool {
+	value, ok := fields[key]
+	return ok && string(value) != "null"
+}
+
+// HasMaxTunnelBandwidth reports whether the response carried
+// maxTunnelBandwidthBytesPerSecond. When false, the field was omitted by the
+// server and must not be rendered as an explicit zero.
+func (l *Limits) HasMaxTunnelBandwidth() bool { return l.present.maxTunnelBandwidth }
+
+// HasMaxHTTPRequestsPerMinutePerPort reports whether the response carried
+// maxHttpRequestsPerMinutePerPort.
+func (l *Limits) HasMaxHTTPRequestsPerMinutePerPort() bool {
+	return l.present.maxHTTPRequestsPerMinutePerPort
+}
+
+// HasMaxConnectionsPerPort reports whether the response carried
+// maxConnectionsPerPort.
+func (l *Limits) HasMaxConnectionsPerPort() bool { return l.present.maxConnectionsPerPort }
 
 type createTunnelRequest struct {
 	Name        string `json:"name"`
