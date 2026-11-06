@@ -5,7 +5,10 @@
 package sdk
 
 import (
+	"context"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 )
@@ -80,5 +83,67 @@ func TestValidateTunnelNameSentinel(t *testing.T) {
 	err := validateTunnelName("bad name!")
 	if !errors.Is(err, ErrInvalidTunnelName) {
 		t.Fatalf("expected ErrInvalidTunnelName, got: %v", err)
+	}
+}
+
+func newTunnelTestServer(t *testing.T, body string) *Devbridge {
+	t.Helper()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(body))
+	}))
+	t.Cleanup(srv.Close)
+	return New(Config{APIBaseURL: srv.URL, HTTPClient: srv.Client()})
+}
+
+func TestShowTunnelStatus(t *testing.T) {
+	cases := []struct {
+		name       string
+		body       string
+		wantStatus bool
+		wantHost   int
+		wantReport int64
+	}{
+		{
+			name:       "status present with reportedAt",
+			body:       `{"tunnelId":"aaaadysa","name":"demo","status":{"hostConnectionCount":1,"clientConnectionCount":2,"totalUploadBytes":1024,"totalDownloadBytes":2048,"reportedAt":1789516860}}`,
+			wantStatus: true,
+			wantHost:   1,
+			wantReport: 1789516860,
+		},
+		{
+			name:       "status null",
+			body:       `{"tunnelId":"aaaadysa","name":"demo","status":null}`,
+			wantStatus: false,
+		},
+		{
+			name:       "reportedAt missing",
+			body:       `{"tunnelId":"aaaadysa","name":"demo","status":{"hostConnectionCount":1,"clientConnectionCount":0,"totalUploadBytes":0,"totalDownloadBytes":0}}`,
+			wantStatus: true,
+			wantHost:   1,
+			wantReport: 0,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			d := newTunnelTestServer(t, tc.body)
+			detail, err := d.ShowTunnel(context.Background(), "aaaadysa")
+			if err != nil {
+				t.Fatalf("ShowTunnel() error = %v", err)
+			}
+			if (detail.Status != nil) != tc.wantStatus {
+				t.Fatalf("status presence = %v, want %v", detail.Status != nil, tc.wantStatus)
+			}
+			if !tc.wantStatus {
+				return
+			}
+			if detail.Status.HostConnectionCount != tc.wantHost {
+				t.Fatalf("hostConnectionCount = %d, want %d", detail.Status.HostConnectionCount, tc.wantHost)
+			}
+			if detail.Status.ReportedAt != tc.wantReport {
+				t.Fatalf("reportedAt = %d, want %d", detail.Status.ReportedAt, tc.wantReport)
+			}
+		})
 	}
 }

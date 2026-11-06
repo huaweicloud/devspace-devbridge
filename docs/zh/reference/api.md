@@ -169,8 +169,12 @@ Content-Type: application/json
 }
 ```
 
-`reportedAt` 是状态更新时间，`clientConnectionCount` 是客户端连接数。
+`reportedAt` 是状态更新时间（Unix 秒），`clientConnectionCount` 是客户端连接数。
 详情的 `bandwidthUsed` 是已结算的上下行总流量，按分钟更新。
+
+`status` 是可选字段。服务端尚未采集到该隧道统计时，该字段缺失或为 `null`；字段存在但 `reportedAt` 缺失（为 `0`）时，
+上报时间未知。`status` 缺失、为 `null` 或 `reportedAt` 距今超过 120 秒，都应视为“统计非实时”，
+不能把此时的连接计数与流量当作真实的 0 值（即空闲隧道）。
 
 ## 更新和删除隧道
 
