@@ -114,6 +114,8 @@ func init() {
 	Msg.Limits.QuotaBytes = Message{ZH: "流量配额", EN: "Quota Bytes"}
 	Msg.Limits.Current = Message{ZH: "当前用量", EN: "Current"}
 	Msg.Limits.MaxTunnelBandwidth = Message{ZH: "隧道带宽上限", EN: "Max Tunnel Bandwidth"}
+	Msg.Limits.NotProvided = Message{ZH: "未下发", EN: "not provided by server"}
+	Msg.Limits.Unlimited = Message{ZH: "不限制", EN: "unlimited"}
 
 	Msg.Echo.EchoStarted = Message{ZH: "Echo 服务已启动", EN: "Echo service started"}
 	Msg.Echo.EchoShort = Message{ZH: "启动 Echo 诊断服务", EN: "Start Echo diagnostic service"}
