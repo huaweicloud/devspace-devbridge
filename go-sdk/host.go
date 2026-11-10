@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -140,15 +139,17 @@ func (d *Devbridge) Host(ctx context.Context, cfg HostConfig) error {
 }
 
 // hostSessionDiagnostics holds a host session's shutdown state: a one-shot
-// disconnect signal and the last close reason captured for logging.
+// disconnect signal and the close reason captured for classification/logging.
 type hostSessionDiagnostics struct {
 	disconnected chan struct{}
-	closedMu     sync.Mutex
-	closedArgs   *ssh.SessionClosedEventArgs
+	closeReason  *closeReasonCapture
 }
 
 func newHostSessionDiagnostics() *hostSessionDiagnostics {
-	return &hostSessionDiagnostics{disconnected: make(chan struct{}, 1)}
+	return &hostSessionDiagnostics{
+		disconnected: make(chan struct{}, 1),
+		closeReason:  newCloseReasonCapture(),
+	}
 }
 
 func (d *Devbridge) runHostSession(ctx context.Context, params sessionParams, onReady func([]int)) (connected bool, err error) {
@@ -219,9 +220,7 @@ func (d *Devbridge) installSessionCallbacks(outerSession *ssh.ClientSession, tun
 		}
 	}
 	outerSession.OnClosed = func(args *ssh.SessionClosedEventArgs) {
-		diag.closedMu.Lock()
-		diag.closedArgs = args
-		diag.closedMu.Unlock()
+		diag.closeReason.handler(args)
 		d.logger.Debug("host: session closed (diagnostic)",
 			"tunnelID", tunnelID,
 			"reason", args.Reason,
@@ -301,9 +300,7 @@ func (d *Devbridge) waitSessionEnd(ctx context.Context, outerSession *ssh.Client
 
 // logDiagnosticClose logs why the host connection was lost (diagnostic only).
 func (d *Devbridge) logDiagnosticClose(tunnelID string, diag *hostSessionDiagnostics) {
-	diag.closedMu.Lock()
-	a := diag.closedArgs
-	diag.closedMu.Unlock()
+	a := diag.closeReason.wait(0)
 	if a == nil {
 		d.logger.Debug("host connection lost (no close event captured)", "tunnelID", tunnelID)
 		return
@@ -320,21 +317,7 @@ func (d *Devbridge) logDiagnosticClose(tunnelID string, diag *hostSessionDiagnos
 // converts a post-connect auth close into a terminal error instead of a
 // recoverable "connection lost" retry.
 func (diag *hostSessionDiagnostics) authError() error {
-	diag.closedMu.Lock()
-	a := diag.closedArgs
-	diag.closedMu.Unlock()
-	if a == nil {
-		return nil
-	}
-	reason := fmt.Sprint(a.Reason)
-	detail := strings.TrimSpace(a.Message)
-	if detail == "" {
-		detail = strings.TrimSpace(reason)
-	}
-	if isAuthCloseReason(reason + " " + a.Message) {
-		return &AuthFailedError{Message: detail}
-	}
-	return nil
+	return diag.closeReason.authError()
 }
 
 type portNotifier struct {
