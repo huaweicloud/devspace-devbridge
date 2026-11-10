@@ -19,6 +19,7 @@ var (
 	MsgReadyToAccept            = Message{ZH: "已就绪，等待连接", EN: "Ready to accept connections"}
 	MsgGatewayRejected          = Message{ZH: "连接被网关拒绝: %s，正在重试...\n", EN: "Connection rejected by gateway: %s, retrying...\n"}
 	MsgConnectionFailedRetrying = Message{ZH: "连接失败，正在重试...", EN: "Connection failed, retrying..."}
+	MsgAuthFailed               = Message{ZH: "鉴权失败，API key 已过期或 token 无效", EN: "authentication failed: API key expired or invalid token"}
 
 	MsgPortForwardingUnavailable = Message{ZH: "端口转发服务不可用", EN: "port forwarding service unavailable"}
 	MsgSessionDisconnected       = Message{ZH: "连接已断开", EN: "disconnected"}

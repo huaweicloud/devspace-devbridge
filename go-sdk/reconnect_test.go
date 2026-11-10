@@ -5,6 +5,10 @@
 package sdk
 
 import (
+	"context"
+	"errors"
+	"io"
+	"log/slog"
 	"testing"
 	"time"
 )
@@ -30,5 +34,41 @@ func TestReconnectDelay(t *testing.T) {
 				t.Fatalf("reconnectDelay(%d) = %v, want %v", tt.count, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestReconnectLoopStopsOnAuthFailed(t *testing.T) {
+	d := &Devbridge{logger: slog.Default(), outputWriter: io.Discard}
+	attempts := 0
+
+	err := d.reconnectLoop(context.Background(), func() (bool, error) {
+		attempts++
+		return false, &AuthFailedError{Message: "API key expired"}
+	}, reconnectDecision{
+		shouldStop: func(err error) bool { return errors.Is(err, ErrAuthFailed) },
+	})
+
+	if !errors.Is(err, ErrAuthFailed) {
+		t.Fatalf("reconnectLoop() err = %v, want ErrAuthFailed", err)
+	}
+	if attempts != 1 {
+		t.Fatalf("session attempts = %d, want 1 (auth failure must not retry)", attempts)
+	}
+}
+
+func TestReconnectLoopConnectedAuthFailedStopsWithoutReset(t *testing.T) {
+	d := &Devbridge{logger: slog.Default(), outputWriter: io.Discard}
+	attempts := 0
+
+	err := d.reconnectLoop(context.Background(), func() (bool, error) {
+		attempts++
+		return true, &AuthFailedError{Message: "invalid token"}
+	}, reconnectDecision{})
+
+	if !errors.Is(err, ErrAuthFailed) {
+		t.Fatalf("reconnectLoop() err = %v, want ErrAuthFailed", err)
+	}
+	if attempts != 1 {
+		t.Fatalf("session attempts = %d, want 1 (connected auth close must abort)", attempts)
 	}
 }

@@ -6,6 +6,7 @@ package sdk
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -84,6 +85,11 @@ func (d *Devbridge) Connect(ctx context.Context, cfg ConnectConfig) error {
 				d.logger.Debug("connection rejected by gateway", "tunnelID", cfg.TunnelID, "err", err)
 				return true
 			}
+			// Expired/invalid credentials cannot be fixed by retrying.
+			if errors.Is(err, ErrAuthFailed) {
+				d.logger.Debug("authentication failed, not retrying", "tunnelID", cfg.TunnelID, "err", err)
+				return true
+			}
 			return false
 		},
 		onReconnect: func(err error) {
@@ -104,6 +110,19 @@ func (d *Devbridge) runConnectSession(ctx context.Context, params sessionParams,
 
 	session := ssh.NewClientSession(config)
 	session.Trace = sshTraceFunc(d.logger)
+	// Capture the session close reason: a post-connect close caused by expired or
+	// invalid credentials must be terminal, exactly like the host path.
+	closeReason := newCloseReasonCapture()
+	session.OnClosed = func(args *ssh.SessionClosedEventArgs) {
+		closeReason.handler(args)
+		if args != nil {
+			d.logger.Debug("connect: session closed (diagnostic)",
+				"tunnelID", params.tunnelID,
+				"reason", args.Reason,
+				"message", args.Message,
+				"err", args.Err)
+		}
+	}
 	defer func() { _ = session.Close() }()
 
 	pfs := tcp.GetPortForwardingService(&session.Session)
@@ -150,6 +169,11 @@ func (d *Devbridge) runConnectSession(ctx context.Context, params sessionParams,
 
 	select {
 	case <-session.Session.Done():
+		// Expired/invalid credentials cannot be fixed by reconnecting: surface a
+		// terminal error instead of looping on "connection lost".
+		if err := closeReason.authError(); err != nil {
+			return false, err
+		}
 		return true, fmt.Errorf(i18n.T(i18n.MsgSessionClosed))
 	case <-ctx.Done():
 		return true, nil

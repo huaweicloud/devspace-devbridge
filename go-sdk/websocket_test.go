@@ -5,9 +5,16 @@
 package sdk
 
 import (
+	"context"
 	"errors"
+	"io"
+	"log/slog"
 	"net/http"
+	"net/http/httptest"
+	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/coder/websocket"
 )
@@ -44,6 +51,16 @@ func TestParseSSHCloseError(t *testing.T) {
 			want: ErrQuotaExceeded,
 		},
 		{
+			name: "policy violation mapping for expired token",
+			err:  websocket.CloseError{Code: websocket.StatusPolicyViolation, Reason: "invalid token: expired"},
+			want: ErrAuthFailed,
+		},
+		{
+			name: "application close code with api key reason",
+			err:  websocket.CloseError{Code: websocket.StatusCode(4004), Reason: "API key expired"},
+			want: ErrAuthFailed,
+		},
+		{
 			name: "non close error passes through",
 			err:  errors.New("some other error"),
 			want: errors.New("some other error"),
@@ -56,7 +73,8 @@ func TestParseSSHCloseError(t *testing.T) {
 
 			if errors.Is(tt.want, ErrQuotaExceeded) ||
 				errors.Is(tt.want, ErrTunnelNotFound) ||
-				errors.Is(tt.want, ErrDuplicateHost) {
+				errors.Is(tt.want, ErrDuplicateHost) ||
+				errors.Is(tt.want, ErrAuthFailed) {
 				if !errors.Is(got, tt.want) {
 					t.Fatalf("parseSSHCloseError() = %v, want %v", got, tt.want)
 				}
@@ -101,5 +119,57 @@ func TestBuildWSHeader(t *testing.T) {
 	}
 	if hdr2.Get("X-API-Key") != "api-key" {
 		t.Fatalf("X-API-Key = %q, want %q", hdr2.Get("X-API-Key"), "api-key")
+	}
+}
+
+func TestDialWithRetryAuthFailedNoRetry(t *testing.T) {
+	for _, status := range []int{http.StatusUnauthorized, http.StatusForbidden} {
+		t.Run(http.StatusText(status), func(t *testing.T) {
+			var attempts atomic.Int32
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				attempts.Add(1)
+				w.WriteHeader(status)
+				_, _ = w.Write([]byte(`{"message":"API key expired"}`))
+			}))
+			defer srv.Close()
+
+			d := &Devbridge{logger: slog.Default(), outputWriter: io.Discard}
+			url := "ws" + strings.TrimPrefix(srv.URL, "http")
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
+			_, err := d.dialWithRetry(ctx, url, &websocket.DialOptions{HTTPClient: srv.Client()}, 5)
+			if !errors.Is(err, ErrAuthFailed) {
+				t.Fatalf("dialWithRetry() err = %v, want ErrAuthFailed", err)
+			}
+			if got := attempts.Load(); got != 1 {
+				t.Fatalf("handshake attempts = %d, want 1 (no retry on auth failure)", got)
+			}
+		})
+	}
+}
+
+func TestDialWithRetryServerErrorStillRetries(t *testing.T) {
+	var attempts atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts.Add(1)
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer srv.Close()
+
+	d := &Devbridge{logger: slog.Default(), outputWriter: io.Discard}
+	url := "ws" + strings.TrimPrefix(srv.URL, "http")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := d.dialWithRetry(ctx, url, &websocket.DialOptions{HTTPClient: srv.Client()}, 1)
+	if err == nil {
+		t.Fatal("dialWithRetry() err = nil, want failure")
+	}
+	if errors.Is(err, ErrAuthFailed) {
+		t.Fatalf("dialWithRetry() err = %v, must not be classified as auth failure", err)
+	}
+	if got := attempts.Load(); got != 2 {
+		t.Fatalf("handshake attempts = %d, want 2 (server errors keep retrying)", got)
 	}
 }

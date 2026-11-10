@@ -34,6 +34,7 @@ type ConnectMessages struct {
 	TunnelIDRequired      Message
 	TunnelCreated         Message
 	TokenModePortsNote    Message
+	AuthFailed            Message
 }
 
 type AuthMessages struct {
