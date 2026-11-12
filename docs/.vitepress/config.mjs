@@ -41,6 +41,10 @@ const enSidebar = [
         text: "Develop and share a web app",
         link: "/guide/best-practices/share-web-app",
       },
+      {
+        text: "Receive GitCode webhook callbacks",
+        link: "/guide/best-practices/gitcode-webhook",
+      },
     ],
   },
   {
@@ -98,6 +102,10 @@ const zhSidebar = [
       {
         text: "开发并分享一个 Web 应用",
         link: "/zh/guide/best-practices/share-web-app",
+      },
+      {
+        text: "接收 GitCode Webhook 回调",
+        link: "/zh/guide/best-practices/gitcode-webhook",
       },
     ],
   },

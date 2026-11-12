@@ -216,6 +216,7 @@ devbridge delete <tunnelId>
 - [Hosting and public access](./host-public-access.md)
 - [Zero-inbound-port SSH tunnel on ECS](./ecs-devbridge-ssh-tunnel.md)
 - [Develop and share a web app](./share-web-app.md)
+- [Receive GitCode webhook callbacks](./gitcode-webhook.md)
 - [Host: expose local services](../host.md)
 - [Connect: connect to remote services](../connect.md)
 - [What is DevBridge](../overview.md)
