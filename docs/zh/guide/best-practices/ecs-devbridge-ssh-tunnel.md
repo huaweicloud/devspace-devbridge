@@ -22,10 +22,3 @@ description: 在华为云购买 ECS 并通过 DevBridge 出站隧道完成 SSH �
 完整步骤、Terraform 代码和验证命令见华为云 AI for IaC 实操案例：
 
 [AI Shell 购买 ECS + DevBridge 零入站端口 SSH 隧道](https://aiiac.developer.huaweicloud.com/cases.html#iac-practice/ecs-devbridge-ssh-tunnel)
-
-## 相关内容
-
-- [托管与公网访问](./host-public-access.md)
-- [托管与远程连接](./host-remote-connect.md)
-- [Host：托管本地服务](../host.md)
-- [Connect：连接远程服务](../connect.md)
