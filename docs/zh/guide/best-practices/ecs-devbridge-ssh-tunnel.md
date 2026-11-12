@@ -17,27 +17,6 @@ description: 在华为云购买 ECS 并通过 DevBridge 出站隧道完成 SSH �
 
 环境由 AI Shell 根据自然语言指令生成 Terraform 并部署，适合需要远程运维 ECS、但不想开放入站端口或维护跳板机、VPN 的场景。
 
-## 实践内容
-
-| 项   | 说明                                                                                      |
-| ---- | ----------------------------------------------------------------------------------------- |
-| 目标 | 安全组入方向全关的 ECS，通过 DevBridge 隧道完成 SSH 登录与 scp 文件传输                   |
-| 产出 | 1 台 ECS（VPC、子网、EIP、FunctionGraph、IAM 委托）和 1 条 DevBridge 出站隧道             |
-| 耗时 | 约 30–45 分钟                                                                             |
-| 环境 | AI DevSpace 的 AI Shell（内置 Terraform、hcloud CLI、DevBridge CLI），默认区域 cn-north-4 |
-| 版本 | 适用 DevBridge 0.3.0-release（x86-64 / ARM64）                                            |
-
-实践中还会用到 FunctionGraph 与 IAM 委托：DevBridge API Key 存放在函数中，ECS 通过临时凭证取回，避免写入 user_data 或 Terraform state。
-
-## 实操步骤概览
-
-1. 检查华为云凭证与 DevBridge API Key 是否可用。
-2. 在 AI Shell 中描述需求，由 Agent 生成 Terraform 配置。
-3. 确认计划并部署 ECS、EIP、安全组等资源。
-4. 等待 cloud-init 安装 DevBridge、创建隧道并托管 22 端口。
-5. 通过隧道 SSH 登录、scp 传输文件，并验证入方向确实不可达。
-6. 执行 destroy，自动清理资源与隧道。
-
 ## 开始实操
 
 完整步骤、Terraform 代码和验证命令见华为云 AI for IaC 实操案例：
