@@ -26,6 +26,10 @@ const enSidebar = [
     text: "Best practices",
     items: [
       {
+        text: "One-click SSH tunnel setup",
+        link: "/guide/best-practices/one-click-ssh-setup",
+      },
+      {
         text: "Zero-inbound-port SSH tunnel on ECS",
         link: "/guide/best-practices/ecs-devbridge-ssh-tunnel",
       },
@@ -87,6 +91,10 @@ const zhSidebar = [
   {
     text: "最佳实践",
     items: [
+      {
+        text: "远端服务器一键配置 SSH 隧道",
+        link: "/zh/guide/best-practices/one-click-ssh-setup",
+      },
       {
         text: "ECS 零入站端口 SSH 隧道",
         link: "/zh/guide/best-practices/ecs-devbridge-ssh-tunnel",

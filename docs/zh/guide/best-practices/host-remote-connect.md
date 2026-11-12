@@ -220,6 +220,7 @@ devbridge delete <tunnelId>
 - [ECS 零入站端口 SSH 隧道](./ecs-devbridge-ssh-tunnel.md)
 - [开发并分享一个 Web 应用](./share-web-app.md)
 - [接收 GitCode Webhook 回调](./gitcode-webhook.md)
+- [远端服务器一键配置 DevBridge SSH 隧道](./one-click-ssh-setup.md)
 - [Host：托管本地服务](../host.md)
 - [Connect：连接远程服务](../connect.md)
 - [什么是开发隧道](../overview.md)
