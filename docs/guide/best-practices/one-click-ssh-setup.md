@@ -9,9 +9,9 @@ description: Set up the DevBridge CLI, an SSH tunnel, and autostart on a Huawei 
 
 ## Scenario and goal
 
-Setting up an SSH tunnel by hand means installing the CLI, signing in, creating a tunnel, hosting the port, handling credentials, and configuring autostart. This practice provides a one-command script that automates the work on a Linux or Windows ECS:
+Setting up an SSH tunnel by hand means installing the CLI, signing in, creating a tunnel, hosting the port, handling credentials, and configuring autostart. This practice provides a one-command script that automates these steps on a Linux or Windows ECS:
 
-- Install the DevBridge CLI and an SSH server (OpenSSH Server on Windows).
+- Install the DevBridge CLI and make sure an SSH server is available (OpenSSH Server is installed on Windows; Linux images ship with one).
 - Sign in with an API key, create a tunnel, and expose SSH port 22.
 - Store the API key encrypted by default (AES-256-GCM + PBKDF2-SHA256), with a plaintext option.
 - Configure autostart (systemd on Linux, Task Scheduler on Windows) and renew the tunnel before expiry.
