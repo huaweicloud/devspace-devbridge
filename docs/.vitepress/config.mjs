@@ -92,7 +92,7 @@ const zhSidebar = [
     text: "最佳实践",
     items: [
       {
-        text: "远端服务器一键配置 SSH 隧道",
+        text: "一键配置 DevBridge 并托管 SSH 隧道",
         link: "/zh/guide/best-practices/one-click-ssh-setup",
       },
       {

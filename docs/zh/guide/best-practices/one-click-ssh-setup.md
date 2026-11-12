@@ -1,9 +1,9 @@
 ---
-title: 远端服务器一键配置 DevBridge SSH 隧道
+title: 一键配置 DevBridge 并托管 SSH 隧道
 description: 在华为云 ECS 上用一条命令完成 DevBridge CLI 安装、SSH 隧道创建与开机自启，无需开放任何入站端口。
 ---
 
-# 远端服务器一键配置 DevBridge SSH 隧道
+# 一键配置 DevBridge 并托管 SSH 隧道
 
 <p class="lead">在远端 ECS 上执行一条命令，自动安装 DevBridge CLI、暴露 SSH 端口 22 并配置开机自启，之后可从其他设备通过隧道登录，无需开放公网入站端口。</p>
 
