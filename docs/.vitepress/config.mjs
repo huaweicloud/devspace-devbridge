@@ -26,7 +26,7 @@ const enSidebar = [
     text: "Best practices",
     items: [
       {
-        text: "One-click SSH tunnel setup",
+        text: "Automated SSH tunnel setup",
         link: "/guide/best-practices/one-click-ssh-setup",
       },
       {

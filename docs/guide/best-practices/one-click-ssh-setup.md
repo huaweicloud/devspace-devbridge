@@ -1,15 +1,15 @@
 ---
-title: One-click DevBridge SSH tunnel on a remote server
-description: Set up the DevBridge CLI, an SSH tunnel, and autostart on a Huawei Cloud ECS with one command, without opening any inbound ports.
+title: Automated DevBridge SSH tunnel setup on a remote server
+description: Automate DevBridge CLI installation, SSH tunnel creation, and autostart on a Huawei Cloud ECS with a single command, without opening any inbound ports.
 ---
 
-# One-click DevBridge SSH tunnel on a remote server
+# Automated DevBridge SSH tunnel setup on a remote server
 
-<p class="lead">Run one command on a remote ECS to install the DevBridge CLI, expose SSH port 22, and enable autostart, then log in from any device through the tunnel without opening public inbound ports.</p>
+<p class="lead">A single command on a remote ECS installs the DevBridge CLI, exposes SSH port 22, and enables autostart; you can then log in from another device through the tunnel without opening public inbound ports.</p>
 
 ## Scenario and goal
 
-Setting up an SSH tunnel by hand means installing the CLI, signing in, creating a tunnel, hosting the port, handling credentials, and configuring autostart. This practice provides a one-command script that automates these steps on a Linux or Windows ECS:
+Setting up an SSH tunnel by hand means installing the CLI, signing in, creating a tunnel, hosting the port, handling credentials, and configuring autostart. This practice provides a setup script that automates these steps on a Linux or Windows ECS:
 
 - Install the DevBridge CLI and make sure an SSH server is available (OpenSSH Server is installed on Windows; Linux images ship with one).
 - Sign in with an API key, create a tunnel, and expose SSH port 22.
@@ -21,6 +21,6 @@ The server only needs outbound TCP 443; the security group needs no inbound rule
 
 ## Start the walkthrough
 
-The installation steps, flags, and verification are in the one-click setup guide in the repository:
+The installation steps, flags, and verification are in the setup guide in the repository:
 
-[DevBridge SSH tunnel one-click setup guide](https://github.com/huaweicloud/devspace-devbridge/blob/master/setup/%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E9%A2%84%E5%90%AF%E5%8A%A8%E6%8C%87%E5%AF%BC.md)
+[DevBridge SSH tunnel setup guide](https://github.com/huaweicloud/devspace-devbridge/blob/master/setup/%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E9%A2%84%E5%90%AF%E5%8A%A8%E6%8C%87%E5%AF%BC.md)
