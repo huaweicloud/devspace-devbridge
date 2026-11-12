@@ -7,15 +7,6 @@ description: 在本地托管服务后，从远端通过 Connect 建立连接并�
 
 <p class="lead">在设备 A 上启动服务并托管，在远端设备 B 通过 Connect 建立本地端口映射，以 localhost 访问远程服务。</p>
 
-## 视频演示
-
-<VideoPlayer
-  src="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/video/devops-best-practice.mp4"
-  poster="/images/videos/devops-best-practice-video.png"
-  title="DevOps 最佳实践演示"
-  :caption="false"
-/>
-
 ## 场景说明
 
 目标：在设备 A 上启动一个 HTTP 服务，通过 DevBridge 隧道托管，再从设备 B 连接隧道，在设备 B 上以

@@ -7,15 +7,6 @@ description: Host a service locally, then connect and access it from a remote de
 
 <p class="lead">Start and host a service on device A, set up local port mappings on remote device B through Connect, and access the remote service via localhost.</p>
 
-## Video demo
-
-<VideoPlayer
-  src="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/video/devops-best-practice.mp4"
-  poster="/images/videos/devops-best-practice-video.png"
-  title="DevOps best practices demo"
-  :caption="false"
-/>
-
 ## Scenario overview
 
 Goal: start an HTTP service on device A, host it through a DevBridge tunnel, connect to the tunnel from device B, and access device A's service at `http://localhost:8080` on device B.

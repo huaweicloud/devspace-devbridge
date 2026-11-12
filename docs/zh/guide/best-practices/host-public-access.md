@@ -7,22 +7,6 @@ description: 启动本地服务并通过 Host 托管，在浏览器中直接访�
 
 <p class="lead">在本地启动服务，使用 Host 托管端口生成公网访问地址，直接在浏览器中打开地址即可访问。</p>
 
-## 视频演示
-
-<VideoPlayer
-  src="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/video/ci-best-practice.mp4"
-  poster="/images/videos/ci-best-practice-video.png"
-  title="CI 最佳实践演示"
-  :caption="false"
-/>
-
-<VideoPlayer
-  src="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/video/ai-developer-space-best-practice.mp4"
-  poster="/images/videos/ai-developer-space-best-practice-video.png"
-  title="AI 开发者空间最佳实践演示"
-  :caption="false"
-/>
-
 ## 场景说明
 
 目标：在本地启动一个 HTTP 服务，通过 DevBridge 隧道托管，获得公网访问地址后在浏览器中直接访问。
