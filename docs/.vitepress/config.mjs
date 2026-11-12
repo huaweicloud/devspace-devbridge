@@ -37,6 +37,10 @@ const enSidebar = [
         text: "Zero-inbound-port SSH tunnel on ECS",
         link: "/guide/best-practices/ecs-devbridge-ssh-tunnel",
       },
+      {
+        text: "Develop and share a web app",
+        link: "/guide/best-practices/share-web-app",
+      },
     ],
   },
   {
@@ -90,6 +94,10 @@ const zhSidebar = [
       {
         text: "ECS 零入站端口 SSH 隧道",
         link: "/zh/guide/best-practices/ecs-devbridge-ssh-tunnel",
+      },
+      {
+        text: "开发并分享一个 Web 应用",
+        link: "/zh/guide/best-practices/share-web-app",
       },
     ],
   },
