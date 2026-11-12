@@ -23,10 +23,6 @@ The full steps, Terraform code, and verification commands are on the Huawei Clou
 
 [Buy an ECS with AI Shell and build a zero-inbound-port SSH tunnel with DevBridge](https://aiiac.developer.huaweicloud.com/cases.html#iac-practice/ecs-devbridge-ssh-tunnel)
 
-::: tip
-The walkthrough is currently available in Chinese and includes copy-ready prompts and Terraform configuration.
-:::
-
 ## Related content
 
 - [Hosting and public access](./host-public-access.md)
