@@ -26,7 +26,7 @@ const enSidebar = [
     text: "Best practices",
     items: [
       {
-        text: "Automated SSH tunnel setup",
+        text: "Automate DevBridge setup and host an SSH tunnel",
         link: "/guide/best-practices/one-click-ssh-setup",
       },
       {
