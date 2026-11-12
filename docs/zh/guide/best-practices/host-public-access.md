@@ -7,22 +7,6 @@ description: 启动本地服务并通过 Host 托管，在浏览器中直接访�
 
 <p class="lead">在本地启动服务，使用 Host 托管端口生成公网访问地址，直接在浏览器中打开地址即可访问。</p>
 
-## 视频演示
-
-<VideoPlayer
-  src="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/video/ci-best-practice.mp4"
-  poster="/images/videos/ci-best-practice-video.png"
-  title="CI 最佳实践演示"
-  :caption="false"
-/>
-
-<VideoPlayer
-  src="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/video/ai-developer-space-best-practice.mp4"
-  poster="/images/videos/ai-developer-space-best-practice-video.png"
-  title="AI 开发者空间最佳实践演示"
-  :caption="false"
-/>
-
 ## 场景说明
 
 目标：在本地启动一个 HTTP 服务，通过 DevBridge 隧道托管，获得公网访问地址后在浏览器中直接访问。
@@ -186,6 +170,10 @@ devbridge delete <tunnelId>
 ## 相关内容
 
 - [托管与远程连接](./host-remote-connect.md)
+- [ECS 零入站端口 SSH 隧道](./ecs-devbridge-ssh-tunnel.md)
+- [开发并分享一个 Web 应用](./share-web-app.md)
+- [接收 GitCode Webhook 回调](./gitcode-webhook.md)
+- [一键配置 DevBridge 并托管 SSH 隧道](./one-click-ssh-setup.md)
 - [Host：托管本地服务](../host.md)
 - [管理端口](../ports.md)
 - [什么是开发隧道](../overview.md)

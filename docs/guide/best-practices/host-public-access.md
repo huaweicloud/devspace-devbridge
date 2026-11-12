@@ -7,22 +7,6 @@ description: Start a local service, host it with Host, and access the tunnel URL
 
 <p class="lead">Start a service locally, host the port with Host to generate a public access URL, then simply open the URL in a browser.</p>
 
-## Video demos
-
-<VideoPlayer
-  src="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/video/ci-best-practice.mp4"
-  poster="/images/videos/ci-best-practice-video.png"
-  title="CI best practices demo"
-  :caption="false"
-/>
-
-<VideoPlayer
-  src="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/video/ai-developer-space-best-practice.mp4"
-  poster="/images/videos/ai-developer-space-best-practice-video.png"
-  title="AI Developer Space best practices demo"
-  :caption="false"
-/>
-
 ## Scenario overview
 
 Goal: start an HTTP service locally, host it through a DevBridge tunnel, get a public access URL, and access it directly in a browser.
@@ -185,6 +169,10 @@ devbridge delete <tunnelId>
 ## Related content
 
 - [Hosting and remote connection](./host-remote-connect.md)
+- [Zero-inbound-port SSH tunnel on ECS](./ecs-devbridge-ssh-tunnel.md)
+- [Develop and share a web app](./share-web-app.md)
+- [Receive GitCode webhook callbacks](./gitcode-webhook.md)
+- [Automate DevBridge setup and host an SSH tunnel](./one-click-ssh-setup.md)
 - [Host: expose local services](../host.md)
 - [Manage ports](../ports.md)
 - [What is DevBridge](../overview.md)

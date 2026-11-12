@@ -26,6 +26,22 @@ const enSidebar = [
     text: "Best practices",
     items: [
       {
+        text: "Automate DevBridge setup and host an SSH tunnel",
+        link: "/guide/best-practices/one-click-ssh-setup",
+      },
+      {
+        text: "Zero-inbound-port SSH tunnel on ECS",
+        link: "/guide/best-practices/ecs-devbridge-ssh-tunnel",
+      },
+      {
+        text: "Develop and share a web app",
+        link: "/guide/best-practices/share-web-app",
+      },
+      {
+        text: "Receive GitCode webhook callbacks",
+        link: "/guide/best-practices/gitcode-webhook",
+      },
+      {
         text: "Hosting and public access",
         link: "/guide/best-practices/host-public-access",
       },
@@ -75,6 +91,22 @@ const zhSidebar = [
   {
     text: "最佳实践",
     items: [
+      {
+        text: "一键配置 DevBridge 并托管 SSH 隧道",
+        link: "/zh/guide/best-practices/one-click-ssh-setup",
+      },
+      {
+        text: "ECS 零入站端口 SSH 隧道",
+        link: "/zh/guide/best-practices/ecs-devbridge-ssh-tunnel",
+      },
+      {
+        text: "开发并分享一个 Web 应用",
+        link: "/zh/guide/best-practices/share-web-app",
+      },
+      {
+        text: "接收 GitCode Webhook 回调",
+        link: "/zh/guide/best-practices/gitcode-webhook",
+      },
       {
         text: "托管与公网访问",
         link: "/zh/guide/best-practices/host-public-access",
