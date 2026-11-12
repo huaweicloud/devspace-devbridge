@@ -33,6 +33,10 @@ const enSidebar = [
         text: "Hosting and remote connection",
         link: "/guide/best-practices/host-remote-connect",
       },
+      {
+        text: "Zero-inbound-port SSH tunnel on ECS",
+        link: "/guide/best-practices/ecs-devbridge-ssh-tunnel",
+      },
     ],
   },
   {
@@ -82,6 +86,10 @@ const zhSidebar = [
       {
         text: "托管与远程连接",
         link: "/zh/guide/best-practices/host-remote-connect",
+      },
+      {
+        text: "ECS 零入站端口 SSH 隧道",
+        link: "/zh/guide/best-practices/ecs-devbridge-ssh-tunnel",
       },
     ],
   },
