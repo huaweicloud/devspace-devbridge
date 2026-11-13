@@ -137,6 +137,15 @@ func (d *Devbridge) dialWithRetry(ctx context.Context, url string, opts *websock
 			return nil, ErrDuplicateHost
 		}
 
+		// 401 Unauthorized / 403 Forbidden: expired or invalid credentials.
+		// Terminal — retrying cannot fix the token, so return immediately
+		// instead of entering the backoff loop.
+		if resp != nil && (resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden) {
+			body, _ := io.ReadAll(resp.Body)
+			_ = resp.Body.Close()
+			return nil, &AuthFailedError{StatusCode: resp.StatusCode, Message: gatewayMessage(body)}
+		}
+
 		// 426 Upgrade Required: CLI version below the gateway minimum.
 		// Terminal — retrying does not change the version, so return a clear
 		// error immediately instead of entering the retry loop.
@@ -246,14 +255,21 @@ func parseSSHCloseError(err error) error {
 }
 
 // gatewayMessage extracts the human-readable message from a gateway rejection
-// body (e.g. {"code":"42600","message":"CLI version ... please upgrade"}),
-// falling back to the raw body when the JSON shape is absent or empty.
+// body. The gateway emits two shapes: {"code":"4xxxx","message":"..."} for business
+// rejections and {"error":"..."} for the auth rejection path (writeJSONError).
+// Falls back to the raw body when the JSON shape is absent or empty.
 func gatewayMessage(body []byte) string {
 	var b struct {
 		Message string `json:"message"`
+		Error   string `json:"error"`
 	}
-	if json.Unmarshal(body, &b) == nil && strings.TrimSpace(b.Message) != "" {
-		return b.Message
+	if json.Unmarshal(body, &b) == nil {
+		if msg := strings.TrimSpace(b.Message); msg != "" {
+			return msg
+		}
+		if msg := strings.TrimSpace(b.Error); msg != "" {
+			return msg
+		}
 	}
 	return strings.TrimSpace(string(body))
 }

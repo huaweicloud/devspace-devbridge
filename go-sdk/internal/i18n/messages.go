@@ -5,6 +5,7 @@
 package i18n
 
 var (
+	MsgAuthFailed               = Message{ZH: "认证失败，请重新登录", EN: "API key expired or invalid token, please login again"}
 	MsgConnectedToTunnel        = Message{ZH: "已连接到隧道: %s\n", EN: "Connected to tunnel: %s\n"}
 	MsgReconnectingWithErr      = Message{ZH: "连接断开，正在重连... (%v)\n", EN: "Connection lost, reconnecting... (%v)\n"}
 	MsgReconnecting             = Message{ZH: "连接断开，正在重连...", EN: "Connection lost, reconnecting..."}
