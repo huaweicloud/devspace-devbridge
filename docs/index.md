@@ -28,7 +28,7 @@ For questions or coordination, please [report an issue](https://github.com/huawe
 ## Getting started
 
 - [Create and host your first tunnel in five minutes](./guide/quickstart.md) — walks you through installing, logging in, hosting, and connecting
-- [Learn how DevBridge works](./guide/overview.md) — the relationship between tunnels, ports, Host, and Connect — with an introductory video
+- [Learn how DevBridge works](./guide/overview.md) — the relationship between tunnels, ports, Host, and Connect
 - [CLI command reference](./reference/cli.md) — every command and its arguments
 
 ## Popular pages
