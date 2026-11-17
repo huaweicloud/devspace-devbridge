@@ -122,6 +122,11 @@ func (d *Devbridge) Host(ctx context.Context, cfg HostConfig) error {
 				d.logger.Debug("connection rejected by gateway", "tunnelID", cfg.TunnelID, "err", err)
 				return true
 			}
+			// Expired/invalid credentials cannot be fixed by retrying: abort immediately.
+			if errors.Is(err, ErrAuthFailed) {
+				d.logger.Debug("authentication failed, not retrying", "tunnelID", cfg.TunnelID, "err", err)
+				return true
+			}
 			return false
 		},
 		onReconnect: func(err error) {

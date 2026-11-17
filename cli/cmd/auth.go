@@ -17,7 +17,9 @@ var hcLoginAPIKey string
 // SDK client. The API key is resolved in the cmd layer so that the config
 // package does not need to depend on the auth package (which would introduce
 // an import cycle).
-func newSDKClient() *devbridge.Devbridge {
+//
+// It is a variable so tests can substitute a client pointing at a test server.
+var newSDKClient = func() *devbridge.Devbridge {
 	var apiKey string
 	if cred := auth.ReadValidAPIKey(); cred != nil {
 		apiKey = cred.APIKey

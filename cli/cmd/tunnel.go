@@ -184,10 +184,17 @@ var deleteAllCmd = &cobra.Command{
 	Short: i18n.T(i18n.Msg.Tunnel.DeleteAllShort),
 	Args:  cobra.NoArgs,
 	RunE: runError(func(cmd *cobra.Command, args []string) error {
+		if err := confirmOrAbort(cmd, "yes", i18n.T(i18n.Msg.Tunnel.ConfirmDeleteAll)); err != nil {
+			return err
+		}
 		client := newSDKClient()
 		if err := client.DeleteAllTunnels(context.Background()); err != nil {
 			return err
 		}
+		if err := config.DeleteDefaultTunnel(); err != nil {
+			return err
+		}
+		fmt.Println(i18n.T(i18n.Msg.Tunnel.DefaultTunnelCleared))
 		fmt.Println(i18n.T(i18n.Msg.Tunnel.TunnelDeletedAll))
 		return nil
 	}),
@@ -264,6 +271,8 @@ func init() {
 
 	tokenCmd.Flags().StringVarP(&tunnelScope, "scope", "s", "", i18n.T(i18n.Msg.Tunnel.FlagScope))
 	_ = tokenCmd.MarkFlagRequired("scope")
+
+	deleteAllCmd.Flags().BoolP("yes", "y", false, i18n.T(i18n.Msg.Tunnel.FlagYes))
 
 	RootCmd.AddCommand(listCmd, createCmd, showCmd, updateCmd, deleteCmd, deleteAllCmd, tokenCmd, setCmd, unsetCmd)
 }
