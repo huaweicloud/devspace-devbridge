@@ -75,22 +75,22 @@ Use the HTTP status and `error.code` to decide how to handle the error; `message
 
 ## API overview
 
-| Method | Path                                      | Purpose                                        |
-| ------ | ----------------------------------------- | ---------------------------------------------- |
-| POST   | `/v1/api-keys/check`                      | Verify credentials (on `ns.developer.myhuaweicloud.com`).                            |
-| POST   | `/v1/tunnels`                             | Create a tunnel.                               |
-| GET    | `/v1/tunnels`                             | Query the current user's valid tunnels.        |
-| DELETE | `/v1/tunnels`                             | Delete all of the current user's tunnels.      |
-| GET    | `/v1/tunnels/{tunnelId}`                  | Query details and runtime status.              |
-| PUT    | `/v1/tunnels/{tunnelId}`                  | Update a tunnel.                               |
-| DELETE | `/v1/tunnels/{tunnelId}`                  | Delete a specific tunnel.                      |
-| POST   | `/v1/tunnels/{tunnelId}/token?scope=host` | Issue a host or connect token.                 |
-| POST   | `/v1/tunnels/{tunnelId}/ports`            | Create a port.                                 |
-| GET    | `/v1/tunnels/{tunnelId}/ports`            | Query the port list.                           |
-| GET    | `/v1/tunnels/{tunnelId}/ports/{port}`     | Query a port's details.                        |
-| PUT    | `/v1/tunnels/{tunnelId}/ports/{port}`     | Update a port policy.                          |
-| DELETE | `/v1/tunnels/{tunnelId}/ports/{port}`     | Delete a port.                                 |
-| GET    | `/v1/limits`                              | Query limits and balance.                      |
+| Method | Path                                      | Purpose                                                   |
+| ------ | ----------------------------------------- | --------------------------------------------------------- |
+| POST   | `/v1/api-keys/check`                      | Verify credentials (on `ns.developer.myhuaweicloud.com`). |
+| POST   | `/v1/tunnels`                             | Create a tunnel.                                          |
+| GET    | `/v1/tunnels`                             | Query the current user's valid tunnels.                   |
+| DELETE | `/v1/tunnels`                             | Delete all of the current user's tunnels.                 |
+| GET    | `/v1/tunnels/{tunnelId}`                  | Query details and runtime status.                         |
+| PUT    | `/v1/tunnels/{tunnelId}`                  | Update a tunnel.                                          |
+| DELETE | `/v1/tunnels/{tunnelId}`                  | Delete a specific tunnel.                                 |
+| POST   | `/v1/tunnels/{tunnelId}/token?scope=host` | Issue a host or connect token.                            |
+| POST   | `/v1/tunnels/{tunnelId}/ports`            | Create a port.                                            |
+| GET    | `/v1/tunnels/{tunnelId}/ports`            | Query the port list.                                      |
+| GET    | `/v1/tunnels/{tunnelId}/ports/{port}`     | Query a port's details.                                   |
+| PUT    | `/v1/tunnels/{tunnelId}/ports/{port}`     | Update a port policy.                                     |
+| DELETE | `/v1/tunnels/{tunnelId}/ports/{port}`     | Delete a port.                                            |
+| GET    | `/v1/limits`                              | Query limits and balance.                                 |
 
 ## Create a tunnel
 
@@ -111,7 +111,7 @@ Content-Type: application/json
 | `description` | string  | No       | Up to 512 characters.                                                                   |
 | `clusterId`   | string  | No       | Cluster ID for the current region; defaults to the server's default cluster if omitted. |
 | `expiration`  | integer | No       | Expiration in hours, default 72, range 1–720.                                           |
-| `type`        | string  | No       | `bridge` or `devbox`, default `bridge`.                                                    |
+| `type`        | string  | No       | `bridge` or `devbox`, default `bridge`.                                                 |
 
 Success response:
 

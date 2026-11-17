@@ -75,22 +75,22 @@ curl -k -i -X POST "$NS_API_BASE/v1/api-keys/check" -H "X-API-Key: $DEVBRIDGE_AP
 
 ## 接口概览
 
-| 方法   | 路径                                      | 用途                               |
-| ------ | ----------------------------------------- | ---------------------------------- |
-| POST   | `/v1/api-keys/check`                      | 校验凭据（域名 `ns.developer.myhuaweicloud.com`）。                         |
-| POST   | `/v1/tunnels`                             | 创建隧道。                         |
-| GET    | `/v1/tunnels`                             | 查询当前用户的有效隧道。           |
-| DELETE | `/v1/tunnels`                             | 删除当前用户的全部隧道。           |
-| GET    | `/v1/tunnels/{tunnelId}`                  | 查询详情和运行状态。               |
-| PUT    | `/v1/tunnels/{tunnelId}`                  | 更新隧道。                         |
-| DELETE | `/v1/tunnels/{tunnelId}`                  | 删除指定隧道。                     |
-| POST   | `/v1/tunnels/{tunnelId}/token?scope=host` | 签发 host 或 connect 令牌。        |
-| POST   | `/v1/tunnels/{tunnelId}/ports`            | 创建端口。                         |
-| GET    | `/v1/tunnels/{tunnelId}/ports`            | 查询端口列表。                     |
-| GET    | `/v1/tunnels/{tunnelId}/ports/{port}`     | 查询端口详情。                     |
-| PUT    | `/v1/tunnels/{tunnelId}/ports/{port}`     | 更新端口策略。                     |
-| DELETE | `/v1/tunnels/{tunnelId}/ports/{port}`     | 删除端口。                         |
-| GET    | `/v1/limits`                              | 查询限制和余额。                   |
+| 方法   | 路径                                      | 用途                                                |
+| ------ | ----------------------------------------- | --------------------------------------------------- |
+| POST   | `/v1/api-keys/check`                      | 校验凭据（域名 `ns.developer.myhuaweicloud.com`）。 |
+| POST   | `/v1/tunnels`                             | 创建隧道。                                          |
+| GET    | `/v1/tunnels`                             | 查询当前用户的有效隧道。                            |
+| DELETE | `/v1/tunnels`                             | 删除当前用户的全部隧道。                            |
+| GET    | `/v1/tunnels/{tunnelId}`                  | 查询详情和运行状态。                                |
+| PUT    | `/v1/tunnels/{tunnelId}`                  | 更新隧道。                                          |
+| DELETE | `/v1/tunnels/{tunnelId}`                  | 删除指定隧道。                                      |
+| POST   | `/v1/tunnels/{tunnelId}/token?scope=host` | 签发 host 或 connect 令牌。                         |
+| POST   | `/v1/tunnels/{tunnelId}/ports`            | 创建端口。                                          |
+| GET    | `/v1/tunnels/{tunnelId}/ports`            | 查询端口列表。                                      |
+| GET    | `/v1/tunnels/{tunnelId}/ports/{port}`     | 查询端口详情。                                      |
+| PUT    | `/v1/tunnels/{tunnelId}/ports/{port}`     | 更新端口策略。                                      |
+| DELETE | `/v1/tunnels/{tunnelId}/ports/{port}`     | 删除端口。                                          |
+| GET    | `/v1/limits`                              | 查询限制和余额。                                    |
 
 ## 创建隧道
 
@@ -111,7 +111,7 @@ Content-Type: application/json
 | `description` | string  | 否   | 最长 512 字符。                             |
 | `clusterId`   | string  | 否   | 当前区域的集群 ID；省略使用服务端默认集群。 |
 | `expiration`  | integer | 否   | 有效期，单位小时，默认 72，范围 1–720。     |
-| `type`        | string  | 否   | `bridge` 或 `devbox`，默认 `bridge`。          |
+| `type`        | string  | 否   | `bridge` 或 `devbox`，默认 `bridge`。       |
 
 成功响应：
 
