@@ -474,7 +474,10 @@ Possible fixes:
     # main - entrypoint
     # ---------------------------------------------------------------------------
     function Main {
-        if ($Help) { Show-Usage }
+        if ($Help) {
+            Show-Usage
+            return
+        }
 
         Show-Welcome
         Detect-Platform
