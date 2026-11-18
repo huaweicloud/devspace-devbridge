@@ -9,15 +9,6 @@ description: 了解 DevBridge 隧道、端口、Host 和 Connect 的关系。
 
 开发隧道适合远程联调、共享开发中的 Web 页面、接收 Webhook，以及从另一台设备访问本地服务。
 
-## 视频介绍
-
-<VideoPlayer
-  src="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/video/promotion-video.mp4"
-  poster="/images/videos/promotion-video.png"
-  title="DevBridge 推广视频"
-  :caption="false"
-/>
-
 ## 工作方式
 
 一次完整连接包含以下部分：
