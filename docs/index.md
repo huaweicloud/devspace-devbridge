@@ -8,7 +8,7 @@ description: "The entry point to DevBridge: a five-minute quickstart, core conce
 <p class="lead">Use DevBridge to securely expose your local development services to remote devices without opening any public inbound ports, and control how each port is accessed.</p>
 
 ::: warning 📢 Notice to users
-DevBridge will release a new version on **Thursday, November 19, after 7:00 PM**. During the release window, the service may experience brief connection interruptions. Please be aware in advance and plan accordingly.
+DevBridge will release a new version on **Thursday, November 19, 19:00–23:00 Beijing time (UTC+8)**. During the release window, the service may experience brief connection interruptions. Please be aware in advance and plan accordingly.
 
 **Impact**
 
