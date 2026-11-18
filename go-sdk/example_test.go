@@ -24,7 +24,7 @@ func ExampleDevbridge_fullWorkflow() {
 	client := sdk.New(sdk.Config{APIKey: "your-api-key"})
 
 	// 1. Create a tunnel
-	tunnel, err := client.CreateTunnel(ctx, "my-dev-tunnel", "dev/test environment", nil)
+	tunnel, err := client.CreateTunnel(ctx, "my-dev-tunnel", "devtest", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
