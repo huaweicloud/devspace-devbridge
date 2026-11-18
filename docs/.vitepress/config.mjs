@@ -53,7 +53,10 @@ const enSidebar = [
   },
   {
     text: "Integrations",
-    items: [{ text: "AI Agent Skill", link: "/integrations/skill" }],
+    items: [
+      { text: "AI Agent Skill", link: "/integrations/skill" },
+      { text: "Go SDK", link: "/integrations/sdk" },
+    ],
   },
   {
     text: "Reference",
@@ -119,7 +122,10 @@ const zhSidebar = [
   },
   {
     text: "集成",
-    items: [{ text: "AI Agent Skill", link: "/zh/integrations/skill" }],
+    items: [
+      { text: "AI Agent Skill", link: "/zh/integrations/skill" },
+      { text: "Go SDK", link: "/zh/integrations/sdk" },
+    ],
   },
   {
     text: "参考",
@@ -156,6 +162,7 @@ export default defineConfig({
           { text: "DevBridge", link: "/" },
           { text: "CLI reference", link: "/reference/cli" },
           { text: "REST API", link: "/reference/api" },
+          { text: "Go SDK", link: "/integrations/sdk" },
           { text: "Changelog", link: "/changelog" },
         ],
         sidebar: enSidebar,
@@ -188,6 +195,7 @@ export default defineConfig({
           { text: "开发隧道", link: "/zh/" },
           { text: "命令参考", link: "/zh/reference/cli" },
           { text: "REST API", link: "/zh/reference/api" },
+          { text: "Go SDK", link: "/zh/integrations/sdk" },
           { text: "更新日志", link: "/zh/changelog" },
         ],
         sidebar: zhSidebar,
