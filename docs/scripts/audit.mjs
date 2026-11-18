@@ -18,6 +18,10 @@ import { execFileSync } from "node:child_process";
 /** GHSA IDs we knowingly accept (no patched version available). */
 const IGNORED_ADVISORIES = new Set([
   "GHSA-vfj7-8cjw-p6xm", // braces ReDoS — dev-only, no fix available
+  // picomatch ReDoS via single-branch repeated extglobs (CVE-2026-112366).
+  // Dev-only glob matching (vitepress/vite/markdownlint-cli2); no patched
+  // version exists (vulnerable <=4.0.7, latest is 4.0.7). Remove when a fix ships.
+  "GHSA-fc5q-39xc-vjpf",
 ]);
 
 const MIN_SEVERITY = "moderate";
