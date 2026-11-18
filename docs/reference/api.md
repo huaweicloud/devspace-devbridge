@@ -12,7 +12,8 @@ description: Use the DevBridge REST API to manage tunnels, ports, and access tok
 API base URL:
 
 ```text
-https://bridge.developer.myhuaweicloud.com
+https://bridge.developer.myhuaweicloud.com   # tunnels, ports, tokens, limits
+https://ns.developer.myhuaweicloud.com        # /v1/api-keys/check
 ```
 
 Paths in this document include the `/v1` version prefix. Every request carries the full API key:
@@ -26,9 +27,11 @@ and put the full value into `X-API-Key`.
 
 ```bash
 export API_BASE='https://bridge.developer.myhuaweicloud.com'
+export NS_API_BASE='https://ns.developer.myhuaweicloud.com'
 export DEVBRIDGE_API_KEY='<full DevBridge API key>'
 
-curl -k -i -X POST "$API_BASE/v1/api-keys/check" -H "X-API-Key: $DEVBRIDGE_API_KEY"
+# The credential-check endpoint is served on a separate host:
+curl -k -i -X POST "$NS_API_BASE/v1/api-keys/check" -H "X-API-Key: $DEVBRIDGE_API_KEY"
 ```
 
 A successful request returns `204 No Content`. All requests below carry `X-API-Key`;
@@ -72,23 +75,22 @@ Use the HTTP status and `error.code` to decide how to handle the error; `message
 
 ## API overview
 
-| Method | Path                                      | Purpose                                        |
-| ------ | ----------------------------------------- | ---------------------------------------------- |
-| POST   | `/v1/api-keys/check`                      | Verify credentials.                            |
-| POST   | `/v1/tunnels`                             | Create a tunnel.                               |
-| GET    | `/v1/tunnels`                             | Query the current user's valid tunnels.        |
-| DELETE | `/v1/tunnels`                             | Delete all of the current user's tunnels.      |
-| GET    | `/v1/tunnels/{tunnelId}`                  | Query details and runtime status.              |
-| PUT    | `/v1/tunnels/{tunnelId}`                  | Update a tunnel.                               |
-| DELETE | `/v1/tunnels/{tunnelId}`                  | Delete a specific tunnel.                      |
-| POST   | `/v1/tunnels/{tunnelId}/token?scope=host` | Issue a host or connect token.                 |
-| POST   | `/v1/tunnels/upsert-with-token`           | Create or reuse by name and issue both tokens. |
-| POST   | `/v1/tunnels/{tunnelId}/ports`            | Create a port.                                 |
-| GET    | `/v1/tunnels/{tunnelId}/ports`            | Query the port list.                           |
-| GET    | `/v1/tunnels/{tunnelId}/ports/{port}`     | Query a port's details.                        |
-| PUT    | `/v1/tunnels/{tunnelId}/ports/{port}`     | Update a port policy.                          |
-| DELETE | `/v1/tunnels/{tunnelId}/ports/{port}`     | Delete a port.                                 |
-| GET    | `/v1/limits`                              | Query limits and balance.                      |
+| Method | Path                                      | Purpose                                                   |
+| ------ | ----------------------------------------- | --------------------------------------------------------- |
+| POST   | `/v1/api-keys/check`                      | Verify credentials (on `ns.developer.myhuaweicloud.com`). |
+| POST   | `/v1/tunnels`                             | Create a tunnel.                                          |
+| GET    | `/v1/tunnels`                             | Query the current user's valid tunnels.                   |
+| DELETE | `/v1/tunnels`                             | Delete all of the current user's tunnels.                 |
+| GET    | `/v1/tunnels/{tunnelId}`                  | Query details and runtime status.                         |
+| PUT    | `/v1/tunnels/{tunnelId}`                  | Update a tunnel.                                          |
+| DELETE | `/v1/tunnels/{tunnelId}`                  | Delete a specific tunnel.                                 |
+| POST   | `/v1/tunnels/{tunnelId}/token?scope=host` | Issue a host or connect token.                            |
+| POST   | `/v1/tunnels/{tunnelId}/ports`            | Create a port.                                            |
+| GET    | `/v1/tunnels/{tunnelId}/ports`            | Query the port list.                                      |
+| GET    | `/v1/tunnels/{tunnelId}/ports/{port}`     | Query a port's details.                                   |
+| PUT    | `/v1/tunnels/{tunnelId}/ports/{port}`     | Update a port policy.                                     |
+| DELETE | `/v1/tunnels/{tunnelId}/ports/{port}`     | Delete a port.                                            |
+| GET    | `/v1/limits`                              | Query limits and balance.                                 |
 
 ## Create a tunnel
 
@@ -109,7 +111,7 @@ Content-Type: application/json
 | `description` | string  | No       | Up to 512 characters.                                                                   |
 | `clusterId`   | string  | No       | Cluster ID for the current region; defaults to the server's default cluster if omitted. |
 | `expiration`  | integer | No       | Expiration in hours, default 72, range 1–720.                                           |
-| `type`        | string  | No       | `bridge` or `env`, default `bridge`.                                                    |
+| `type`        | string  | No       | `bridge` or `devbox`, default `bridge`.                                                 |
 
 Success response:
 
@@ -218,45 +220,6 @@ curl -k -X POST "$API_BASE/v1/tunnels/aaaadysa/token?scope=host" -H "X-API-Key: 
 `lifetime` is the validity duration in seconds; `expiration` is the Unix time (in seconds) at which the token expires.
 When establishing a connection, both the tunnel and the token must be within their validity periods. Keep tokens safe.
 
-## Create or reuse by name and issue tokens
-
-```http
-POST /v1/tunnels/upsert-with-token
-Content-Type: application/json
-
-{
-  "name": "frontend-dev",
-  "expiration": 24,
-  "ports": [
-    {"port": 8080, "protocol": "http", "allowAnonymous": false}
-  ]
-}
-```
-
-Supports the tunnel-creation fields plus an optional `ports` array of up to 10 items:
-
-- Creates or reuses a tunnel by name; when reusing a valid tunnel, its original details and expiration are kept.
-- An expired tunnel that is kept is renewed, with its duration taken from `expiration` (defaulting to the original duration).
-- `ports` appends ports; existing ports keep their original policies, which can be changed via the port update endpoint.
-- New Host and Connect tokens are generated on each call.
-
-On success, returns the tunnel-creation response plus these two fields:
-
-```json
-{
-  "hostToken": {
-    "lifetime": 86400,
-    "expiration": 1789603200,
-    "token": "<Host JWT>"
-  },
-  "connectToken": {
-    "lifetime": 86400,
-    "expiration": 1789603200,
-    "token": "<Connect JWT>"
-  }
-}
-```
-
 ## Create and query ports
 
 ```http
@@ -316,10 +279,7 @@ The `port` in the path specifies the target port. On success, returns the update
   "activeTunnels": 1,
   "maxTunnels": 10,
   "maxPortsPerTunnel": 10,
-  "maxHostsPerTunnel": 1,
-  "maxTunnelBandwidthBytesPerSecond": 5242880,
-  "maxHttpRequestsPerMinutePerPort": 500,
-  "maxConnectionsPerPort": 100
+  "maxHostsPerTunnel": 1
 }
 ```
 

@@ -5,6 +5,25 @@ description: Changes to the DevBridge CLI and related services.
 
 # Changelog
 
+## 0.3.0-release (2026-11-06)
+
+### Improvements
+
+- Reports the client version and prompts for an upgrade (with a one-click install command) when the version is below the minimum required.
+- `ping` now distinguishes a network failure from an error returned by the tunneled service; a 4xx/5xx from the service is treated as a normal response and probing continues.
+
+### Fixes
+
+- Fixed a reconnect storm that could occur after a connection dropped.
+- Fixed a resource leak in long-running `ping` sessions.
+- Fixed `--allow-anonymous` / `--deny-anonymous` flag handling.
+- The installer now verifies the package before extracting it.
+
+### Removed
+
+- Removed the client-side version self-check.
+- Removed the `config get/set/unset` command.
+
 ## 2026-09-21
 
 ### Improvements
