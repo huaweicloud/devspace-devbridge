@@ -9,7 +9,7 @@ description: Use limits to query quota, and echo and ping to debug the tunnel li
 
 ## View quota and usage
 
-Use `devbridge limits` to view the current account's quota and usage:
+Use devbridge limits to view the current account's quota and usage:
 
 ```bash
 devbridge limits
@@ -37,7 +37,7 @@ The output includes:
 
 ## Use echo to verify the link
 
-`devbridge echo` starts an HTTP echo service that returns detailed request information, for verifying that the Host and Connect link is working.
+devbridge echo starts an HTTP echo service that returns detailed request information, for verifying that the Host and Connect link is working.
 
 ### Start the echo service
 
@@ -49,10 +49,10 @@ devbridge echo
 devbridge echo -p 8080 -i 0.0.0.0
 ```
 
-| Flag | Description                             |
-| ---- | --------------------------------------- |
-| `-p` | Listening port; random by default.      |
-| `-i` | Listening address, default `127.0.0.1`. |
+| Flag | Description                           |
+| ---- | ------------------------------------- |
+| -p   | Listening port; random by default.    |
+| -i   | Listening address, default 127.0.0.1. |
 
 ### Verify together with Host
 
@@ -62,7 +62,7 @@ devbridge echo -p 8080 -i 0.0.0.0
    devbridge echo -p 8080
    ```
 
-2. Start Host in terminal 2 to host port `8080`:
+2. Start Host in terminal 2 to host port 8080:
 
    ```bash
    devbridge host -p 8080
@@ -70,11 +70,11 @@ devbridge echo -p 8080 -i 0.0.0.0
 
 3. On another device, access the tunnel URL through Connect or a browser. If you get the echo service's response back, the link is working.
 
-The echo service returns request details (method, path, headers, and so on) rather than a directory listing like `python3 -m http.server`, making it useful for confirming whether a request arrives correctly.
+The echo service returns request details (method, path, headers, and so on) rather than a directory listing like python3 -m http.server, making it useful for confirming whether a request arrives correctly.
 
 ## Use ping to probe connectivity
 
-`devbridge ping` sends HTTP ping probes to a URI and prints the status code and latency, for checking whether a tunnel URL is reachable.
+devbridge ping sends HTTP ping probes to a URI and prints the status code and latency, for checking whether a tunnel URL is reachable.
 
 ### Basic usage
 
@@ -100,21 +100,21 @@ HTTP 200 OK -- 4 ms
 
 | Flag | Description                                   |
 | ---- | --------------------------------------------- |
-| `-i` | Probe interval in milliseconds, default 1000. |
+| -i   | Probe interval in milliseconds, default 1000. |
 
 ### Probe scenarios
 
 | Probe target                          | Description                                                  |
 | ------------------------------------- | ------------------------------------------------------------ |
 | Tunnel public URL                     | Verify that Host is running and the tunnel URL is reachable. |
-| `http://127.0.0.1:<port>`             | Verify that Connect's local mapping works.                   |
-| `http://127.0.0.1:<port>` (Host side) | Confirm the local service is listening.                      |
+| http://127.0.0.1:\<port\>             | Verify that Connect's local mapping works.                   |
+| http://127.0.0.1:\<port\> (Host side) | Confirm the local service is listening.                      |
 
-Press `Ctrl+C` to stop probing.
+Press Ctrl+C to stop probing.
 
 ## Debug logging
 
-Append `-v` / `--verbose` to any command to enable debug-level logging, which prints diagnostic information such as the request address, retry count, and time taken:
+Append -v / --verbose to any command to enable debug-level logging, which prints diagnostic information such as the request address, retry count, and time taken:
 
 ```bash
 devbridge -v host <tunnelId>
@@ -122,7 +122,7 @@ devbridge connect <tunnelId> --verbose
 devbridge -v list
 ```
 
-`--verbose` doesn't print API keys or tokens in plaintext.
+--verbose doesn't print API keys or tokens in plaintext.
 
 ## Related content
 

@@ -17,7 +17,7 @@ devbridge connect <tunnelId>
 
 Connect reads the tunnel's port configuration, requests a new Connect token, and connects to the currently available Host.
 
-Once the connection is established, access the remote service through the same port on your local machine. For example, if the tunnel has port `8080`:
+Once the connection is established, access the remote service through the same port on your local machine. For example, if the tunnel has port 8080:
 
 ```text
 http://localhost:8080
@@ -25,7 +25,7 @@ http://localhost:8080
 
 ## Connect to multiple ports
 
-A tunnel can be configured with multiple ports. Connect sets up the corresponding mappings based on the tunnel's port configuration; you don't need to use a `--port` flag to filter ports.
+A tunnel can be configured with multiple ports. Connect sets up the corresponding mappings based on the tunnel's port configuration; you don't need to use a --port flag to filter ports.
 
 View the list of remote ports:
 
@@ -41,7 +41,7 @@ When integrating other clients or skipping API calls, you can provide a JWT toke
 devbridge connect <tunnelId> --token <jwt>
 ```
 
-The `--token` mode skips token issuance and port lookup; the Host side negotiates and delivers the ports through the relay channel. You must specify the tunnel ID.
+The --token mode skips token issuance and port lookup; the Host side negotiates and delivers the ports through the relay channel. You must specify the tunnel ID.
 
 ## Authenticate with an API key
 
@@ -55,13 +55,13 @@ This mode still queries the tunnel's port configuration through the API, but ski
 
 ## Protected ports
 
-When a port is configured with `--deny-anonymous`, Connect must use a valid identity, along with a Connect token. The CLI requests the token automatically, so you usually don't need to run `devbridge token` manually.
+When a port is configured with --deny-anonymous, Connect must use a valid identity, along with a Connect token. The CLI requests the token automatically, so you usually don't need to run devbridge token manually.
 
 A Host token can't be used for Connect, and a Connect token can't be used for Host.
 
 ## Automatic reconnection
 
-Connect is a long-running foreground command. It automatically tries to reconnect after brief network interruptions; press `Ctrl+C` to stop.
+Connect is a long-running foreground command. It automatically tries to reconnect after brief network interruptions; press Ctrl+C to stop.
 
 The following cases require manual handling:
 

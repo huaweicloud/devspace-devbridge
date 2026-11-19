@@ -15,13 +15,13 @@ description: 启动本地服务并通过 Host 托管，在浏览器中直接访�
 
 ## 第一步：启动本地服务
 
-在终端 1 启动一个监听 `8080` 端口的 HTTP 服务：
+在终端 1 启动一个监听 8080 端口的 HTTP 服务：
 
 ```bash
 python3 -m http.server 8080
 ```
 
-启动后该终端会持续运行，服务默认监听 `0.0.0.0:8080`。保持此终端不要关闭。
+启动后该终端会持续运行，服务默认监听 0.0.0.0:8080。保持此终端不要关闭。
 
 ![启动本地 HTTP 服务](/images/host-connect/python-http-server.png)
 
@@ -39,7 +39,7 @@ Host 有两种方式，根据是否复用已有隧道选择。
 
 ### 方式一：使用临时隧道
 
-没有可复用隧道时，让 Host 自动创建一条临时隧道并托管 `8080` 端口：
+没有可复用隧道时，让 Host 自动创建一条临时隧道并托管 8080 端口：
 
 ```bash
 devbridge host -p 8080
@@ -51,9 +51,9 @@ devbridge host -p 8080
 devbridge host -p 8080 -d "隧道描述信息" -e 8
 ```
 
-- `-p 8080`：托管本地 `8080` 端口。
-- `-d`：隧道描述，可选。
-- `-e`：有效期小时数，可选，默认 72 小时。
+- -p 8080：托管本地 8080 端口。
+- -d：隧道描述，可选。
+- -e：有效期小时数，可选，默认 72 小时。
 
 Host 成功后会输出隧道 ID 和访问地址，形如：
 
@@ -63,16 +63,16 @@ https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com
 
 ![使用临时隧道启动 Host](/images/host-connect/host-temporary-tunnel.png)
 
-上图展示的是 `devbridge host -p 8080` 的实际输出：自动创建隧道 `yf7oqwea` 并托管 `8080` 端口，输出对应的 Tunnel URL。
+上图展示的是 devbridge host -p 8080 的实际输出：自动创建隧道 yf7oqwea 并托管 8080 端口，输出对应的 Tunnel URL。
 
 ::: tip 临时隧道生命周期
-`devbridge host -p 8080` 创建的隧道在停止 Host 后仍然保留，不会自动删除。不再使用时应通过
-`devbridge delete <tunnelId>` 清理。
+devbridge host -p 8080 创建的隧道在停止 Host 后仍然保留，不会自动删除。不再使用时应通过
+devbridge delete \<tunnelId\> 清理。
 :::
 
 ### 方式二：使用已有隧道
 
-复用已有隧道前，必须确认该隧道存在，且已配置 `8080` 端口。
+复用已有隧道前，必须确认该隧道存在，且已配置 8080 端口。
 
 1. 列出当前工作空间的有效隧道：
 
@@ -88,7 +88,7 @@ https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com
    devbridge port list <tunnelId>
    ```
 
-   确认 `8080` 端口已经存在。如果不存在，先创建：
+   确认 8080 端口已经存在。如果不存在，先创建：
 
    ```bash
    devbridge port create <tunnelId> -p 8080 --protocol http
@@ -100,13 +100,13 @@ https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com
    devbridge host <tunnelId>
    ```
 
-   Host 会加载隧道中配置的全部端口并开始转发，不需要再指定 `-p`。
+   Host 会加载隧道中配置的全部端口并开始转发，不需要再指定 -p。
 
    ![使用已有隧道启动 Host](/images/host-connect/host-existing-tunnel.png)
 
-   上图展示的是 `devbridge host ghirszae` 的实际输出：Host 成功托管 `8080` 端口并输出隧道地址，运行过程中触发了一次自动重连，恢复后继续转发。
+   上图展示的是 devbridge host ghirszae 的实际输出：Host 成功托管 8080 端口并输出隧道地址，运行过程中触发了一次自动重连，恢复后继续转发。
 
-无论哪种方式，Host 都在前台持续运行。保持终端 2 不要关闭，按 `Ctrl+C` 可停止托管。
+无论哪种方式，Host 都在前台持续运行。保持终端 2 不要关闭，按 Ctrl+C 可停止托管。
 
 ## 第三步：在浏览器中访问隧道地址
 
@@ -120,19 +120,19 @@ https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com
 
 | 端口策略             | 浏览器访问行为                                      |
 | -------------------- | --------------------------------------------------- |
-| 允许匿名访问（`-a`） | 直接打开地址即可访问，不需要 DevBridge 身份或凭证。 |
+| 允许匿名访问（-a）   | 直接打开地址即可访问，不需要 DevBridge 身份或凭证。 |
 | 禁止匿名访问（默认） | 跳转到登录页，完成认证获取凭证后即可访问。          |
 
-端口的匿名访问策略在创建端口时通过 `-a` 或 `--deny-anonymous` 指定，详见[管理端口](../ports.md)。
+端口的匿名访问策略在创建端口时通过 -a 或 --deny-anonymous 指定，详见[管理端口](../ports.md)。
 
 ## 完整流程速查
 
-| 步骤 | 终端   | 命令                                                  | 说明                     |
-| ---- | ------ | ----------------------------------------------------- | ------------------------ |
-| 1    | 终端 1 | `python3 -m http.server 8080`                         | 启动本地 HTTP 服务。     |
-| 2    | 终端 2 | `devbridge host -p 8080`                              | 临时隧道托管（方式一）。 |
-| 2    | 终端 2 | `devbridge host <tunnelId>`                           | 已有隧道托管（方式二）。 |
-| 3    | 浏览器 | `https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com` | 直接访问隧道地址。       |
+| 步骤 | 终端   | 命令                                                    | 说明                     |
+| ---- | ------ | ------------------------------------------------------- | ------------------------ |
+| 1    | 终端 1 | python3 -m http.server 8080                             | 启动本地 HTTP 服务。     |
+| 2    | 终端 2 | devbridge host -p 8080                                  | 临时隧道托管（方式一）。 |
+| 2    | 终端 2 | devbridge host \<tunnelId\>                             | 已有隧道托管（方式二）。 |
+| 3    | 浏览器 | https://\<tunnelId\>-\<port\>.devbridge-s2.hwtunnel.com | 直接访问隧道地址。       |
 
 ## 常见问题
 
@@ -142,7 +142,7 @@ https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com
 
 ### 浏览器访问返回登录页
 
-端口配置为禁止匿名访问时，浏览器会跳转到登录页。完成认证后即可访问，或创建端口时使用 `-a` 允许匿名访问。
+端口配置为禁止匿名访问时，浏览器会跳转到登录页。完成认证后即可访问，或创建端口时使用 -a 允许匿名访问。
 
 ### 隧道 ID 遗忘
 
@@ -158,8 +158,8 @@ devbridge list
 
 完成验证后，按顺序停止：
 
-1. 在 Host 终端按 `Ctrl+C`；
-2. 在服务终端按 `Ctrl+C` 停止 `python3 -m http.server`。
+1. 在 Host 终端按 Ctrl+C；
+2. 在服务终端按 Ctrl+C 停止 python3 -m http.server。
 
 临时隧道停止 Host 后不会自动删除。确认不再使用后清理：
 

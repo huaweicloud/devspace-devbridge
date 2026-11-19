@@ -9,7 +9,7 @@ description: 排查 DevBridge 安装、登录、隧道、Host 和 Connect 问题
 
 ## 找不到 devbridge 命令
 
-确认默认安装目录存在，并加入当前终端的 `PATH`：
+确认默认安装目录存在，并加入当前终端的 PATH：
 
 ```bash
 export PATH="$HOME/.huawei/bin:$PATH"
@@ -31,8 +31,8 @@ devbridge version
 
 1. 当前网络是否允许访问安装地址；
 2. DNS 和 HTTPS 代理是否正常；
-3. 如果使用 Bash 安装方式，`curl` 是否可用；
-4. 如果使用 PowerShell 安装方式，`irm` 是否可用；
+3. 如果使用 Bash 安装方式，curl 是否可用；
+4. 如果使用 PowerShell 安装方式，irm 是否可用；
 5. 安装地址是否完整且没有被换行或截断。
 
 不要在下载失败时改用来源不明的安装脚本。
@@ -52,7 +52,7 @@ devbridge auth logout
 devbridge auth login
 ```
 
-使用 API Key 登录时，确认 API Key 有效且未过期。通过环境变量传入时，检查 `HW_API_KEY` 是否已正确设置。
+使用 API Key 登录时，确认 API Key 有效且未过期。通过环境变量传入时，检查 HW_API_KEY 是否已正确设置。
 
 ## 找不到隧道
 
@@ -82,9 +82,9 @@ devbridge list
 
 依次确认：
 
-1. `devbridge auth status` 显示凭证有效；
-2. `devbridge show <tunnelId>` 能读取隧道；
-3. `devbridge port list <tunnelId>` 包含需要托管的端口；
+1. devbridge auth status 显示凭证有效；
+2. devbridge show \<tunnelId\> 能读取隧道；
+3. devbridge port list \<tunnelId\> 包含需要托管的端口；
 4. 本地服务确实监听该端口；
 5. 当前网络允许访问 DevBridge。
 
@@ -94,7 +94,7 @@ devbridge list
 curl -v http://127.0.0.1:8080
 ```
 
-如果端口使用 `https`，应使用 HTTPS 检查，并确认证书和本地服务配置正确。
+如果端口使用 https，应使用 HTTPS 检查，并确认证书和本地服务配置正确。
 
 ## Connect 无法访问服务
 
@@ -117,7 +117,7 @@ Connect 自动重连只处理短暂网络中断，不能恢复已删除或已过
 devbridge port show <tunnelId> -p 8080
 ```
 
-如果本地服务是普通 HTTP，协议应为 `http`；本地服务自身完成 TLS 时使用 `https`；只有确实需要自动识别时使用 `auto`。
+如果本地服务是普通 HTTP，协议应为 http；本地服务自身完成 TLS 时使用 https；只有确实需要自动识别时使用 auto。
 
 当前 CLI 不支持直接修改已有端口的协议。需要修改时，删除端口并使用正确协议重新创建：
 
@@ -130,7 +130,7 @@ devbridge port create <tunnelId> -p 8080 --protocol http
 
 收集以下非敏感信息：
 
-- `devbridge version`；
+- devbridge version；
 - 操作系统和架构；
 - 执行的命令，不包含 API Key 和令牌；
 - 隧道 ID、端口和协议；

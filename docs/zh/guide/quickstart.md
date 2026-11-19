@@ -5,11 +5,11 @@ description: 安装 DevBridge CLI，登录并通过开发隧道托管本地服�
 
 # 创建并托管隧道
 
-<p class="lead">在本快速入门中，你将托管本机的 `8080` 端口，然后从另一台设备连接隧道。</p>
+<p class="lead">在本快速入门中，你将托管本机的 8080 端口，然后从另一台设备连接隧道。</p>
 
 ## 准备工作
 
-- 已安装 DevBridge CLI，并确认 `devbridge version` 可以正常执行，参阅[安装 DevBridge CLI](./install.md)；
+- 已安装 DevBridge CLI，并确认 devbridge version 可以正常执行，参阅[安装 DevBridge CLI](./install.md)；
 - 已完成登录：个人环境使用交互登录，自动化环境使用 API Key，参阅[登录与凭证](./authentication.md)；
 - 另一台设备可用于验证 Connect 模式（需同样安装并登录）。
 
@@ -41,11 +41,11 @@ Host 成功后会输出隧道 ID 和访问地址。隧道地址采用以下格�
 https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com
 ```
 
-保持 Host 进程运行。网络短暂中断时，CLI 会自动尝试恢复连接；按 `Ctrl+C` 停止本次托管。
+保持 Host 进程运行。网络短暂中断时，CLI 会自动尝试恢复连接；按 Ctrl+C 停止本次托管。
 
 ::: tip 重复使用隧道
 需要保留固定地址或配置多个端口时，先创建持久隧道，再使用
-`devbridge host <tunnelId>` 托管其中配置的全部端口。详见[管理隧道](./tunnels.md)。
+devbridge host \<tunnelId\> 托管其中配置的全部端口。详见[管理隧道](./tunnels.md)。
 :::
 
 ## 从另一台设备连接
@@ -62,7 +62,7 @@ Connect 会读取隧道端口配置并建立本地映射。连接建立后，通
 http://localhost:8080
 ```
 
-保持 Connect 进程运行；按 `Ctrl+C` 停止连接。有关多端口和重连行为，请参阅
+保持 Connect 进程运行；按 Ctrl+C 停止连接。有关多端口和重连行为，请参阅
 [Connect：连接远程服务](./connect.md)。
 
 ## 下一步

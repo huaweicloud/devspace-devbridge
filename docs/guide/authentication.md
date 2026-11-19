@@ -40,7 +40,7 @@ You can create and manage API keys on the DevBridge management page:
 
 > **API key management page**: <https://devstation.connect.huaweicloud.com/space/devbridge?tab=apikey>
 
-After creating a new API key on that page, copy it and inject it through the `HW_API_KEY` environment variable.
+After creating a new API key on that page, copy it and inject it through the HW_API_KEY environment variable.
 
 ## Check login status
 
@@ -65,7 +65,7 @@ Don't delete the configuration directory as a substitute for logging out, unless
 - Use interactive login on personal terminals.
 - Use an API key for automated tasks, injected through an environment variable.
 - Don't pass API keys through chat, logs, or support tickets.
-- Don't commit `~/.huawei/devbridge`.
+- Don't commit ~/.huawei/devbridge.
 - If you suspect credentials have leaked, log out, revoke them, and reissue immediately.
 - Host and Connect tokens are scoped to their corresponding tunnel and connection direction.
 

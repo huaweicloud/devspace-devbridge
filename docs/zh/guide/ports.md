@@ -21,33 +21,33 @@ devbridge port create <tunnelId> -p 8080 --protocol http --deny-anonymous
 devbridge port create <tunnelId> -p 8080 --protocol http -a
 ```
 
-创建一个使用默认 `auto` 协议的端口：
+创建一个使用默认 auto 协议的端口：
 
 ```bash
 devbridge port create <tunnelId> -p 3000
 ```
 
-创建时必须提供端口，协议默认为 `auto`。端口范围为 `1` 到 `65535`，同一条隧道内不能重复。
+创建时必须提供端口，协议默认为 auto。端口范围为 1 到 65535，同一条隧道内不能重复。
 
 ## 选择协议
 
-| 协议    | 使用场景                 |
-| ------- | ------------------------ |
-| `http`  | 本地服务接收普通 HTTP。  |
-| `https` | 本地服务自身提供 HTTPS。 |
-| `auto`  | 由连接端自动识别协议。   |
+| 协议  | 使用场景                 |
+| ----- | ------------------------ |
+| http  | 本地服务接收普通 HTTP。  |
+| https | 本地服务自身提供 HTTPS。 |
+| auto  | 由连接端自动识别协议。   |
 
 协议描述的是 Host 侧本地服务。选择错误可能导致握手失败、连接中断或返回不可识别的数据。
 
 ## 控制匿名访问
 
-`-a`、`--allow-anonymous` 表示该端口可匿名访问：
+-a、--allow-anonymous 表示该端口可匿名访问：
 
 ```bash
 devbridge port create <tunnelId> -p 8080 --protocol http -a
 ```
 
-`--deny-anonymous` 表示该端口必须经过身份认证：
+--deny-anonymous 表示该端口必须经过身份认证：
 
 ```bash
 devbridge port create <tunnelId> -p 8080 --protocol http --deny-anonymous
@@ -66,7 +66,7 @@ devbridge port create <tunnelId> -p 8080 --protocol http --deny-anonymous
 
 ### 浏览器访问行为
 
-在浏览器中直接打开隧道地址 `https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com` 时，行为取决于端口的匿名访问策略：
+在浏览器中直接打开隧道地址 https://\<tunnelId\>-\<port\>.devbridge-s2.hwtunnel.com 时，行为取决于端口的匿名访问策略：
 
 - **允许匿名访问**：直接打开地址即可访问，不需要登录或凭证。
 - **禁止匿名访问**：跳转到登录页，完成认证获取凭证后即可访问。
@@ -109,7 +109,7 @@ devbridge port update <tunnelId> -p 8080 -a
 ```
 
 更新命令只修改匿名访问策略。当前 CLI 不支持直接修改已有端口的协议；需要变更协议时，
-先删除端口，再使用新协议重新创建。端口不支持描述字段，因此端口命令中没有 `-d`。
+先删除端口，再使用新协议重新创建。端口不支持描述字段，因此端口命令中没有 -d。
 
 ## 删除端口
 

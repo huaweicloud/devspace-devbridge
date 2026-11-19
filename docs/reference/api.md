@@ -16,14 +16,14 @@ https://bridge.developer.myhuaweicloud.com   # tunnels, ports, tokens, limits
 https://ns.developer.myhuaweicloud.com        # /v1/api-keys/check
 ```
 
-Paths in this document include the `/v1` version prefix. Every request carries the full API key:
+Paths in this document include the /v1 version prefix. Every request carries the full API key:
 
 ```http
 X-API-Key: devbridge_<API key content>
 ```
 
 Create a DevBridge key on the [API key management page](https://devstation.connect.huaweicloud.com/space/devbridge?tab=apikey)
-and put the full value into `X-API-Key`.
+and put the full value into X-API-Key.
 
 ```bash
 export API_BASE='https://bridge.developer.myhuaweicloud.com'
@@ -34,16 +34,16 @@ export DEVBRIDGE_API_KEY='<full DevBridge API key>'
 curl -k -i -X POST "$NS_API_BASE/v1/api-keys/check" -H "X-API-Key: $DEVBRIDGE_API_KEY"
 ```
 
-A successful request returns `204 No Content`. All requests below carry `X-API-Key`;
+A successful request returns 204 No Content. All requests below carry X-API-Key;
 requests and responses use JSON with camelCase fields.
 
-The `-k` in the examples skips server certificate validation. For production calls,
-keep certificate validation on, use a system-trusted CA, or pass a CA certificate via `--cacert`.
+The -k in the examples skips server certificate validation. For production calls,
+keep certificate validation on, use a system-trusted CA, or pass a CA certificate via --cacert.
 
 ## Responses and errors
 
-Business endpoints return `200` on success, with the response body as the corresponding object, array, or boolean.
-The authentication check returns `204` on success.
+Business endpoints return 200 on success, with the response body as the corresponding object, array, or boolean.
+The authentication check returns 204 on success.
 
 Failures use the corresponding HTTP 4xx or 5xx status code:
 
@@ -56,41 +56,41 @@ Failures use the corresponding HTTP 4xx or 5xx status code:
 }
 ```
 
-`error.code` and `error.message` are always present; `target` is optional and indicates the error field.
-Parameter-validation failures may include a `details` array, each item containing `code`, `target`, and `message`.
-Use the HTTP status and `error.code` to decide how to handle the error; `message` is for display only.
+error.code and error.message are always present; target is optional and indicates the error field.
+Parameter-validation failures may include a details array, each item containing code, target, and message.
+Use the HTTP status and error.code to decide how to handle the error; message is for display only.
 
-| HTTP status | Common error codes        | Meaning                                                             |
-| ----------- | ------------------------- | ------------------------------------------------------------------- |
-| 400         | `40000`, `11001`          | Invalid parameter or port.                                          |
-| 401         | `40100`                   | Key missing, invalid, or the corresponding identity is unavailable. |
-| 403         | `40300`, `10005`, `12001` | Scope not allowed, no access to the tunnel, or account disabled.    |
-| 404         | `10001`, `10002`, `11003` | Cluster, tunnel, or port not found.                                 |
-| 409         | `10003`, `10007`, `11002` | Tunnel ID, name, or port conflict.                                  |
-| 410         | `10004`                   | Tunnel has expired.                                                 |
-| 429         | `10006`, `11005`, `12002` | Tunnel count, port count, or monthly traffic quota reached.         |
-| 429         | `42900`                   | Requests too frequent; slow down and retry with backoff.            |
-| 500         | `50000`, `30001`          | Internal processing or token generation failed.                     |
-| 503         | `50300`                   | Service temporarily unavailable; retry later.                       |
+| HTTP status | Common error codes  | Meaning                                                             |
+| ----------- | ------------------- | ------------------------------------------------------------------- |
+| 400         | 40000, 11001        | Invalid parameter or port.                                          |
+| 401         | 40100               | Key missing, invalid, or the corresponding identity is unavailable. |
+| 403         | 40300, 10005, 12001 | Scope not allowed, no access to the tunnel, or account disabled.    |
+| 404         | 10001, 10002, 11003 | Cluster, tunnel, or port not found.                                 |
+| 409         | 10003, 10007, 11002 | Tunnel ID, name, or port conflict.                                  |
+| 410         | 10004               | Tunnel has expired.                                                 |
+| 429         | 10006, 11005, 12002 | Tunnel count, port count, or monthly traffic quota reached.         |
+| 429         | 42900               | Requests too frequent; slow down and retry with backoff.            |
+| 500         | 50000, 30001        | Internal processing or token generation failed.                     |
+| 503         | 50300               | Service temporarily unavailable; retry later.                       |
 
 ## API overview
 
-| Method | Path                                      | Purpose                                                   |
-| ------ | ----------------------------------------- | --------------------------------------------------------- |
-| POST   | `/v1/api-keys/check`                      | Verify credentials (on `ns.developer.myhuaweicloud.com`). |
-| POST   | `/v1/tunnels`                             | Create a tunnel.                                          |
-| GET    | `/v1/tunnels`                             | Query the current user's valid tunnels.                   |
-| DELETE | `/v1/tunnels`                             | Delete all of the current user's tunnels.                 |
-| GET    | `/v1/tunnels/{tunnelId}`                  | Query details and runtime status.                         |
-| PUT    | `/v1/tunnels/{tunnelId}`                  | Update a tunnel.                                          |
-| DELETE | `/v1/tunnels/{tunnelId}`                  | Delete a specific tunnel.                                 |
-| POST   | `/v1/tunnels/{tunnelId}/token?scope=host` | Issue a host or connect token.                            |
-| POST   | `/v1/tunnels/{tunnelId}/ports`            | Create a port.                                            |
-| GET    | `/v1/tunnels/{tunnelId}/ports`            | Query the port list.                                      |
-| GET    | `/v1/tunnels/{tunnelId}/ports/{port}`     | Query a port's details.                                   |
-| PUT    | `/v1/tunnels/{tunnelId}/ports/{port}`     | Update a port policy.                                     |
-| DELETE | `/v1/tunnels/{tunnelId}/ports/{port}`     | Delete a port.                                            |
-| GET    | `/v1/limits`                              | Query limits and balance.                                 |
+| Method | Path                                    | Purpose                                                 |
+| ------ | --------------------------------------- | ------------------------------------------------------- |
+| POST   | /v1/api-keys/check                      | Verify credentials (on ns.developer.myhuaweicloud.com). |
+| POST   | /v1/tunnels                             | Create a tunnel.                                        |
+| GET    | /v1/tunnels                             | Query the current user's valid tunnels.                 |
+| DELETE | /v1/tunnels                             | Delete all of the current user's tunnels.               |
+| GET    | /v1/tunnels/{tunnelId}                  | Query details and runtime status.                       |
+| PUT    | /v1/tunnels/{tunnelId}                  | Update a tunnel.                                        |
+| DELETE | /v1/tunnels/{tunnelId}                  | Delete a specific tunnel.                               |
+| POST   | /v1/tunnels/{tunnelId}/token?scope=host | Issue a host or connect token.                          |
+| POST   | /v1/tunnels/{tunnelId}/ports            | Create a port.                                          |
+| GET    | /v1/tunnels/{tunnelId}/ports            | Query the port list.                                    |
+| GET    | /v1/tunnels/{tunnelId}/ports/{port}     | Query a port's details.                                 |
+| PUT    | /v1/tunnels/{tunnelId}/ports/{port}     | Update a port policy.                                   |
+| DELETE | /v1/tunnels/{tunnelId}/ports/{port}     | Delete a port.                                          |
+| GET    | /v1/limits                              | Query limits and balance.                               |
 
 ## Create a tunnel
 
@@ -107,11 +107,11 @@ Content-Type: application/json
 
 | Request field | Type    | Required | Description                                                                             |
 | ------------- | ------- | -------- | --------------------------------------------------------------------------------------- |
-| `name`        | string  | Yes      | 1–128 characters, unique per user.                                                      |
-| `description` | string  | No       | Up to 512 characters.                                                                   |
-| `clusterId`   | string  | No       | Cluster ID for the current region; defaults to the server's default cluster if omitted. |
-| `expiration`  | integer | No       | Expiration in hours, default 72, range 1–720.                                           |
-| `type`        | string  | No       | `bridge` or `devbox`, default `bridge`.                                                 |
+| name          | string  | Yes      | 1–128 characters, unique per user.                                                      |
+| description   | string  | No       | Up to 512 characters.                                                                   |
+| clusterId     | string  | No       | Cluster ID for the current region; defaults to the server's default cluster if omitted. |
+| expiration    | integer | No       | Expiration in hours, default 72, range 1–720.                                           |
+| type          | string  | No       | bridge or devbox, default bridge.                                                       |
 
 Success response:
 
@@ -131,13 +131,13 @@ Success response:
 }
 ```
 
-`url` is the tunnel domain; `description` may be `null`.
-`expirationHours` is the fixed duration setting, and `tunnelExpiration` is the dynamically computed expiration time.
+url is the tunnel domain; description may be null.
+expirationHours is the fixed duration setting, and tunnelExpiration is the dynamically computed expiration time.
 After creation, obtain connection tokens via the token endpoint.
 
 ## Query tunnels
 
-`GET /v1/tunnels` returns the current user's valid tunnels and can be filtered with `?clusterId=...`:
+GET /v1/tunnels returns the current user's valid tunnels and can be filtered with ?clusterId=...:
 
 ```json
 [
@@ -156,8 +156,8 @@ After creation, obtain connection tokens via the token endpoint.
 ]
 ```
 
-A list response is either an empty array or an array of tunnels. `GET /v1/tunnels/{tunnelId}` returns the same fields as creation,
-plus the optional runtime `status`. Here is what `status` contains:
+A list response is either an empty array or an array of tunnels. GET /v1/tunnels/{tunnelId} returns the same fields as creation,
+plus the optional runtime status. Here is what status contains:
 
 ```json
 {
@@ -171,8 +171,8 @@ plus the optional runtime `status`. Here is what `status` contains:
 }
 ```
 
-`reportedAt` is the time the status was updated, and `clientConnectionCount` is the number of client connections.
-The `bandwidthUsed` in details is the settled total upload and download traffic, updated every minute.
+reportedAt is the time the status was updated, and clientConnectionCount is the number of client connections.
+The bandwidthUsed in details is the settled total upload and download traffic, updated every minute.
 
 ## Update and delete a tunnel
 
@@ -186,22 +186,22 @@ Content-Type: application/json
 }
 ```
 
-`name`, `description`, `expiration`, and `type` are all optional; omit them or pass `null` to leave them unchanged,
-and pass an empty string to clear the description. Passing `expiration` recomputes the expiration time from now.
-A successful update returns the JSON boolean `true` directly.
+name, description, expiration, and type are all optional; omit them or pass null to leave them unchanged,
+and pass an empty string to clear the description. Passing expiration recomputes the expiration time from now.
+A successful update returns the JSON boolean true directly.
 
-The following delete endpoints also return `true`, while removing ports and runtime status:
+The following delete endpoints also return true, while removing ports and runtime status:
 
 ```text
 DELETE /v1/tunnels/{tunnelId}
 DELETE /v1/tunnels
 ```
 
-`DELETE /v1/tunnels` deletes all of the current user's tunnels, including expired ones.
+DELETE /v1/tunnels deletes all of the current user's tunnels, including expired ones.
 
 ## Issue a tunnel token
 
-Each call issues a new token. `scope` is a required query parameter, either `host` or `connect`:
+Each call issues a new token. scope is a required query parameter, either host or connect:
 
 ```bash
 curl -k -X POST "$API_BASE/v1/tunnels/aaaadysa/token?scope=host" -H "X-API-Key: $DEVBRIDGE_API_KEY"
@@ -217,7 +217,7 @@ curl -k -X POST "$API_BASE/v1/tunnels/aaaadysa/token?scope=host" -H "X-API-Key: 
 }
 ```
 
-`lifetime` is the validity duration in seconds; `expiration` is the Unix time (in seconds) at which the token expires.
+lifetime is the validity duration in seconds; expiration is the Unix time (in seconds) at which the token expires.
 When establishing a connection, both the tunnel and the token must be within their validity periods. Keep tokens safe.
 
 ## Create and query ports
@@ -233,8 +233,8 @@ Content-Type: application/json
 }
 ```
 
-All three fields are required: the port ranges from 1 to 65535; `protocol` is `http`, `https`, or `auto`;
-and `allowAnonymous` controls whether anonymous access to the port is allowed.
+All three fields are required: the port ranges from 1 to 65535; protocol is http, https, or auto;
+and allowAnonymous controls whether anonymous access to the port is allowed.
 
 Success response:
 
@@ -248,8 +248,8 @@ Success response:
 }
 ```
 
-`GET /v1/tunnels/{tunnelId}/ports` returns an array of ports, `[]` when empty.
-`GET /v1/tunnels/{tunnelId}/ports/{port}` returns a single port object.
+GET /v1/tunnels/{tunnelId}/ports returns an array of ports, [] when empty.
+GET /v1/tunnels/{tunnelId}/ports/{port} returns a single port object.
 
 ## Update and delete a port
 
@@ -262,14 +262,14 @@ Content-Type: application/json
 }
 ```
 
-`protocol` and `allowAnonymous` are both optional; omit them or pass `null` to leave them unchanged.
-The `port` in the path specifies the target port. On success, returns the updated port object.
+protocol and allowAnonymous are both optional; omit them or pass null to leave them unchanged.
+The port in the path specifies the target port. On success, returns the updated port object.
 
-`DELETE /v1/tunnels/{tunnelId}/ports/{port}` returns the JSON boolean `true` on success.
+DELETE /v1/tunnels/{tunnelId}/ports/{port} returns the JSON boolean true on success.
 
 ## Limits and balance
 
-`GET /v1/limits` returns:
+GET /v1/limits returns:
 
 ```json
 {
@@ -283,14 +283,14 @@ The `port` in the path specifies the target port. On success, returns the update
 }
 ```
 
-Example quotas are for illustration only; use the actual response. `activeTunnels` is the current user's number of valid tunnels;
-`maxTunnels` is the limit shared by all users under the account.
-`quotaBytes` and `remainingBytes` are also account-shared monthly quota and balance, reset at 00:00 Beijing time on the 1st of each month;
-`resetAt` is the Unix time (in seconds) of the next reset.
+Example quotas are for illustration only; use the actual response. activeTunnels is the current user's number of valid tunnels;
+maxTunnels is the limit shared by all users under the account.
+quotaBytes and remainingBytes are also account-shared monthly quota and balance, reset at 00:00 Beijing time on the 1st of each month;
+resetAt is the Unix time (in seconds) of the next reset.
 
 ## Field conventions
 
-- `tunnelId` is the tunnel identifier; pass it in the same-named path parameter.
-- The request `expiration` and response `expirationHours` are in hours.
-- `tunnelExpiration`, `created`, `reportedAt`, `resetAt`, and the token `expiration` use Unix time in seconds; convert to local time for display.
+- tunnelId is the tunnel identifier; pass it in the same-named path parameter.
+- The request expiration and response expirationHours are in hours.
+- tunnelExpiration, created, reportedAt, resetAt, and the token expiration use Unix time in seconds; convert to local time for display.
 - Traffic fields are in bytes; rate fields are in bytes per second.

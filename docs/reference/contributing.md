@@ -53,7 +53,7 @@ DevBridge is a monorepo with two components, each in its own top-level directory
 
 ### Install Go (>= 1.26)
 
-The CLI's `go.mod` declares `go 1.26.0`. Install Go 1.26 or later.
+The CLI's go.mod declares go 1.26.0. Install Go 1.26 or later.
 
 ```bash
 # Option 1: official binary (recommended)
@@ -150,15 +150,15 @@ cd go-sdk && go build ./...
 
 | Rule            | Tool / notes                                                                                            |
 | --------------- | ------------------------------------------------------------------------------------------------------- |
-| Formatting      | `gofmt -s -w .` or `go fmt ./...` — run before every commit                                             |
-| Static analysis | `go vet ./...`                                                                                          |
-| Lint            | `golangci-lint run` (CLI uses `cli/.golangci.yml`)                                                      |
+| Formatting      | gofmt -s -w . or go fmt ./... — run before every commit                                                 |
+| Static analysis | go vet ./...                                                                                            |
+| Lint            | golangci-lint run (CLI uses cli/.golangci.yml)                                                          |
 | Naming          | Exported identifiers use PascalCase, unexported use camelCase, package names are lowercase single words |
-| Import order    | stdlib → third-party → internal packages, sorted with `goimports`                                       |
-| Error handling  | Never ignore error return values; do not discard errors with `_`                                        |
-| Comments        | Exported functions/types must have `// Name ...` doc comments                                           |
+| Import order    | stdlib → third-party → internal packages, sorted with goimports                                         |
+| Error handling  | Never ignore error return values; do not discard errors with _                                          |
+| Comments        | Exported functions/types must have // Name ... doc comments                                             |
 
-> **golangci-lint config**: the current `cli/.golangci.yml` disables strict linters such as `errcheck`, `gosec`, and `lll`. New code should follow the spirit of these rules even when the tool does not enforce them.
+> **golangci-lint config**: the current cli/.golangci.yml disables strict linters such as errcheck, gosec, and lll. New code should follow the spirit of these rules even when the tool does not enforce them.
 
 ### General conventions
 
@@ -177,7 +177,7 @@ cd cli
 make test         # equivalent to go test ./...
 ```
 
-> **Current status**: the CLI has no unit test files yet. When adding features, please include tests in the same directory as the code under test, named `*_test.go`.
+> **Current status**: the CLI has no unit test files yet. When adding features, please include tests in the same directory as the code under test, named *_test.go.
 
 ### Go SDK tests
 
@@ -191,26 +191,26 @@ go vet ./...      # static analysis
 
 Existing test files:
 
-| File                | Coverage                         |
-| ------------------- | -------------------------------- |
-| `tunnel_test.go`    | Tunnel creation & management     |
-| `websocket_test.go` | WebSocket connection & reconnect |
-| `example_test.go`   | Public API usage examples        |
+| File              | Coverage                         |
+| ----------------- | -------------------------------- |
+| tunnel_test.go    | Tunnel creation & management     |
+| websocket_test.go | WebSocket connection & reconnect |
+| example_test.go   | Public API usage examples        |
 
-New public APIs must include a corresponding `_test.go` file.
+New public APIs must include a corresponding _test.go file.
 
 ---
 
 ## Branching strategy
 
-| Branch    | Purpose            | Direct push?       |
-| --------- | ------------------ | ------------------ |
-| `master`  | Stable release     | ❌ Merge only      |
-| `develop` | Integration branch | ❌ PR merge only   |
-| `feat/*`  | Feature branch     | ✅ (personal fork) |
-| `fix/*`   | Bug fix branch     | ✅ (personal fork) |
+| Branch  | Purpose            | Direct push?       |
+| ------- | ------------------ | ------------------ |
+| master  | Stable release     | ❌ Merge only      |
+| develop | Integration branch | ❌ PR merge only   |
+| feat/*  | Feature branch     | ✅ (personal fork) |
+| fix/*   | Bug fix branch     | ✅ (personal fork) |
 
-**PR target branch**: `develop` by default. Only maintainers merge to `master` during release windows.
+**PR target branch**: develop by default. Only maintainers merge to master during release windows.
 
 ---
 
@@ -224,23 +224,23 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) format:
 
 ### type values
 
-| type       | Description                        |
-| ---------- | ---------------------------------- |
-| `feat`     | New feature                        |
-| `fix`      | Bug fix                            |
-| `docs`     | Documentation change               |
-| `style`    | Code formatting (no logic change)  |
-| `refactor` | Refactoring                        |
-| `test`     | Test-related                       |
-| `chore`    | Build, tooling, dependency changes |
+| type     | Description                        |
+| -------- | ---------------------------------- |
+| feat     | New feature                        |
+| fix      | Bug fix                            |
+| docs     | Documentation change               |
+| style    | Code formatting (no logic change)  |
+| refactor | Refactoring                        |
+| test     | Test-related                       |
+| chore    | Build, tooling, dependency changes |
 
 ### scope values
 
 | scope | Component    |
 | ----- | ------------ |
-| `cli` | CLI tool     |
-| `sdk` | Go SDK       |
-| `ci`  | CI/CD config |
+| cli   | CLI tool     |
+| sdk   | Go SDK       |
+| ci    | CI/CD config |
 
 ### Examples
 
@@ -283,11 +283,11 @@ git push origin feat/your-feature
 
 ### 4. Open a PR on GitHub
 
-- **Target branch**: `develop`
+- **Target branch**: develop
 - **PR title**: follow the commit convention format
 - **PR description** must include:
   - **Change summary**: what you did
-  - **Related Issue**: e.g. `Closes #123`
+  - **Related Issue**: e.g. Closes #123
   - **How to test**: how to verify
   - **Screenshots**: attach screenshots for CLI output changes
 
@@ -296,22 +296,22 @@ git push origin feat/your-feature
 - [ ] All CI passes
 - [ ] New features include tests
 - [ ] No new lint warnings introduced
-- [ ] Dependency changes pass `go mod tidy`
+- [ ] Dependency changes pass go mod tidy
 
 ### Automatic CI checks
 
 Opening a PR automatically triggers the following CI:
 
-| Workflow        | Trigger                  | Checks                                 |
-| --------------- | ------------------------ | -------------------------------------- |
-| `build-cli.yml` | PR to develop/master     | GoReleaser snapshot build verification |
-| `build-sdk.yml` | PR modifying `go-sdk/**` | `go build` + `go vet` + `go test`      |
+| Workflow      | Trigger                | Checks                                 |
+| ------------- | ---------------------- | -------------------------------------- |
+| build-cli.yml | PR to develop/master   | GoReleaser snapshot build verification |
+| build-sdk.yml | PR modifying go-sdk/** | go build + go vet + go test            |
 
 ---
 
 ## CLI development guide
 
-The CLI lives in `cli/` and is built with Go + cobra.
+The CLI lives in cli/ and is built with Go + cobra.
 
 ### Local build
 
@@ -346,19 +346,19 @@ make build-all    # builds 6 platform binaries + SHA256 checksums
 
 ### Code organization conventions
 
-- Command definitions go in `cmd/`, one file per subcommand
-- Business logic goes in `internal/`, organized by domain (`auth`, `config`, `i18n`, `netutil`)
-- Do not write complex business logic in `cmd/` — keep the command layer thin
-- New dependencies must be justified in the PR, and `go mod tidy` must produce a consistent `go.sum`
+- Command definitions go in cmd/, one file per subcommand
+- Business logic goes in internal/, organized by domain (auth, config, i18n, netutil)
+- Do not write complex business logic in cmd/ — keep the command layer thin
+- New dependencies must be justified in the PR, and go mod tidy must produce a consistent go.sum
 
 ### Environment variables
 
 CLI configuration priority: ldflags (build-time) > hardcoded defaults.
 
-| Variable         | Scope | Purpose                                       | Required? |
-| ---------------- | ----- | --------------------------------------------- | --------- |
-| `HW_API_KEY`     | Both  | API key for REST API authentication           | Yes       |
-| `DEVBRIDGE_LANG` | CLI   | Override interface language (e.g. `zh`, `en`) | No        |
+| Variable       | Scope | Purpose                                   | Required? |
+| -------------- | ----- | ----------------------------------------- | --------- |
+| HW_API_KEY     | Both  | API key for REST API authentication       | Yes       |
+| DEVBRIDGE_LANG | CLI   | Override interface language (e.g. zh, en) | No        |
 
 Create a DevBridge key on the [API key management page](https://devstation.connect.huaweicloud.com/space/devbridge?tab=apikey), then set the environment variable:
 
@@ -369,25 +369,25 @@ export DEVBRIDGE_LANG=zh
 
 ### Build-time address injection (ldflags)
 
-The REST API base URL, login page URL, and WebSocket gateway address are injected at build time via `-ldflags`. The Makefile exposes four variables:
+The REST API base URL, login page URL, and WebSocket gateway address are injected at build time via -ldflags. The Makefile exposes four variables:
 
-| Makefile variable | Injected into                | Purpose                       |
-| ----------------- | ---------------------------- | ----------------------------- |
-| `SERVER_DOMAIN`   | `config.DefaultServerDomain` | REST API server domain        |
-| `LOGIN_URL`       | `auth.LoginURL`              | Browser login page URL        |
-| `GATEWAY_ADDR`    | `config.ServerAddr`          | WebSocket gateway (host:port) |
-| `CLUSTER_DOMAIN`  | `config.ServerHost`          | WebSocket gateway SNI host    |
+| Makefile variable | Injected into              | Purpose                       |
+| ----------------- | -------------------------- | ----------------------------- |
+| SERVER_DOMAIN     | config.DefaultServerDomain | REST API server domain        |
+| LOGIN_URL         | auth.LoginURL              | Browser login page URL        |
+| GATEWAY_ADDR      | config.ServerAddr          | WebSocket gateway (host:port) |
+| CLUSTER_DOMAIN    | config.ServerHost          | WebSocket gateway SNI host    |
 
-The full REST API base URL is the bare `SERVER_DOMAIN`; the SDK prepends a `/v1` version prefix to each request path.
+The full REST API base URL is the bare SERVER_DOMAIN; the SDK prepends a /v1 version prefix to each request path.
 
-The production build (`build-prod`) injects these addresses:
+The production build (build-prod) injects these addresses:
 
-| Variable         | `build-prod`                                 |
-| ---------------- | -------------------------------------------- |
-| `SERVER_DOMAIN`  | `https://bridge.developer.myhuaweicloud.com` |
-| `LOGIN_URL`      | `https://devstation.connect.huaweicloud.com` |
-| `GATEWAY_ADDR`   | `gateway.devbridge-s2.hwtunnel.com:443`      |
-| `CLUSTER_DOMAIN` | `devbridge-s2.hwtunnel.com`                  |
+| Variable       | build-prod                                 |
+| -------------- | ------------------------------------------ |
+| SERVER_DOMAIN  | https://bridge.developer.myhuaweicloud.com |
+| LOGIN_URL      | https://devstation.connect.huaweicloud.com |
+| GATEWAY_ADDR   | gateway.devbridge-s2.hwtunnel.com:443      |
+| CLUSTER_DOMAIN | devbridge-s2.hwtunnel.com                  |
 
 To target a custom environment, override any variable:
 
@@ -395,11 +395,11 @@ To target a custom environment, override any variable:
 make build-dev SERVER_DOMAIN=https://my-test-server.com LOGIN_URL=https://my-login.com
 ```
 
-When modifying these variables, update both `Makefile` and `.goreleaser.yaml` (or `.goreleaser.test.yaml`).
+When modifying these variables, update both Makefile and .goreleaser.yaml (or .goreleaser.test.yaml).
 
 ### Relationship to the API documentation
 
-The REST API in [REST API](/reference/api) is served at the bare `SERVER_DOMAIN`, and the SDK prepends a `/v1` version prefix to each endpoint path:
+The REST API in [REST API](/reference/api) is served at the bare SERVER_DOMAIN, and the SDK prepends a /v1 version prefix to each endpoint path:
 
 ```text
 https://bridge.developer.myhuaweicloud.com  +  /v1/tunnels
@@ -410,7 +410,7 @@ https://bridge.developer.myhuaweicloud.com  +  /v1/tunnels
 
 ## Go SDK development guide
 
-The Go SDK lives in `go-sdk/` and enables third-party applications to integrate DevBridge capabilities.
+The Go SDK lives in go-sdk/ and enables third-party applications to integrate DevBridge capabilities.
 
 ### Local build and tests
 
@@ -423,9 +423,9 @@ go vet ./...
 
 ### SDK configuration
 
-SDK configuration priority: `Config` struct > environment variable > hardcoded defaults.
+SDK configuration priority: Config struct > environment variable > hardcoded defaults.
 
-Third-party applications configure the SDK via the `Config` struct. Empty fields fall back to environment variables and then to hardcoded defaults:
+Third-party applications configure the SDK via the Config struct. Empty fields fall back to environment variables and then to hardcoded defaults:
 
 ```go
 import devbridge "github.com/huaweicloud/devspace-devbridge/go-sdk"
@@ -441,20 +441,20 @@ client := devbridge.New(cfg)
 
 SDK default constants:
 
-| Constant             | Value                                        |
-| -------------------- | -------------------------------------------- |
-| `DefaultAPIBaseURL`  | `https://bridge.developer.myhuaweicloud.com` |
-| `DefaultGatewayAddr` | `gateway.devbridge-s2.hwtunnel.com:443`      |
-| `DefaultGatewayHost` | `devbridge-s2.hwtunnel.com`                  |
-| `DefaultClusterID`   | `devbridge-s2` (overridable via ldflags)     |
+| Constant           | Value                                      |
+| ------------------ | ------------------------------------------ |
+| DefaultAPIBaseURL  | https://bridge.developer.myhuaweicloud.com |
+| DefaultGatewayAddr | gateway.devbridge-s2.hwtunnel.com:443      |
+| DefaultGatewayHost | devbridge-s2.hwtunnel.com                  |
+| DefaultClusterID   | devbridge-s2 (overridable via ldflags)     |
 
 ### Code organization conventions
 
-- The SDK is an independent Go module (`github.com/huaweicloud/devspace-devbridge/go-sdk`)
-- The CLI references the local SDK via a `replace` directive (see `cli/go.mod`)
-- Public APIs live in the package root (`client.go`, `tunnel.go`, etc.); internal implementation goes in `internal/`
-- Every public type/function should have a corresponding `_test.go` file
-- **Backward compatibility**: released APIs must not introduce breaking changes; if a break is unavoidable, mark it with `BREAKING CHANGE` in the PR
+- The SDK is an independent Go module (github.com/huaweicloud/devspace-devbridge/go-sdk)
+- The CLI references the local SDK via a replace directive (see cli/go.mod)
+- Public APIs live in the package root (client.go, tunnel.go, etc.); internal implementation goes in internal/
+- Every public type/function should have a corresponding _test.go file
+- **Backward compatibility**: released APIs must not introduce breaking changes; if a break is unavoidable, mark it with BREAKING CHANGE in the PR
 
 ---
 
@@ -465,7 +465,7 @@ SDK default constants:
 Please include:
 
 - **Environment**: OS, Go version (CLI/SDK)
-- **DevBridge version**: output of `devbridge version`
+- **DevBridge version**: output of devbridge version
 - **Reproduction steps**: step-by-step and actionable
 - **Expected behavior**: what should happen
 - **Actual behavior**: what actually happened
@@ -491,29 +491,29 @@ Releases are handled by project maintainers. Contributors do not need to worry a
 
 ### CLI release
 
-1. A maintainer manually triggers `build-cli.yml` via GitHub Actions `workflow_dispatch`
-2. If the version number contains `release`, it is automatically published to GitHub Release and GitCode Release
+1. A maintainer manually triggers build-cli.yml via GitHub Actions workflow_dispatch
+2. If the version number contains release, it is automatically published to GitHub Release and GitCode Release
 3. Artifacts include 6 platform tar.gz packages + checksums.txt + install script
 
 ### Go SDK release
 
-1. A maintainer manually triggers `build-sdk.yml` via GitHub Actions `workflow_dispatch`, passing a version (e.g. `0.2.3`)
-2. The workflow runs build/vet/test quality gates, then creates a GitHub Release (source tar.gz + checksums.txt, `--latest=false` so it never steals the CLI's latest) and syncs the `go-sdk/v*` tag to the GitCode mirror repo
+1. A maintainer manually triggers build-sdk.yml via GitHub Actions workflow_dispatch, passing a version (e.g. 0.2.3)
+2. The workflow runs build/vet/test quality gates, then creates a GitHub Release (source tar.gz + checksums.txt, --latest=false so it never steals the CLI's latest) and syncs the go-sdk/v* tag to the GitCode mirror repo
 3. The Go module proxy (proxy.golang.org / goproxy.cn) indexes and permanently caches it — the tag is immutable once created, and re-running with an already-released version fails (422)
 
 ---
 
 ## FAQ
 
-### `go build` fails with "go: go.mod requires go >= 1.26"
+### go build fails with "go: go.mod requires go >= 1.26"
 
 Your local Go version is below the CLI requirement. Upgrade to Go 1.26 or later — see [Local environment setup](#local-environment-setup).
 
-If you are only modifying the Go SDK, you can build inside the `go-sdk/` directory, which requires Go >= 1.22.
+If you are only modifying the Go SDK, you can build inside the go-sdk/ directory, which requires Go >= 1.22.
 
-### `make build-dev` cannot find go-sdk
+### make build-dev cannot find go-sdk
 
-The CLI references the local `../go-sdk` via a `replace` directive. Make sure you cloned the full monorepo at the root level, not just the `cli/` subdirectory.
+The CLI references the local ../go-sdk via a replace directive. Make sure you cloned the full monorepo at the root level, not just the cli/ subdirectory.
 
 ### PR CI fails but passes locally
 

@@ -32,6 +32,7 @@
   --vp-sidebar-font-size: 14px;
   --vp-nav-pr: 16px;
   --vp-nav-width: 262px;
+
   --vp-sidebar-width: calc(var(--vp-nav-width) + var(--vp-layout-pl));
   /* === 文本导读 aside outline 响应式变量 === */
   --vp-aside-width: 0px;
@@ -46,6 +47,45 @@
   --vp-aside-l1-pl: 12px;
   --vp-aside-l2-py: 8px;
   --vp-aside-l2-pl: 24px;
+
+  /* === 文档内容区响应式变量（默认=移动端 <=768px） === */
+  --vp-doc-h1-fs: 24px;
+  --vp-doc-h2-fs: 20px;
+  --vp-doc-h3-fs: 16px;
+  --vp-doc-body-fs: 14px;
+  --vp-doc-zh-lh: 24px;
+  --vp-doc-en-lh: 22px;
+
+  /* === 文档标题间距变量（默认=移动端 <=768px） === */
+  --vp-doc-h2-mt: 30px;
+  --vp-doc-h2-mb: 12px;
+  --vp-doc-h3-mt: 20px;
+  --vp-doc-h3-mb: 12px;
+  --vp-doc-h4-mt: 12px;
+  --vp-doc-h4-mb: 8px;
+
+  /* === 文档表格变量（默认=移动端 <=768px） === */
+  --vp-doc-table-fs: 14px;
+  --vp-doc-table-lh: 24px;
+  --vp-doc-table-en-lh: 22px;
+  --vp-doc-table-py: 10px;
+  --vp-doc-table-px: 14px;
+  --vp-doc-table-bg: #f2f2f2;
+
+  /* === 更新时间变量（默认=移动端 <=768px） === */
+  --vp-doc-update-fs: 12px;
+  --vp-doc-update-lh: 18px;
+
+  /* === 代码块变量（默认=移动端 <=768px） === */
+  --vp-code-block-radius: 8px;
+  --vp-code-block-padding: 38px 4px 4px 14px;
+  --vp-code-block-fs: 14px;
+  --vp-code-block-lh: 24px;
+  --vp-code-btn-size: 30px;
+  --vp-code-btn-top: 7px;
+  --vp-code-btn-copy-right: 37px;
+  --vp-code-btn-toggle-right: 7px;
+  --vp-code-btn-icon-size: 16px;
 }
 
 @media (min-width: 769px) {
@@ -58,6 +98,39 @@
     --vp-sidebar-font-size: 12px;
     --vp-nav-pr: 16px;
     --vp-nav-width: 262px;
+
+    /* >768px：文档内容区字号/行高 */
+    --vp-doc-h1-fs: 24px;
+    --vp-doc-h2-fs: 16px;
+    --vp-doc-h3-fs: 14px;
+    --vp-doc-body-fs: 12px;
+    --vp-doc-zh-lh: 20px;
+    --vp-doc-en-lh: 18px;
+
+    /* >768px：文档标题间距 */
+    --vp-doc-h2-mt: 24px;
+    --vp-doc-h2-mb: 8px;
+    --vp-doc-h3-mt: 16px;
+    --vp-doc-h3-mb: 8px;
+    --vp-doc-h4-mt: 8px;
+    --vp-doc-h4-mb: 4px;
+
+    /* >768px：文档表格 */
+    --vp-doc-table-fs: 12px;
+    --vp-doc-table-lh: 18px;
+    --vp-doc-table-en-lh: 18px;
+    --vp-doc-table-py: 8px;
+    --vp-doc-table-px: 12px;
+
+    /* >768px：代码块 */
+    --vp-code-block-padding: 36px 4px 4px 12px;
+    --vp-code-block-fs: 12px;
+    --vp-code-block-lh: 20px;
+    --vp-code-btn-size: 28px;
+    --vp-code-btn-top: 6px;
+    --vp-code-btn-copy-right: 34px;
+    --vp-code-btn-toggle-right: 6px;
+    --vp-code-btn-icon-size: 14px;
   }
 }
 @media (min-width: 1025px) {
@@ -70,6 +143,7 @@
     --vp-sidebar-font-size: 12px;
     --vp-nav-pr: 16px;
     --vp-nav-width: 302px;
+
     /* >1024px：标题16、一级12、二级12、图标16×16、滚动条左距8、宽140 */
     --vp-aside-width: 140px;
     --vp-aside-pl: 16px;
@@ -107,6 +181,38 @@
     --vp-aside-l1-pl: 16px;
     --vp-aside-l2-py: 9px;
     --vp-aside-l2-pl: 28px;
+
+    /* >1280px：文档内容区字号/行高 */
+    --vp-doc-h1-fs: 28px;
+    --vp-doc-h2-fs: 20px;
+    --vp-doc-h3-fs: 16px;
+    --vp-doc-body-fs: 14px;
+    --vp-doc-zh-lh: 24px;
+    --vp-doc-en-lh: 22px;
+
+    /* >1280px：文档标题间距 */
+    --vp-doc-h2-mt: 32px;
+
+    /* >1280px：文档表格 */
+    --vp-doc-table-fs: 14px;
+    --vp-doc-table-lh: 22px;
+    --vp-doc-table-en-lh: 22px;
+    --vp-doc-table-py: 10px;
+    --vp-doc-table-px: 14px;
+
+    /* >1280px：更新时间 */
+    --vp-doc-update-fs: 14px;
+    --vp-doc-update-lh: 22px;
+
+    /* >1280px：代码块 */
+    --vp-code-block-padding: 38px 4px 4px 14px;
+    --vp-code-block-fs: 14px;
+    --vp-code-block-lh: 24px;
+    --vp-code-btn-size: 30px;
+    --vp-code-btn-top: 7px;
+    --vp-code-btn-copy-right: 37px;
+    --vp-code-btn-toggle-right: 7px;
+    --vp-code-btn-icon-size: 16px;
   }
 }
 @media (min-width: 1601px) {
@@ -131,6 +237,31 @@
     --vp-aside-l1-pl: 16px;
     --vp-aside-l2-py: 9px;
     --vp-aside-l2-pl: 28px;
+
+    /* >1600px：文档内容区字号/行高 */
+    --vp-doc-h1-fs: 32px;
+    --vp-doc-h2-fs: 24px;
+    --vp-doc-h3-fs: 20px;
+    --vp-doc-body-fs: 16px;
+    --vp-doc-zh-lh: 28px;
+    --vp-doc-en-lh: 24px;
+
+    /* >1600px：文档标题间距 */
+    --vp-doc-h2-mt: 40px;
+
+    /* >1600px：文档表格 */
+    --vp-doc-table-fs: 14px;
+    --vp-doc-table-lh: 22px;
+    --vp-doc-table-en-lh: 22px;
+    --vp-doc-table-py: 12px;
+    --vp-doc-table-px: 16px;
+
+    /* >1600px：代码块 */
+    --vp-code-block-padding: 40px 4px 4px 16px;
+    --vp-code-btn-size: 32px;
+    --vp-code-btn-top: 8px;
+    --vp-code-btn-copy-right: 40px;
+    --vp-code-btn-toggle-right: 8px;
   }
 }
 @media (min-width: 1776px) {
@@ -426,14 +557,14 @@ body {
 }
 
 .VPDoc.has-aside .content-container {
-  max-width: 744px;
+  max-width: 100% !important;
 }
 
 @media (min-width: 1280px) {
-.VPDoc .aside {
-  padding-left: var(--vp-aside-pl);
-  width: calc(var(--vp-aside-width) + var(--vp-aside-pl));
-}
+  .VPDoc .aside {
+    padding-left: var(--vp-aside-pl);
+    width: calc(var(--vp-aside-width) + var(--vp-aside-pl));
+  }
   .VPDoc .content {
     flex: 1 1 auto !important;
   }
@@ -442,7 +573,7 @@ body {
 .VPDoc .container {
   padding-top: 8px;
 }
-.VPDoc .container>.content{
+.VPDoc .container > .content {
   padding: var(--vp-doc-content-padding);
   background: var(--vp-c-bg-elv);
   border-radius: 16px;
@@ -451,24 +582,35 @@ body {
 .vp-doc h1 {
   margin: 0 0 16px;
   max-width: 760px;
-  font-size: 34px;
+  font-size: var(--vp-doc-h1-fs);
   line-height: 1.22;
   font-weight: 650;
 }
 
 .vp-doc h2 {
-  margin-top: 44px;
-  padding-top: 4px;
+  margin-top: var(--vp-doc-h2-mt);
+  margin-bottom: var(--vp-doc-h2-mb);
+  padding-top: 0;
   border-top: 0;
-  font-size: 24px;
+  font-size: var(--vp-doc-h2-fs);
   line-height: 1.35;
   font-weight: 650;
 }
 
 .vp-doc h3 {
-  margin-top: 30px;
-  font-size: 19px;
+  margin-top: var(--vp-doc-h3-mt);
+  margin-bottom: var(--vp-doc-h3-mb);
+  font-size: var(--vp-doc-h3-fs);
   line-height: 1.45;
+  font-weight: 650;
+}
+
+.vp-doc h4,
+.vp-doc h5,
+.vp-doc h6 {
+  margin-top: var(--vp-doc-h4-mt);
+  margin-bottom: var(--vp-doc-h4-mb);
+  font-size: var(--vp-doc-body-fs);
   font-weight: 650;
 }
 
@@ -479,11 +621,17 @@ body {
 
 .vp-doc p,
 .vp-doc li {
-  line-height: 1.72;
+  font-size: var(--vp-doc-body-fs);
+  line-height: var(--vp-doc-zh-lh);
+}
+
+:lang(en) .vp-doc p,
+:lang(en) .vp-doc li {
+  line-height: var(--vp-doc-en-lh);
 }
 
 .vp-doc p {
-  margin: 17px 0;
+  margin: 0;
 }
 
 .vp-doc li + li {
@@ -515,40 +663,201 @@ body {
   color: var(--vp-c-text-1);
 }
 
+/* === 代码块样式 === */
 .vp-doc div[class*="language-"] {
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 6px;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 3%);
+  border-radius: var(--vp-code-block-radius);
+  background: #fafafa;
+  position: relative;
+  overflow: hidden;
+}
+
+.vp-doc div[class*="language-"] pre {
+  margin: 0;
+  padding: var(--vp-code-block-padding);
+  overflow-x: auto;
+  position: relative;
+  z-index: 1;
 }
 
 .vp-doc div[class*="language-"] code {
-  font-size: 13px;
-  line-height: 1.65;
+  font-size: var(--vp-code-block-fs);
+  line-height: var(--vp-code-block-lh);
+  font-family: "PT Mono", "Consolas", "Monaco", "Menlo", monospace;
+  color: #191919;
+  padding: 0;
+  width: auto;
+  min-width: 0;
 }
 
-.vp-doc [class*="language-"] > span.lang {
-  color: var(--vp-c-text-3);
-  font-size: 10px;
+.vp-doc div[class*="language-"] > span.lang {
+  color: #595959;
+  font-size: 12px;
   font-weight: 600;
+  position: absolute;
+  top: 8px;
+  left: 14px;
+  z-index: 2;
+  opacity: 1;
+}
+
+.vp-doc div[class*="language-"]:hover > button.copy + span.lang {
+  opacity: 1;
+}
+
+.vp-doc div[class*="language-"] > button.copy {
+  position: absolute;
+  top: var(--vp-code-btn-top);
+  right: var(--vp-code-btn-copy-right);
+  width: var(--vp-code-btn-size);
+  height: var(--vp-code-btn-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background-color: transparent;
+  background-image: none;
+  cursor: pointer;
+  opacity: 1;
+  z-index: 3;
+  border: 0;
+}
+
+.vp-doc div[class*="language-"]:hover > button.copy {
+  opacity: 1;
+}
+
+.vp-doc div[class*="language-"] > button.copy:hover,
+.vp-doc div[class*="language-"] > button.copy.copied {
+  background-color: transparent;
+  background-image: none;
+  border-color: transparent;
+}
+
+.vp-doc div[class*="language-"] > button.copy.copied::before {
+  display: none;
+}
+
+.vp-doc div[class*="language-"] > button.copy img {
+  width: var(--vp-code-btn-icon-size);
+  height: var(--vp-code-btn-icon-size);
+}
+
+.vp-doc div[class*="language-"] > button.code-theme-toggle {
+  position: absolute;
+  top: var(--vp-code-btn-top);
+  right: var(--vp-code-btn-toggle-right);
+  width: var(--vp-code-btn-size);
+  height: var(--vp-code-btn-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background-color: transparent;
+  cursor: pointer;
+  opacity: 1;
+  z-index: 3;
+  border: 0;
+}
+
+.vp-doc div[class*="language-"] > button.code-theme-toggle:hover {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.vp-doc div[class*="language-"] > button.code-theme-toggle img {
+  width: var(--vp-code-btn-icon-size);
+  height: var(--vp-code-btn-icon-size);
+}
+
+.vp-doc div[class*="language-"].code-dark {
+  background: #1d2023;
+  border: 1px solid rgb(219, 219, 219);
+}
+
+.vp-doc div[class*="language-"].code-dark code {
+  color: #e5e5e5;
+}
+
+.vp-doc div[class*="language-"].code-dark > span.lang {
+  color: #999999;
+}
+
+.vp-doc div[class*="language-"].code-dark > button.copy:hover,
+.vp-doc div[class*="language-"].code-dark > button.copy.copied {
+  background-color: transparent;
+  background-image: none;
+  border-color: transparent;
+}
+
+.vp-doc div[class*="language-"].code-dark > button.copy img {
+  filter: none;
+}
+
+.vp-doc div[class*="language-"].code-dark > button.code-theme-toggle:hover {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.vp-doc div[class*="language-"].code-dark > button.code-theme-toggle img {
+  filter: none;
+}
+
+.vp-doc div[class*="language-"]:not(.code-dark) .vp-code span {
+  color: var(--shiki-light);
+}
+.vp-doc div[class*="language-"].code-dark .vp-code span {
+  color: var(--shiki-dark);
+}
+
+.vp-doc
+  div[class*="language-bash"]
+  .vp-code
+  span[style*="--shiki-light:#0F5ED4"],
+.vp-doc
+  div[class*="language-shell"]
+  .vp-code
+  span[style*="--shiki-light:#0F5ED4"],
+.vp-doc
+  div[class*="language-powershell"]
+  .vp-code
+  span[style*="--shiki-light:#0F5ED4"],
+.vp-doc
+  div[class*="language-console"]
+  .vp-code
+  span[style*="--shiki-light:#0F5ED4"] {
+  --shiki-light: #841eb0 !important;
+  --shiki-dark: #d083f1 !important;
 }
 
 .vp-doc table {
   display: table;
   width: 100%;
   border: 1px solid var(--vp-c-divider);
-  font-size: 14px;
+  font-size: var(--vp-doc-table-fs);
+  line-height: var(--vp-doc-table-lh);
+}
+
+:lang(en) .vp-doc table {
+  line-height: var(--vp-doc-table-en-lh);
 }
 
 .vp-doc th {
-  background: var(--vp-c-bg-soft);
+  background: var(--vp-doc-table-bg);
   font-weight: 600;
+  font-size: var(--vp-doc-table-fs);
+  line-height: var(--vp-doc-table-lh);
 }
 
 .vp-doc th,
 .vp-doc td {
-  padding: 10px 13px;
+  padding: var(--vp-doc-table-py) var(--vp-doc-table-px);
+  font-size: var(--vp-doc-table-fs);
+  line-height: var(--vp-doc-table-lh);
 }
 
+.vp-doc tr {
+  background: transparent !important;
+}
 .vp-doc .custom-block {
   border: 1px solid var(--vp-c-divider);
   border-left: 3px solid var(--vp-c-brand-1);
@@ -563,6 +872,44 @@ body {
 
 .vp-doc .custom-block p {
   margin: 8px 0;
+}
+
+/* === 文档图片：描边 + hover 放大图标 + 点击放大 === */
+.vp-doc img {
+  border-radius: 4px;
+  cursor: zoom-in;
+  transition: border-color 0.2s;
+}
+.vp-doc img:hover {
+  border-color: #d0d0d0;
+}
+
+.vp-doc div[class*="language-"] img {
+  cursor: pointer;
+  border-radius: 0;
+  transition: none;
+}
+.vp-doc div[class*="language-"] img:hover {
+  border-color: transparent;
+}
+
+/* 图片放大 lightbox */
+.img-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 80%);
+  cursor: zoom-out;
+}
+.img-lightbox img {
+  max-width: 90vw;
+  max-height: 90vh;
+  border: 0;
+  border-radius: 4px;
+  cursor: zoom-out;
 }
 
 .VPDocAsideOutline .outline-title {
@@ -580,32 +927,136 @@ body {
 
 .VPDocOutlineItem.root > li > .outline-link {
   font-size: var(--vp-aside-l1-fs);
-  padding: var(--vp-aside-l1-py) var(--vp-aside-scroll-pr) var(--vp-aside-l1-py) var(--vp-aside-l1-pl);
+  padding: var(--vp-aside-l1-py) var(--vp-aside-scroll-pr) var(--vp-aside-l1-py)
+    var(--vp-aside-l1-pl);
 }
 
 .VPDocOutlineItem.nested > li > .outline-link {
   font-size: var(--vp-aside-l2-fs);
-  padding: var(--vp-aside-l2-py) var(--vp-aside-scroll-pr) var(--vp-aside-l2-py) var(--vp-aside-l2-pl);
+  padding: var(--vp-aside-l2-py) var(--vp-aside-scroll-pr) var(--vp-aside-l2-py)
+    var(--vp-aside-l2-pl);
 }
 
-
 .VPDocAsideOutline .content {
-  border-left-color: var(--vp-c-divider);
+  border-left: 0;
   padding-left: 0;
 }
 
-.VPDoc .aside .aside-container{
+/* 一级列表区域滚动：内容过多时右侧出现滚动条 */
+.VPDocOutlineItem.root {
+  max-height: calc(100vh - var(--vp-nav-height) - 280px);
+  overflow-y: auto;
+  padding-left: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: #dbdbdb transparent;
+}
+
+/* root 滚动条：4px 宽、#dbdbdb 色、无上下箭头 */
+.VPDocOutlineItem.root::-webkit-scrollbar {
+  width: 4px !important;
+}
+.VPDocOutlineItem.root::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+.VPDocOutlineItem.root::-webkit-scrollbar-thumb {
+  background: #dbdbdb !important;
+  border-radius: 2px !important;
+}
+.VPDocOutlineItem.root::-webkit-scrollbar-button {
+  display: none !important;
+}
+
+/* 隐藏 VitePress 默认 marker，改用 li 上的圆点 + 线段 */
+.VPDocAsideOutline .outline-marker {
+  display: none;
+}
+
+/* 一级 li：圆点(::before) + 圆点下方线段(::after)，li 间有间距故线段自然间断 */
+.VPDocOutlineItem.root > li {
+  position: relative;
+}
+.VPDocOutlineItem.root > li::before {
+  content: "";
+  position: absolute;
+  top: 19px;
+  left: -4px;
+  width: 8px;
+  height: 8px;
+  border: 1px solid #191919;
+  background-color: #fff;
+  border-radius: 50%;
+  z-index: 1;
+}
+.VPDocOutlineItem.root > li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 35px;
+  left: -1px;
+  width: 1px;
+  background-color: #dbdbdb;
+  height: calc(100% - 24px);
+}
+/* 一级选中：圆点变实心 */
+.VPDocOutlineItem.root > li:has(> .outline-link.active)::before {
+  background-color: #191919;
+}
+
+.VPDocOutlineItem.nested {
+  padding-left: 0;
+}
+.VPDocOutlineItem.nested > li {
+  position: relative;
+}
+/* 二级选中：在一级连线位置上画一段短粗线 */
+.VPDocOutlineItem.nested > li:has(> .outline-link.active)::before {
+  content: "";
+  position: absolute;
+  top: calc(50% - 10px);
+  left: -2px;
+  width: 3px;
+  height: 20px;
+  background-color: #191919;
+  border-radius: 0;
+  z-index: 1;
+}
+
+/* 一级/二级选中文字加粗 */
+.VPDocOutlineItem.root > li > .outline-link.active,
+.VPDocOutlineItem.nested > li > .outline-link.active {
+  font-weight: 650;
+}
+
+.VPDoc .aside .aside-container {
   width: var(--vp-aside-width);
+
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+  scrollbar-width: auto;
+}
+.VPDoc .aside .aside-container::-webkit-scrollbar {
+  display: block;
 }
 
 .VPDocFooter {
   margin-top: 72px;
 }
 
+/* 最后更新时间移到标题下方时的样式 */
+.vp-doc h1 + .edit-info {
+  margin-bottom: 16px;
+  padding: 0;
+}
+.vp-doc h1 + .edit-info .last-updated .VPLastUpdated {
+  font-size: var(--vp-doc-update-fs);
+  line-height: var(--vp-doc-update-lh);
+  color: #808080;
+}
+
 .VPDoc {
   padding-left: var(--vp-doc-pl) !important;
   padding-right: var(--vp-doc-pl) !important;
 }
+
 .VPDocFooter .pager-link {
   border-color: var(--vp-c-divider);
   border-radius: 6px;
@@ -621,15 +1072,6 @@ body {
   .VPNavBar {
     background: var(--vp-c-bg);
     backdrop-filter: none;
-  }
-
-  .vp-doc h1 {
-    font-size: 29px;
-  }
-
-  .vp-doc h2 {
-    margin-top: 38px;
-    font-size: 22px;
   }
 
   .vp-doc table {
@@ -746,11 +1188,15 @@ body {
   }
 }
 
-/* === aside 导读折叠按钮 === */
+/* === aside 导读折叠按钮：定位到 outline-title 右侧中间 === */
+.VPDocAsideOutline .outline-title {
+  position: relative;
+}
 .aside-toggle {
-  position: fixed;
-  right: var(--vp-layout-pl);
-  top: calc(var(--vp-nav-height) + 48px);
+  position: absolute;
+  right: 0;
+  top: calc(var(--vp-aside-title-fs) * 1.5 / 2);
+  transform: translateY(-50%);
   z-index: 300;
   width: var(--vp-aside-icon-size);
   height: var(--vp-aside-icon-size);
@@ -801,7 +1247,7 @@ body {
   z-index: 299;
   width: 5px;
   margin-left: -2px;
-  cursor: col-resize;
+  cursor: e-resize;
   background: transparent;
   -webkit-tap-highlight-color: transparent;
 }
@@ -819,9 +1265,8 @@ body {
   transition: opacity 0.2s;
 }
 
-
 .sidebar-resizing {
-  cursor: col-resize !important;
+  cursor: e-resize !important;
   user-select: none !important;
 }
 

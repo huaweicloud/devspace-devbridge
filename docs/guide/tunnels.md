@@ -15,13 +15,13 @@ devbridge create frontend -d "tunnel description" -e 24
 
 Parameters:
 
-| Parameter  | Description                |
-| ---------- | -------------------------- |
-| `frontend` | Tunnel name.               |
-| `-d`       | Optional description.      |
-| `-e`       | Expiration time, in hours. |
+| Parameter | Description                |
+| --------- | -------------------------- |
+| frontend  | Tunnel name.               |
+| -d        | Optional description.      |
+| -e        | Expiration time, in hours. |
 
-If `-e` is omitted, it defaults to 72 hours; the allowed range is 1 to 720 hours.
+If -e is omitted, it defaults to 72 hours; the allowed range is 1 to 720 hours.
 
 Expired tunnels don't appear in the list of valid tunnels, and you can no longer issue tokens for them or manage their ports. The system cleans up expired data after a retention period.
 
@@ -56,7 +56,7 @@ The details show the tunnel ID, name, description, and expiration time of the sp
 devbridge update <tunnelId> -n "frontend-v2" -d "tunnel description" -e 48
 ```
 
-Pass only the options you want to change. `-e` is still in hours, with a maximum of 720 hours. Updating a tunnel or port refreshes the current expiration time.
+Pass only the options you want to change. -e is still in hours, with a maximum of 720 hours. Updating a tunnel or port refreshes the current expiration time.
 
 ## Set a default tunnel
 
@@ -110,7 +110,7 @@ Delete all tunnels in the current workspace:
 devbridge delete-all
 ```
 
-`delete-all` affects every tunnel in the current workspace. Deleting a tunnel also removes its port configuration, and any existing Host or Connect connections to that tunnel will stop working.
+delete-all affects every tunnel in the current workspace. Deleting a tunnel also removes its port configuration, and any existing Host or Connect connections to that tunnel will stop working.
 
 ## Next steps
 

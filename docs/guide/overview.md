@@ -26,8 +26,8 @@ Both Host and Connect initiate outbound connections to DevBridge, so the device 
 | ------------- | ------------------------------------------------------------------------------------ |
 | Tunnel ID     | An eight-character lowercase Base32 identifier used in CLI commands and tunnel URLs. |
 | Cluster       | The isolation and routing scope the tunnel belongs to.                               |
-| Port          | A port the tunnel is allowed to forward, from `1` to `65535`.                        |
-| Protocol      | The application protocol for a port: `http`, `https`, or `auto`.                     |
+| Port          | A port the tunnel is allowed to forward, from 1 to 65535.                            |
+| Protocol      | The application protocol for a port: http, https, or auto.                           |
 | Expiration    | How long the tunnel stays valid; once it expires, it can no longer be used.          |
 | Host          | The side that hosts local services.                                                  |
 | Connect       | The side that accesses remote services.                                              |
@@ -50,7 +50,7 @@ Tunnels belong to the workspace associated with the currently logged-in identity
 
 Each tunnel also belongs to a cluster. Host, Connect, and the gateway must use the same cluster as the tunnel to avoid cross-cluster access.
 
-Whether a port allows anonymous access is determined by its port policy. Admin consoles, debugging endpoints, and services that handle user data should use `--deny-anonymous`.
+Whether a port allows anonymous access is determined by its port policy. Admin consoles, debugging endpoints, and services that handle user data should use --deny-anonymous.
 
 ## Usage boundaries
 

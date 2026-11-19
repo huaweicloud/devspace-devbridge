@@ -9,10 +9,10 @@ description: Install and verify the DevBridge CLI using the official installatio
 
 ## System requirements
 
-- Bash and `curl`, or PowerShell 5.1 or later
+- Bash and curl, or PowerShell 5.1 or later
 - x86-64 or ARM64 architecture
 - Access to a DevBridge installation source
-- Write permission for the `~/.huawei` directory
+- Write permission for the ~/.huawei directory
 
 ## Install
 
@@ -58,14 +58,14 @@ irm https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/install
 
 A standard installation installs the current release and uses the default directories; you don't need to specify a version or installation source.
 
-| Item                        | Default location      |
-| --------------------------- | --------------------- |
-| CLI executable              | `~/.huawei/bin`       |
-| CLI configuration and state | `~/.huawei/devbridge` |
+| Item                        | Default location    |
+| --------------------------- | ------------------- |
+| CLI executable              | ~/.huawei/bin       |
+| CLI configuration and state | ~/.huawei/devbridge |
 
 ## Configure PATH
 
-If your terminal can't find `devbridge` directly, run the following in the current session:
+If your terminal can't find devbridge directly, run the following in the current session:
 
 ```bash
 export PATH="$HOME/.huawei/bin:$PATH"
@@ -77,7 +77,7 @@ If you use PowerShell, run:
 $env:Path = "$HOME/.huawei/bin;$env:Path"
 ```
 
-To make the change persist across future terminals, add the appropriate command to your shell's startup file. For Bash or Zsh, write it to `~/.bashrc` or `~/.zshrc`; for PowerShell, write it to `$PROFILE`. Alternatively, reopen the terminal to pick up the PATH change the installer has already made.
+To make the change persist across future terminals, add the appropriate command to your shell's startup file. For Bash or Zsh, write it to ~/.bashrc or ~/.zshrc; for PowerShell, write it to $PROFILE. Alternatively, reopen the terminal to pick up the PATH change the installer has already made.
 
 ## Verify the installation
 
@@ -90,7 +90,7 @@ The first command shows the current CLI version; the second lists the supported 
 
 ## Directories after installation
 
-Don't commit `~/.huawei/devbridge` to a code repository, and don't copy this directory between different users. When migrating to a new device, log in again.
+Don't commit ~/.huawei/devbridge to a code repository, and don't copy this directory between different users. When migrating to a new device, log in again.
 
 For how login credentials are stored and the underlying security principles, see [Login and credentials](./authentication.md).
 

@@ -9,7 +9,7 @@ description: Host a service locally, then connect and access it from a remote de
 
 ## Scenario overview
 
-Goal: start an HTTP service on device A, host it through a DevBridge tunnel, connect to the tunnel from device B, and access device A's service at `http://localhost:8080` on device B.
+Goal: start an HTTP service on device A, host it through a DevBridge tunnel, connect to the tunnel from device B, and access device A's service at http://localhost:8080 on device B.
 
 | Device   | Role    | Responsibility                                                       |
 | -------- | ------- | -------------------------------------------------------------------- |
@@ -20,13 +20,13 @@ Both devices must have the DevBridge CLI installed and be logged in. If not, see
 
 ## Step 1: Start the local service on device A
 
-In terminal 1 on device A, start an HTTP service listening on port `8080`:
+In terminal 1 on device A, start an HTTP service listening on port 8080:
 
 ```bash
 python3 -m http.server 8080
 ```
 
-Once started, this terminal keeps running; the service listens on `0.0.0.0:8080` by default. Keep this terminal open.
+Once started, this terminal keeps running; the service listens on 0.0.0.0:8080 by default. Keep this terminal open.
 
 ![Start the local HTTP service](/images/host-connect/python-http-server.png)
 
@@ -44,7 +44,7 @@ There are two ways to run Host, depending on whether you reuse an existing tunne
 
 ### Option 1: Use a temporary tunnel
 
-If you don't have a reusable tunnel, let Host automatically create a temporary tunnel and host port `8080`:
+If you don't have a reusable tunnel, let Host automatically create a temporary tunnel and host port 8080:
 
 ```bash
 devbridge host -p 8080
@@ -56,9 +56,9 @@ To set a description and expiration:
 devbridge host -p 8080 -d "tunnel description" -e 8
 ```
 
-- `-p 8080`: hosts local port `8080`.
-- `-d`: tunnel description, optional.
-- `-e`: expiration in hours, optional, defaults to 72 hours.
+- -p 8080: hosts local port 8080.
+- -d: tunnel description, optional.
+- -e: expiration in hours, optional, defaults to 72 hours.
 
 After Host succeeds, it prints the tunnel ID and access URL, in the following format:
 
@@ -66,19 +66,19 @@ After Host succeeds, it prints the tunnel ID and access URL, in the following fo
 https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com
 ```
 
-Note the `<tunnelId>` here; device B needs it to connect.
+Note the \<tunnelId\> here; device B needs it to connect.
 
 ![Start Host with a temporary tunnel](/images/host-connect/host-temporary-tunnel.png)
 
-The image above shows the actual output of `devbridge host -p 8080`: it automatically creates tunnel `yf7oqwea`, hosts port `8080`, and prints the corresponding tunnel URL.
+The image above shows the actual output of devbridge host -p 8080: it automatically creates tunnel yf7oqwea, hosts port 8080, and prints the corresponding tunnel URL.
 
 ::: tip Temporary tunnel lifecycle
-A tunnel created by `devbridge host -p 8080` is retained after you stop Host — it isn't deleted automatically. Clean it up with `devbridge delete <tunnelId>` when you no longer need it.
+A tunnel created by devbridge host -p 8080 is retained after you stop Host — it isn't deleted automatically. Clean it up with devbridge delete \<tunnelId\> when you no longer need it.
 :::
 
 ### Option 2: Use an existing tunnel
 
-Before reusing an existing tunnel, confirm that it exists and that port `8080` is already configured.
+Before reusing an existing tunnel, confirm that it exists and that port 8080 is already configured.
 
 1. List the valid tunnels in the current workspace:
 
@@ -94,7 +94,7 @@ Before reusing an existing tunnel, confirm that it exists and that port `8080` i
    devbridge port list <tunnelId>
    ```
 
-   Confirm port `8080` already exists. If it doesn't, create it first:
+   Confirm port 8080 already exists. If it doesn't, create it first:
 
    ```bash
    devbridge port create <tunnelId> -p 8080 --protocol http
@@ -106,13 +106,13 @@ Before reusing an existing tunnel, confirm that it exists and that port `8080` i
    devbridge host <tunnelId>
    ```
 
-   Host loads all the ports configured in the tunnel and begins forwarding; you don't need to specify `-p` again.
+   Host loads all the ports configured in the tunnel and begins forwarding; you don't need to specify -p again.
 
    ![Start Host with an existing tunnel](/images/host-connect/host-existing-tunnel.png)
 
-   The image above shows the actual output of `devbridge host ghirszae`: Host successfully hosts port `8080` and prints the tunnel URL; during the run it triggers an automatic reconnection and resumes forwarding after recovering.
+   The image above shows the actual output of devbridge host ghirszae: Host successfully hosts port 8080 and prints the tunnel URL; during the run it triggers an automatic reconnection and resumes forwarding after recovering.
 
-Either way, Host keeps running in the foreground. Keep terminal 2 open; press `Ctrl+C` to stop hosting.
+Either way, Host keeps running in the foreground. Keep terminal 2 open; press Ctrl+C to stop hosting.
 
 ## Step 3: Start Connect on device B
 
@@ -122,15 +122,15 @@ On device B, run the following command to connect to the tunnel:
 devbridge connect <tunnelId>
 ```
 
-Replace `<tunnelId>` with the tunnel ID that Host printed in step 2.
+Replace \<tunnelId\> with the tunnel ID that Host printed in step 2.
 
-Connect reads the tunnel's port configuration, requests a Connect token, and sets up local port mappings. After the connection succeeds, port `8080` on device B maps to the service on device A.
+Connect reads the tunnel's port configuration, requests a Connect token, and sets up local port mappings. After the connection succeeds, port 8080 on device B maps to the service on device A.
 
-Connect also keeps running in the foreground; keep the terminal open, and press `Ctrl+C` to stop the connection.
+Connect also keeps running in the foreground; keep the terminal open, and press Ctrl+C to stop the connection.
 
 ![Connect to the tunnel](/images/host-connect/connect-tunnel.png)
 
-The image above shows the actual output of `devbridge connect ghirszae`: on success it shows `Forwarding localhost:8080 -> tunnel port: 8080`, meaning device B's local port `8080` is mapped to the tunnel port.
+The image above shows the actual output of devbridge connect ghirszae: on success it shows Forwarding localhost:8080 -> tunnel port: 8080, meaning device B's local port 8080 is mapped to the tunnel port.
 
 ## Step 4: Access the remote service on device B
 
@@ -142,7 +142,7 @@ curl http://127.0.0.1:8080
 
 ![Access the remote service via curl](/images/host-connect/curl-access.png)
 
-The HTML directory listing in the response is served by `python3 -m http.server 8080` on device A, which confirms that device B has successfully reached device A's service through the local port mapping.
+The HTML directory listing in the response is served by python3 -m http.server 8080 on device A, which confirms that device B has successfully reached device A's service through the local port mapping.
 
 You can also open it in a browser:
 
@@ -150,23 +150,23 @@ You can also open it in a browser:
 http://localhost:8080
 ```
 
-or use `127.0.0.1`:
+or use 127.0.0.1:
 
 ```text
 http://127.0.0.1:8080
 ```
 
-Both are equivalent: they point to the local port mapping on device B, which DevBridge then forwards to the `8080` service on device A.
+Both are equivalent: they point to the local port mapping on device B, which DevBridge then forwards to the 8080 service on device A.
 
 ## Quick reference
 
 | Step | Device   | Terminal   | Command                        | Description                              |
 | ---- | -------- | ---------- | ------------------------------ | ---------------------------------------- |
-| 1    | Device A | Terminal 1 | `python3 -m http.server 8080`  | Start the local HTTP service.            |
-| 2    | Device A | Terminal 2 | `devbridge host -p 8080`       | Host with a temporary tunnel (Option 1). |
-| 2    | Device A | Terminal 2 | `devbridge host <tunnelId>`    | Host with an existing tunnel (Option 2). |
-| 3    | Device B | Terminal   | `devbridge connect <tunnelId>` | Connect and set up local mappings.       |
-| 4    | Device B | Browser    | `http://localhost:8080`        | Access the remote service.               |
+| 1    | Device A | Terminal 1 | python3 -m http.server 8080    | Start the local HTTP service.            |
+| 2    | Device A | Terminal 2 | devbridge host -p 8080         | Host with a temporary tunnel (Option 1). |
+| 2    | Device A | Terminal 2 | devbridge host \<tunnelId\>    | Host with an existing tunnel (Option 2). |
+| 3    | Device B | Terminal   | devbridge connect \<tunnelId\> | Connect and set up local mappings.       |
+| 4    | Device B | Browser    | http://localhost:8080          | Access the remote service.               |
 
 ## FAQ
 
@@ -179,13 +179,13 @@ Confirm the local service in terminal 1 is still running. Host exits with an err
 Check these in order:
 
 1. the Host process on device A is still running
-2. device A's local service is still reachable: `curl http://127.0.0.1:8080`
-3. port `8080` on device B isn't in use by another process
+2. device A's local service is still reachable: curl http://127.0.0.1:8080
+3. port 8080 on device B isn't in use by another process
 4. both sides use the same tunnel ID
 
 ### Port already in use
 
-If `8080` on device B is already in use by another process, Connect can't set up the mapping. Free the port first, or change the local service's listening port and run through the flow again.
+If 8080 on device B is already in use by another process, Connect can't set up the mapping. Free the port first, or change the local service's listening port and run through the flow again.
 
 ### Forgot the tunnel ID
 
@@ -201,9 +201,9 @@ Both temporary and persistent tunnels appear in the valid tunnel list.
 
 After verification, stop things in this order:
 
-1. Device B: press `Ctrl+C` in the Connect terminal.
-2. Device A: press `Ctrl+C` in the Host terminal.
-3. Device A: press `Ctrl+C` in the service terminal to stop `python3 -m http.server`.
+1. Device B: press Ctrl+C in the Connect terminal.
+2. Device A: press Ctrl+C in the Host terminal.
+3. Device A: press Ctrl+C in the service terminal to stop python3 -m http.server.
 
 A temporary tunnel isn't deleted automatically after you stop Host. Clean it up once you're sure you no longer need it:
 

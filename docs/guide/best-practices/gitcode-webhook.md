@@ -12,7 +12,7 @@ description: Build a webhook receiver in Huawei Cloud AI DevSpace, expose it thr
 The practice runs in the Huawei Cloud AI DevSpace experience edition and takes about 40 minutes, with no manual coding:
 
 - Build and start a webhook receiver on port 8080 that logs the full HTTP POST payload.
-- Validate the `X-GitCode-Token` header so only callbacks with the correct password are processed; other requests get a 401.
+- Validate the X-GitCode-Token header so only callbacks with the correct password are processed; other requests get a 401.
 - Expose the receiver as a public HTTPS URL with a DevBridge tunnel, without buying a public IP.
 - Configure the callback URL and password in a GitCode repository webhook for push, issue, and other events.
 - Check the receiver logs to confirm delivery, then clean up the tunnel, service process, and webhook configuration.

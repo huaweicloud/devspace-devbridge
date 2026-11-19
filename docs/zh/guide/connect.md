@@ -17,7 +17,7 @@ devbridge connect <tunnelId>
 
 Connect 会读取隧道端口配置、申请新的 Connect 令牌，并连接当前可用的 Host。
 
-连接建立后，通过本机相同端口访问远程服务。例如，隧道包含端口 `8080`：
+连接建立后，通过本机相同端口访问远程服务。例如，隧道包含端口 8080：
 
 ```text
 http://localhost:8080
@@ -26,7 +26,7 @@ http://localhost:8080
 ## 连接多个端口
 
 一条隧道可以配置多个端口。Connect 会根据隧道端口配置建立对应映射，不需要使用未经确认的
-`--port` 参数筛选端口。
+--port 参数筛选端口。
 
 查看远程端口列表：
 
@@ -42,7 +42,7 @@ devbridge port list <tunnelId>
 devbridge connect <tunnelId> --token <jwt>
 ```
 
-`--token` 模式跳过令牌签发和端口查询，端口由 Host 端通过中继通道协商下发。必须显式指定隧道 ID。
+--token 模式跳过令牌签发和端口查询，端口由 Host 端通过中继通道协商下发。必须显式指定隧道 ID。
 
 ## 使用 API Key 鉴权
 
@@ -56,13 +56,13 @@ devbridge connect <tunnelId> --api-key <key>
 
 ## 受保护端口
 
-端口使用 `--deny-anonymous` 配置后，Connect 必须使用有效身份和 Connect 令牌。CLI 会自动申请令牌，通常不需要手动执行 `devbridge token`。
+端口使用 --deny-anonymous 配置后，Connect 必须使用有效身份和 Connect 令牌。CLI 会自动申请令牌，通常不需要手动执行 devbridge token。
 
 Host 令牌不能用于 Connect，Connect 令牌也不能用于 Host。
 
 ## 自动重连
 
-Connect 是前台长运行命令。网络短暂中断时会自动尝试恢复连接；按 `Ctrl+C` 停止。
+Connect 是前台长运行命令。网络短暂中断时会自动尝试恢复连接；按 Ctrl+C 停止。
 
 以下情况需要人工处理：
 

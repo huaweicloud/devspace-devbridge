@@ -8,14 +8,14 @@ This directory holds the source of the DevBridge documentation site, built with
 
 ## Local preview
 
-Development requires Node.js 24 (run inside `docs/`):
+Development requires Node.js 24 (run inside docs/):
 
 ```bash
 npm ci
 npm run docs:dev
 ```
 
-The local dev address is `http://127.0.0.1:5173/devspace-devbridge/`.
+The local dev address is http://127.0.0.1:5173/devspace-devbridge/.
 
 Before submitting, run:
 
@@ -26,17 +26,17 @@ npm run audit
 
 ## Adding pages
 
-1. Add a Markdown file under `guide/` or `reference/`.
-2. Register an entry in the `sidebar` of `.vitepress/config.mjs`.
+1. Add a Markdown file under guide/ or reference/.
+2. Register an entry in the sidebar of .vitepress/config.mjs.
 3. Use relative links to connect related topics.
-4. Run `npm run check`.
+4. Run npm run check.
 
-Do not edit `.vitepress/dist` directly — it is a build artifact and is not committed.
+Do not edit .vitepress/dist directly — it is a build artifact and is not committed.
 
 ## Dependency policy
 
-Docs dependencies are pinned in `package.json` and `package-lock.json`. When adjusting
-dependencies or Vite override versions, both `npm run check` and `npm run audit` must pass.
+Docs dependencies are pinned in package.json and package-lock.json. When adjusting
+dependencies or Vite override versions, both npm run check and npm run audit must pass.
 
 ## Content ownership
 
@@ -48,5 +48,5 @@ dependencies or Vite override versions, both `npm run check` and `npm run audit`
 
 ## Publishing
 
-On push to `master` or `develop`, GitHub Actions lints Markdown in `docs/`, builds VitePress, and
-publishes `.vitepress/dist`. GitHub Pages Source must be set to **GitHub Actions**.
+On push to master or develop, GitHub Actions lints Markdown in docs/, builds VitePress, and
+publishes .vitepress/dist. GitHub Pages Source must be set to **GitHub Actions**.

@@ -27,7 +27,7 @@ Then host the ports of that tunnel:
 devbridge host <tunnelId>
 ```
 
-Host automatically requests a new Host token, loads the tunnel's full port configuration, connects to the relay service, and begins forwarding. The command keeps running in the foreground; press `Ctrl+C` to stop it.
+Host automatically requests a new Host token, loads the tunnel's full port configuration, connects to the relay service, and begins forwarding. The command keeps running in the foreground; press Ctrl+C to stop it.
 
 ## Create and host immediately
 
@@ -37,9 +37,9 @@ When you don't have a reusable tunnel, you can have Host create a temporary tunn
 devbridge host -p 8080 -d "tunnel description" -e 8
 ```
 
-Here `-d` and `-e` apply to the new tunnel: they set the tunnel description and the expiration in hours, respectively. They are not port parameters.
+Here -d and -e apply to the new tunnel: they set the tunnel description and the expiration in hours, respectively. They are not port parameters.
 
-If you need a stable address, multiple ports, or explicit access policies, configure them first with `devbridge create` and `devbridge port create`, then start Host.
+If you need a stable address, multiple ports, or explicit access policies, configure them first with devbridge create and devbridge port create, then start Host.
 
 ## Use an existing token
 
@@ -49,7 +49,7 @@ When integrating other clients or skipping API calls, you can provide a JWT toke
 devbridge host <tunnelId> --token <jwt>
 ```
 
-The `--token` mode skips token issuance and port lookup; the gateway delivers the ports through the relay channel. You must specify the tunnel ID.
+The --token mode skips token issuance and port lookup; the gateway delivers the ports through the relay channel. You must specify the tunnel ID.
 
 ## Authenticate with an API key
 
@@ -73,18 +73,18 @@ In addition to the local mappings set up by Connect, you can open the URL direct
 
 | Port policy                       | Browser behavior                                                                                            |
 | --------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Allows anonymous access (`-a`)    | Open the URL directly to access it — no DevBridge identity or credentials required.                         |
+| Allows anonymous access (-a)      | Open the URL directly to access it — no DevBridge identity or credentials required.                         |
 | Denies anonymous access (default) | You're redirected to a sign-in page; complete authentication to obtain credentials, then you can access it. |
 
 ::: tip Two ways to access
 
-- **Access the tunnel URL directly**: open `https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com` in a browser on any device. Best for quickly sharing and verifying.
-- **Access via Connect**: run `devbridge connect <tunnelId>` on another device, then access `http://localhost:<port>`. Best when you need local port mappings.
+- **Access the tunnel URL directly**: open https://\<tunnelId\>-\<port\>.devbridge-s2.hwtunnel.com in a browser on any device. Best for quickly sharing and verifying.
+- **Access via Connect**: run devbridge connect \<tunnelId\> on another device, then access http://localhost:\<port\>. Best when you need local port mappings.
 
 The two ways are equivalent and both reach the service on the Host device. See [Connect: connect to remote services](./connect.md).
 :::
 
-A port's anonymous-access policy is set at creation time with `-a` or `--deny-anonymous`. See [Manage ports](./ports.md).
+A port's anonymous-access policy is set at creation time with -a or --deny-anonymous. See [Manage ports](./ports.md).
 
 ## Automatic reconnection
 
@@ -100,13 +100,13 @@ Automatic reconnection doesn't recreate deleted tunnels or bypass port access po
 
 ## Stop Host
 
-Press `Ctrl+C` in the Host terminal. Stopping Host only ends the current forwarding:
+Press Ctrl+C in the Host terminal. Stopping Host only ends the current forwarding:
 
 - persistent tunnels and port configuration are retained
 - the Connect side can no longer access ports without a running Host
 - run the Host command again to resume hosting
 
-Delete tunnels you no longer use with `devbridge delete <tunnelId>`.
+Delete tunnels you no longer use with devbridge delete \<tunnelId\>.
 
 ## Security recommendations
 

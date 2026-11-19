@@ -41,7 +41,7 @@ devbridge auth login
 
 > **API Key 管理页面**：<https://devstation.connect.huaweicloud.com/space/devbridge?tab=apikey>
 
-在该页面创建新的 API Key 后，将其复制并通过环境变量 `HW_API_KEY` 注入 CLI 即可使用。
+在该页面创建新的 API Key 后，将其复制并通过环境变量 HW_API_KEY 注入 CLI 即可使用。
 
 ## 查看登录状态
 
@@ -66,7 +66,7 @@ devbridge auth logout
 - 个人终端使用交互登录；
 - 自动化任务使用 API Key，通过环境变量注入；
 - 不通过聊天、日志或工单传递 API Key；
-- 不提交 `~/.huawei/devbridge`；
+- 不提交 ~/.huawei/devbridge；
 - 怀疑凭证泄露时立即退出、撤销并重新签发；
 - Host 和 Connect 令牌只用于对应隧道和对应连接方向。
 

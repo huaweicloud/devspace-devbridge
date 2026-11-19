@@ -2,6 +2,48 @@ import { defineConfig } from "vitepress";
 
 const base = "/devspace-devbridge/";
 
+const shikiLightTheme = {
+  name: "devbridge-light",
+  type: "light",
+  fg: "#191919",
+  bg: "transparent",
+  colors: {},
+  tokenColors: [
+    { scope: "comment", settings: { foreground: "#9e7e3f" } },
+    { scope: "string", settings: { foreground: "#191919" } },
+    { scope: "string.quoted.single", settings: { foreground: "#cc272a" } },
+    { scope: "string.quoted.double", settings: { foreground: "#733400" } },
+    { scope: "constant.numeric", settings: { foreground: "#2e6600" } },
+    { scope: "keyword", settings: { foreground: "#841eb0" } },
+    { scope: "keyword.operator", settings: { foreground: "#b85900" } },
+    {
+      scope: ["entity.name.function", "support.function"],
+      settings: { foreground: "#0f5ed4" },
+    },
+  ],
+};
+
+const shikiDarkTheme = {
+  name: "devbridge-dark",
+  type: "dark",
+  fg: "#ffffff",
+  bg: "transparent",
+  colors: {},
+  tokenColors: [
+    { scope: "comment", settings: { foreground: "#9e8f46" } },
+    { scope: "string", settings: { foreground: "#ffffff" } },
+    { scope: "string.quoted.single", settings: { foreground: "#f76360" } },
+    { scope: "string.quoted.double", settings: { foreground: "#d6a981" } },
+    { scope: "constant.numeric", settings: { foreground: "#5cb400" } },
+    { scope: "keyword", settings: { foreground: "#d083f1" } },
+    { scope: "keyword.operator", settings: { foreground: "#ff9a2e" } },
+    {
+      scope: ["entity.name.function", "support.function"],
+      settings: { foreground: "#68abfc" },
+    },
+  ],
+};
+
 const enSidebar = [
   {
     text: "Getting started",
@@ -156,6 +198,7 @@ export default defineConfig({
   titleTemplate: ":title | DevBridge",
   base,
   cleanUrls: true,
+  appearance: false,
   srcExclude: ["README.md", "README.zh-CN.md"],
   lastUpdated: true,
   locales: {
@@ -180,7 +223,7 @@ export default defineConfig({
         search: { provider: "local" },
         docFooter: { prev: "Previous", next: "Next" },
         lastUpdated: {
-          text: "Last updated",
+          text: "Updated",
           formatOptions: { dateStyle: "medium", timeStyle: "short" },
         },
         darkModeSwitchLabel: "Appearance",
@@ -232,7 +275,7 @@ export default defineConfig({
         },
         docFooter: { prev: "上一篇", next: "下一篇" },
         lastUpdated: {
-          text: "最后更新于",
+          text: "更新时间",
           formatOptions: { dateStyle: "medium", timeStyle: "short" },
         },
         darkModeSwitchLabel: "外观",
@@ -253,7 +296,23 @@ export default defineConfig({
   head: [
     ["meta", { name: "theme-color", content: "#ffffff" }],
     ["meta", { name: "color-scheme", content: "light dark" }],
+    ["link", { rel: "preconnect", href: "https://fonts.googleapis.com" }],
+    [
+      "link",
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" },
+    ],
+    [
+      "link",
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=PT+Mono&display=swap",
+      },
+    ],
   ],
+  markdown: {
+    theme: { light: shikiLightTheme, dark: shikiDarkTheme },
+  },
+  ignoreDeadLinks: [/^https?:\/\/localhost/, /^https?:\/\/127\.0\.0\.1/],
   themeConfig: {
     search: { provider: "local" },
   },

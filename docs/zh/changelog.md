@@ -10,53 +10,53 @@ description: DevBridge 命令行工具与服务的变更日志。
 ### 改进
 
 - 端侧上报版本号，版本过低时提示升级，并附一键升级命令。
-- `ping` 区分「网络不通」与「业务返回错误」：业务返回 4xx/5xx 时视为网络正常，继续探测。
+- ping 区分「网络不通」与「业务返回错误」：业务返回 4xx/5xx 时视为网络正常，继续探测。
 
 ### 修复
 
 - 修复网络异常时可能出现的重连风暴。
-- 修复 `ping` 长时间运行时的资源泄漏。
-- 修复 `--allow-anonymous` / `--deny-anonymous` 参数解析错误。
+- 修复 ping 长时间运行时的资源泄漏。
+- 修复 --allow-anonymous / --deny-anonymous 参数解析错误。
 - 安装包增加安装前校验。
 
 ### 移除
 
 - 移除客户端本地版本自检。
-- 移除 `config get/set/unset` 命令。
+- 移除 config get/set/unset 命令。
 
 ## 2026-09-21
 
 ### 改进
 
-- 新增 `config` 命令，用于查看与自定义网关连接配置。
-- 默认网关地址与 SNI 域名切换至 `devbridge-s2.hwtunnel.com`。
-- 支持全端口托管（端口 `-1`），需使用 DevBox 场景的 API Key。
+- 新增 config 命令，用于查看与自定义网关连接配置。
+- 默认网关地址与 SNI 域名切换至 devbridge-s2.hwtunnel.com。
+- 支持全端口托管（端口 -1），需使用 DevBox 场景的 API Key。
 - 同一隧道同一时间仅允许一个 Host 连接，并对重复连接返回更明确的错误提示。
 
 ## 2026-08-31
 
 ### 改进
 
-- 认证方式由 AK/SK 迁移至 API Key，并新增 `--api-key` 参数与 `HW_API_KEY` 环境变量。
+- 认证方式由 AK/SK 迁移至 API Key，并新增 --api-key 参数与 HW_API_KEY 环境变量。
 - 登录凭证优先存储于操作系统钥匙串（Keyring）。
-- `host` 与 `connect` 支持 API Key 鉴权与默认隧道。
-- `connect --token` 模式要求显式指定隧道 ID。
-- `devbridge show` 新增 Host/Connect 连接数与上传、下载流量统计。
+- host 与 connect 支持 API Key 鉴权与默认隧道。
+- connect --token 模式要求显式指定隧道 ID。
+- devbridge show 新增 Host/Connect 连接数与上传、下载流量统计。
 - 新增 API Key 管理页面，支持在线创建、查看与删除 API Key，并按 DevBridge、DevBox 使用场景区分。
 
 ### 移除
 
-- 移除 AK/SK 登录相关参数（`--access-key`、`--secret-key`、`--security-token`）。
-- 移除 `list` 与 `port list` 命令的 JSON 输出参数。
-- 移除 `--huaweicloud` 与 `loginType` 参数。
+- 移除 AK/SK 登录相关参数（--access-key、--secret-key、--security-token）。
+- 移除 list 与 port list 命令的 JSON 输出参数。
+- 移除 --huaweicloud 与 loginType 参数。
 
 ## 2026-08-11
 
 ### 改进
 
-- 新增 `limits` 命令，用于查看账户配额与当前使用情况。
-- 新增 `echo` 与 `ping` 调试工具，用于验证隧道链路。
-- 全局新增 `-v` / `--verbose` 参数，用于启用调试级别日志。
+- 新增 limits 命令，用于查看账户配额与当前使用情况。
+- 新增 echo 与 ping 调试工具，用于验证隧道链路。
+- 全局新增 -v / --verbose 参数，用于启用调试级别日志。
 
 ## 2026-07-31
 

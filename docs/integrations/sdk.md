@@ -19,7 +19,7 @@ The Go SDK wraps the core capabilities of the DevBridge CLI as a Go API.
 
 ## Installation
 
-Requires Go 1.22 or above. Replace `vX.Y.Z` with the released SDK version:
+Requires Go 1.22 or above. Replace vX.Y.Z with the released SDK version:
 
 ```bash
 go get github.com/huaweicloud/devspace-devbridge/go-sdk@vX.Y.Z
@@ -157,40 +157,40 @@ client := sdk.New(sdk.Config{
 
 | Method                                       | Description                                                                                   |
 | -------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `CreateTunnel(ctx, name, desc, *expiration)` | Create a tunnel; the description supports only Chinese characters/letters/digits (0-64 chars) |
-| `ListTunnels(ctx)`                           | List tunnels                                                                                  |
-| `ShowTunnel(ctx, id)`                        | Show tunnel details                                                                           |
-| `UpdateTunnel(ctx, id, *name, *desc, *exp)`  | Update a tunnel                                                                               |
-| `DeleteTunnel(ctx, id)`                      | Delete a tunnel                                                                               |
-| `DeleteAllTunnels(ctx)`                      | Delete all tunnels                                                                            |
-| `IssueToken(ctx, id, scope)`                 | Issue a token (scope: "host" / "connect")                                                     |
-| `GetLimits(ctx)`                             | Query quotas                                                                                  |
+| CreateTunnel(ctx, name, desc, *expiration)   | Create a tunnel; the description supports only Chinese characters/letters/digits (0-64 chars) |
+| ListTunnels(ctx)                             | List tunnels                                                                                  |
+| ShowTunnel(ctx, id)                          | Show tunnel details                                                                           |
+| UpdateTunnel(ctx, id, \*name, \*desc, \*exp) | Update a tunnel                                                                               |
+| DeleteTunnel(ctx, id)                        | Delete a tunnel                                                                               |
+| DeleteAllTunnels(ctx)                        | Delete all tunnels                                                                            |
+| IssueToken(ctx, id, scope)                   | Issue a token (scope: "host" / "connect")                                                     |
+| GetLimits(ctx)                               | Query quotas                                                                                  |
 
 ### Port management
 
-| Method                                                  | Description       |
-| ------------------------------------------------------- | ----------------- |
-| `CreatePort(ctx, tunnelID, port, protocol, *allowAnon)` | Create a port     |
-| `ListPorts(ctx, tunnelID)`                              | List ports        |
-| `ShowPort(ctx, tunnelID, port)`                         | Show port details |
-| `UpdatePort(ctx, tunnelID, port, *allowAnon)`           | Update a port     |
-| `DeletePort(ctx, tunnelID, port)`                       | Delete a port     |
+| Method                                                | Description       |
+| ----------------------------------------------------- | ----------------- |
+| CreatePort(ctx, tunnelID, port, protocol, *allowAnon) | Create a port     |
+| ListPorts(ctx, tunnelID)                              | List ports        |
+| ShowPort(ctx, tunnelID, port)                         | Show port details |
+| UpdatePort(ctx, tunnelID, port, *allowAnon)           | Update a port     |
+| DeletePort(ctx, tunnelID, port)                       | Delete a port     |
 
 ### Host / Connect
 
-| Method                        | Description                           |
-| ----------------------------- | ------------------------------------- |
-| `Host(ctx, HostConfig)`       | Host local ports (blocking)           |
-| `Connect(ctx, ConnectConfig)` | Connect to a remote tunnel (blocking) |
+| Method                      | Description                           |
+| --------------------------- | ------------------------------------- |
+| Host(ctx, HostConfig)       | Host local ports (blocking)           |
+| Connect(ctx, ConnectConfig) | Connect to a remote tunnel (blocking) |
 
-Common fields of `HostConfig` / `ConnectConfig`:
+Common fields of HostConfig / ConnectConfig:
 
-| Field                    | Description                                                                                                          |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------- |
-| `Ports`                  | Port list; when empty for `Host`, delivered from the gateway; when empty for `Connect`, negotiated with Host via SSH |
-| `JWTToken` / `APIKey`    | Choose one; skips the SDK's internal token issuance                                                                  |
-| `LocalIP` (Connect only) | Local listen address, defaults to `127.0.0.1`                                                                        |
-| `OnReady`                | Session-ready callback: `Host` returns the hosted port list, `Connect` returns the port mapping list                 |
+| Field                  | Description                                                                                                      |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Ports                  | Port list; when empty for Host, delivered from the gateway; when empty for Connect, negotiated with Host via SSH |
+| JWTToken / APIKey      | Choose one; skips the SDK's internal token issuance                                                              |
+| LocalIP (Connect only) | Local listen address, defaults to 127.0.0.1                                                                      |
+| OnReady                | Session-ready callback: Host returns the hosted port list, Connect returns the port mapping list                 |
 
 ## Error handling
 
@@ -255,8 +255,8 @@ Both Host and Connect actively connect to the DevBridge relay, so the device run
 
 ## Dependencies
 
-- `github.com/coder/websocket` — WebSocket client
-- `github.com/microsoft/dev-tunnels-ssh` — SSH tunnel protocol
+- github.com/coder/websocket — WebSocket client
+- github.com/microsoft/dev-tunnels-ssh — SSH tunnel protocol
 
 ## Related links
 

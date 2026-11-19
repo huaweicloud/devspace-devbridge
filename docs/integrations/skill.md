@@ -22,43 +22,43 @@ npx skills add https://gitcode.com/huaweicloud/huaweicloud-skills.git#master \
   --skill huawei-cloud-devbridge-tunnel -y
 ```
 
-After installation, the skill lives at `~/.agents/skills/huawei-cloud-devbridge-tunnel`.
+After installation, the skill lives at ~/.agents/skills/huawei-cloud-devbridge-tunnel.
 
 ### Install from the skill catalog
 
-An agent that has `huawei-cloud-find-skills` installed can search by keyword and install. Because this skill isn't yet indexed, search by the skill name directly.
+An agent that has huawei-cloud-find-skills installed can search by keyword and install. Because this skill isn't yet indexed, search by the skill name directly.
 
 ## What the skill can do
 
 The skill wraps the following operations, all executed through adapter functions that automatically accommodate different CLI versions:
 
-| Adapter function | CLI command             | Purpose                    |
-| ---------------- | ----------------------- | -------------------------- |
-| `db_init`        | —                       | Verify the CLI is usable   |
-| `db_create`      | `devbridge create`      | Create a tunnel            |
-| `db_port_create` | `devbridge port create` | Create a port              |
-| `db_host`        | `devbridge host`        | Host local services        |
-| `db_connect`     | `devbridge connect`     | Connect to a remote tunnel |
-| `db_list`        | `devbridge list`        | List tunnels               |
-| `db_show`        | `devbridge show`        | View tunnel details        |
-| `db_update`      | `devbridge update`      | Update a tunnel            |
-| `db_delete`      | `devbridge delete`      | Delete a tunnel            |
-| `db_port_list`   | `devbridge port list`   | List ports                 |
-| `db_port_delete` | `devbridge port delete` | Delete a port              |
-| `db_version`     | `devbridge version`     | View the CLI version       |
-| `db_auth_status` | `devbridge auth status` | View login status          |
-| `db_auth_login`  | `devbridge auth login`  | Log in                     |
+| Adapter function | CLI command           | Purpose                    |
+| ---------------- | --------------------- | -------------------------- |
+| db_init          | —                     | Verify the CLI is usable   |
+| db_create        | devbridge create      | Create a tunnel            |
+| db_port_create   | devbridge port create | Create a port              |
+| db_host          | devbridge host        | Host local services        |
+| db_connect       | devbridge connect     | Connect to a remote tunnel |
+| db_list          | devbridge list        | List tunnels               |
+| db_show          | devbridge show        | View tunnel details        |
+| db_update        | devbridge update      | Update a tunnel            |
+| db_delete        | devbridge delete      | Delete a tunnel            |
+| db_port_list     | devbridge port list   | List ports                 |
+| db_port_delete   | devbridge port delete | Delete a port              |
+| db_version       | devbridge version     | View the CLI version       |
+| db_auth_status   | devbridge auth status | View login status          |
+| db_auth_login    | devbridge auth login  | Log in                     |
 
 ## Adapter layer
 
-The DevBridge CLI updates itself automatically on each use, which may rename flags or change parameters. The skill solves this with the `scripts/devbridge_cmd.sh` adapter layer:
+The DevBridge CLI updates itself automatically on each use, which may rename flags or change parameters. The skill solves this with the scripts/devbridge_cmd.sh adapter layer:
 
-1. Before running, it dynamically discovers the flags supported by the current version via `devbridge <command> --help`.
+1. Before running, it dynamically discovers the flags supported by the current version via devbridge \<command\> --help.
 2. After running, it parses the error and automatically recovers from failures caused by renamed flags, new required parameters, or renamed commands.
 3. When automatic recovery fails, it returns the error and a suggested command to the agent.
 
 ::: tip Why not call devbridge directly
-All tunnel, port, Host, and Connect operations must go through the `db_*` adapter functions, not call `devbridge` directly. Only `devbridge auth` and `devbridge version` are exempt.
+All tunnel, port, Host, and Connect operations must go through the db_* adapter functions, not call devbridge directly. Only devbridge auth and devbridge version are exempt.
 :::
 
 ## Prerequisites
@@ -86,8 +86,8 @@ Tell the agent:
 The agent automatically runs through the following flow:
 
 1. Installs the CLI and checks the authentication status.
-2. Creates a tunnel with the name `dev-tunnel-<random>` and an 8-hour expiration.
-3. Adds port 8080 with the `http` protocol and allows anonymous access.
+2. Creates a tunnel with the name dev-tunnel-\<random\> and an 8-hour expiration.
+3. Adds port 8080 with the http protocol and allows anonymous access.
 4. Starts Host in the background to host the service.
 
 When done, it returns the tunnel ID and access URL.
@@ -102,11 +102,11 @@ The agent uses the parameters you specify and defaults for the rest, without con
 
 | Parameter        | Default               |
 | ---------------- | --------------------- |
-| Tunnel name      | `dev-tunnel-<random>` |
+| Tunnel name      | dev-tunnel-\<random\> |
 | Description      | DevBridge             |
 | Expiration       | 8 hours               |
 | Port             | 8080                  |
-| Protocol         | `http`                |
+| Protocol         | http                  |
 | Anonymous access | Allowed               |
 
 ## Cleanup
@@ -115,7 +115,7 @@ When done, stop the Host process and delete the tunnel:
 
 > Delete the tunnel I just created
 
-The agent runs `db_delete <tunnelId>` to delete the tunnel and its port configuration.
+The agent runs db_delete \<tunnelId\> to delete the tunnel and its port configuration.
 
 ## Related content
 

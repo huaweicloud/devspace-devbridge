@@ -5,11 +5,11 @@ description: Install the DevBridge CLI, log in, host a local service through Dev
 
 # Create and host a tunnel
 
-<p class="lead">In this quickstart, you'll host port `8080` on your local machine, then connect to the tunnel from another device.</p>
+<p class="lead">In this quickstart, you'll host port 8080 on your local machine, then connect to the tunnel from another device.</p>
 
 ## Prerequisites
 
-- Install the DevBridge CLI and confirm that `devbridge version` runs properly. See [Install the DevBridge CLI](./install.md).
+- Install the DevBridge CLI and confirm that devbridge version runs properly. See [Install the DevBridge CLI](./install.md).
 - Log in: use interactive login for personal environments and an API key for automated environments. See [Login and credentials](./authentication.md).
 - Have a second device ready to verify Connect mode (it must also have the CLI installed and be logged in).
 
@@ -41,11 +41,11 @@ After Host starts successfully, it prints the tunnel ID and access URL. The tunn
 https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com
 ```
 
-Keep the Host process running. If the network drops briefly, the CLI automatically tries to reconnect; press `Ctrl+C` to end this hosting session.
+Keep the Host process running. If the network drops briefly, the CLI automatically tries to reconnect; press Ctrl+C to end this hosting session.
 
 ::: tip Reuse a tunnel
 When you need a fixed address or want to configure multiple ports, first create a persistent tunnel, then use
-`devbridge host <tunnelId>` to host all the ports configured for it. See [Manage tunnels](./tunnels.md).
+devbridge host \<tunnelId\> to host all the ports configured for it. See [Manage tunnels](./tunnels.md).
 :::
 
 ## Connect from another device
@@ -62,7 +62,7 @@ Connect reads the tunnel's port configuration and sets up local mappings. Once t
 http://localhost:8080
 ```
 
-Keep the Connect process running; press `Ctrl+C` to stop the connection. For details about multiple ports and reconnection behavior, see
+Keep the Connect process running; press Ctrl+C to stop the connection. For details about multiple ports and reconnection behavior, see
 [Connect: connect to remote services](./connect.md).
 
 ## Next steps

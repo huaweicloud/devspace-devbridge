@@ -9,7 +9,7 @@ description: Troubleshoot DevBridge installation, login, tunnel, Host, and Conne
 
 ## devbridge command not found
 
-Confirm the default install directory exists and add it to the current terminal's `PATH`:
+Confirm the default install directory exists and add it to the current terminal's PATH:
 
 ```bash
 export PATH="$HOME/.huawei/bin:$PATH"
@@ -31,8 +31,8 @@ Check:
 
 1. whether the current network can reach the install address
 2. whether DNS and the HTTPS proxy work
-3. if you're using the Bash method, whether `curl` is available
-4. if you're using the PowerShell method, whether `irm` is available
+3. if you're using the Bash method, whether curl is available
+4. if you're using the PowerShell method, whether irm is available
 5. whether the install address is complete and not wrapped or truncated
 
 Don't switch to an install script of unknown origin when a download fails.
@@ -52,7 +52,7 @@ devbridge auth logout
 devbridge auth login
 ```
 
-When logging in with an API key, confirm the key is valid and hasn't expired. When passing it via an environment variable, check that `HW_API_KEY` is set correctly.
+When logging in with an API key, confirm the key is valid and hasn't expired. When passing it via an environment variable, check that HW_API_KEY is set correctly.
 
 ## Tunnel not found
 
@@ -82,9 +82,9 @@ Reuse an existing tunnel, or delete tunnels you no longer need.
 
 Confirm in order:
 
-1. `devbridge auth status` shows valid credentials
-2. `devbridge show <tunnelId>` can read the tunnel
-3. `devbridge port list <tunnelId>` includes the ports to host
+1. devbridge auth status shows valid credentials
+2. devbridge show \<tunnelId\> can read the tunnel
+3. devbridge port list \<tunnelId\> includes the ports to host
 4. the local service is actually listening on that port
 5. the current network can reach DevBridge
 
@@ -94,7 +94,7 @@ Check the local port:
 curl -v http://127.0.0.1:8080
 ```
 
-If the port uses `https`, check over HTTPS and confirm the certificate and local service configuration are correct.
+If the port uses https, check over HTTPS and confirm the certificate and local service configuration are correct.
 
 ## Connect can't access the service
 
@@ -117,7 +117,7 @@ View the port protocol:
 devbridge port show <tunnelId> -p 8080
 ```
 
-If the local service is plain HTTP, the protocol should be `http`; use `https` when the local service handles TLS itself; use `auto` only when auto-detection is genuinely needed.
+If the local service is plain HTTP, the protocol should be http; use https when the local service handles TLS itself; use auto only when auto-detection is genuinely needed.
 
 The current CLI doesn't support changing an existing port's protocol directly. To change it, delete the port and recreate it with the correct protocol:
 
@@ -130,7 +130,7 @@ devbridge port create <tunnelId> -p 8080 --protocol http
 
 Collect the following non-sensitive information:
 
-- `devbridge version`
+- devbridge version
 - operating system and architecture
 - the commands you ran, excluding API keys and tokens
 - tunnel ID, port, and protocol

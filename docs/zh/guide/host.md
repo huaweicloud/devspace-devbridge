@@ -27,7 +27,7 @@ devbridge port list <tunnelId>
 devbridge host <tunnelId>
 ```
 
-Host 会自动申请新的 Host 令牌，加载隧道中的全部端口配置，连接中继服务并开始转发。命令在前台持续运行，按 `Ctrl+C` 停止。
+Host 会自动申请新的 Host 令牌，加载隧道中的全部端口配置，连接中继服务并开始转发。命令在前台持续运行，按 Ctrl+C 停止。
 
 ## 创建并立即托管
 
@@ -37,10 +37,10 @@ Host 会自动申请新的 Host 令牌，加载隧道中的全部端口配置，
 devbridge host -p 8080 -d "隧道描述信息" -e 8
 ```
 
-这里的 `-d` 和 `-e` 属于新建隧道：分别设置隧道描述和有效期小时数。它们不是端口参数。
+这里的 -d 和 -e 属于新建隧道：分别设置隧道描述和有效期小时数。它们不是端口参数。
 
-需要稳定地址、多个端口或明确访问策略时，建议先使用 `devbridge create` 和
-`devbridge port create` 完成配置，再启动 Host。
+需要稳定地址、多个端口或明确访问策略时，建议先使用 devbridge create 和
+devbridge port create 完成配置，再启动 Host。
 
 ## 使用已有令牌
 
@@ -50,7 +50,7 @@ devbridge host -p 8080 -d "隧道描述信息" -e 8
 devbridge host <tunnelId> --token <jwt>
 ```
 
-`--token` 模式跳过令牌签发和端口查询，端口由网关通过中继通道下发。必须显式指定隧道 ID。
+--token 模式跳过令牌签发和端口查询，端口由网关通过中继通道下发。必须显式指定隧道 ID。
 
 ## 使用 API Key 鉴权
 
@@ -74,18 +74,18 @@ https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com
 
 | 端口策略             | 浏览器访问行为                                      |
 | -------------------- | --------------------------------------------------- |
-| 允许匿名访问（`-a`） | 直接打开地址即可访问，不需要 DevBridge 身份或凭证。 |
+| 允许匿名访问（-a）   | 直接打开地址即可访问，不需要 DevBridge 身份或凭证。 |
 | 禁止匿名访问（默认） | 跳转到登录页，完成认证获取凭证后即可访问。          |
 
 ::: tip 两种访问方式
 
-- **直接访问隧道地址**：在任意设备浏览器中打开 `https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com`，适合快速分享和验证。
-- **通过 Connect 访问**：在另一台设备运行 `devbridge connect <tunnelId>`，再访问 `http://localhost:<port>`，适合需要本地端口映射的场景。
+- **直接访问隧道地址**：在任意设备浏览器中打开 https://\<tunnelId\>-\<port\>.devbridge-s2.hwtunnel.com，适合快速分享和验证。
+- **通过 Connect 访问**：在另一台设备运行 devbridge connect \<tunnelId\>，再访问 http://localhost:\<port\>，适合需要本地端口映射的场景。
 
 两种方式等价，都能访问 Host 托管的服务。详见[Connect：连接远程服务](./connect.md)。
 :::
 
-端口的匿名访问策略在创建端口时通过 `-a` 或 `--deny-anonymous` 指定，详见[管理端口](./ports.md)。
+端口的匿名访问策略在创建端口时通过 -a 或 --deny-anonymous 指定，详见[管理端口](./ports.md)。
 
 ## 自动重连
 
@@ -101,13 +101,13 @@ Host 在网络短暂中断后自动尝试重连。以下状态需要人工处理
 
 ## 停止 Host
 
-在 Host 终端按 `Ctrl+C`。停止 Host 只结束当前转发：
+在 Host 终端按 Ctrl+C。停止 Host 只结束当前转发：
 
 - 持久隧道和端口配置仍然保留；
 - Connect 端无法继续访问没有 Host 的端口；
 - 再次执行 Host 命令即可恢复托管。
 
-不再使用的隧道应通过 `devbridge delete <tunnelId>` 删除。
+不再使用的隧道应通过 devbridge delete \<tunnelId\> 删除。
 
 ## 安全建议
 

@@ -19,7 +19,7 @@ DevBridge 是华为云的开发隧道服务，通过中继连接 Host（本地�
 
 ## 安装
 
-要求 Go 1.22 及以上版本。请将 `vX.Y.Z` 替换为实际发布的 SDK 版本号：
+要求 Go 1.22 及以上版本。请将 vX.Y.Z 替换为实际发布的 SDK 版本号：
 
 ```bash
 go get github.com/huaweicloud/devspace-devbridge/go-sdk@vX.Y.Z
@@ -157,40 +157,40 @@ client := sdk.New(sdk.Config{
 
 | 方法                                         | 说明                                            |
 | -------------------------------------------- | ----------------------------------------------- |
-| `CreateTunnel(ctx, name, desc, *expiration)` | 创建隧道，描述仅支持中文/字母/数字（0-64 字符） |
-| `ListTunnels(ctx)`                           | 查询隧道列表                                    |
-| `ShowTunnel(ctx, id)`                        | 查询隧道详情                                    |
-| `UpdateTunnel(ctx, id, *name, *desc, *exp)`  | 更新隧道                                        |
-| `DeleteTunnel(ctx, id)`                      | 删除隧道                                        |
-| `DeleteAllTunnels(ctx)`                      | 删除全部隧道                                    |
-| `IssueToken(ctx, id, scope)`                 | 签发令牌（scope: "host" / "connect"）           |
-| `GetLimits(ctx)`                             | 查询配额                                        |
+| CreateTunnel(ctx, name, desc, *expiration)   | 创建隧道，描述仅支持中文/字母/数字（0-64 字符） |
+| ListTunnels(ctx)                             | 查询隧道列表                                    |
+| ShowTunnel(ctx, id)                          | 查询隧道详情                                    |
+| UpdateTunnel(ctx, id, \*name, \*desc, \*exp) | 更新隧道                                        |
+| DeleteTunnel(ctx, id)                        | 删除隧道                                        |
+| DeleteAllTunnels(ctx)                        | 删除全部隧道                                    |
+| IssueToken(ctx, id, scope)                   | 签发令牌（scope: "host" / "connect"）           |
+| GetLimits(ctx)                               | 查询配额                                        |
 
 ### 端口管理
 
-| 方法                                                    | 说明         |
-| ------------------------------------------------------- | ------------ |
-| `CreatePort(ctx, tunnelID, port, protocol, *allowAnon)` | 创建端口     |
-| `ListPorts(ctx, tunnelID)`                              | 查询端口列表 |
-| `ShowPort(ctx, tunnelID, port)`                         | 查询端口详情 |
-| `UpdatePort(ctx, tunnelID, port, *allowAnon)`           | 更新端口     |
-| `DeletePort(ctx, tunnelID, port)`                       | 删除端口     |
+| 方法                                                  | 说明         |
+| ----------------------------------------------------- | ------------ |
+| CreatePort(ctx, tunnelID, port, protocol, *allowAnon) | 创建端口     |
+| ListPorts(ctx, tunnelID)                              | 查询端口列表 |
+| ShowPort(ctx, tunnelID, port)                         | 查询端口详情 |
+| UpdatePort(ctx, tunnelID, port, *allowAnon)           | 更新端口     |
+| DeletePort(ctx, tunnelID, port)                       | 删除端口     |
 
 ### Host / Connect
 
-| 方法                          | 说明                 |
-| ----------------------------- | -------------------- |
-| `Host(ctx, HostConfig)`       | 托管本地端口（阻塞） |
-| `Connect(ctx, ConnectConfig)` | 连接远端隧道（阻塞） |
+| 方法                        | 说明                 |
+| --------------------------- | -------------------- |
+| Host(ctx, HostConfig)       | 托管本地端口（阻塞） |
+| Connect(ctx, ConnectConfig) | 连接远端隧道（阻塞） |
 
-`HostConfig` / `ConnectConfig` 常用字段：
+HostConfig / ConnectConfig 常用字段：
 
-| 字段                    | 说明                                                                     |
-| ----------------------- | ------------------------------------------------------------------------ |
-| `Ports`                 | 端口列表；`Host` 为空时从网关下发，`Connect` 为空时从 Host 通过 SSH 协商 |
-| `JWTToken` / `APIKey`   | 二选一，跳过 SDK 内部的令牌签发                                          |
-| `LocalIP`（仅 Connect） | 本地监听地址，默认 `127.0.0.1`                                           |
-| `OnReady`               | 会话就绪回调：`Host` 返回托管端口列表，`Connect` 返回端口映射列表        |
+| 字段                  | 说明                                                                 |
+| --------------------- | -------------------------------------------------------------------- |
+| Ports                 | 端口列表；Host 为空时从网关下发，Connect 为空时从 Host 通过 SSH 协商 |
+| JWTToken / APIKey     | 二选一，跳过 SDK 内部的令牌签发                                      |
+| LocalIP（仅 Connect） | 本地监听地址，默认 127.0.0.1                                         |
+| OnReady               | 会话就绪回调：Host 返回托管端口列表，Connect 返回端口映射列表        |
 
 ## 错误处理
 
@@ -255,8 +255,8 @@ Host 和 Connect 都主动连接 DevBridge 中继，因此 Host 所在设备不�
 
 ## 依赖
 
-- `github.com/coder/websocket` — WebSocket 客户端
-- `github.com/microsoft/dev-tunnels-ssh` — SSH 隧道协议
+- github.com/coder/websocket — WebSocket 客户端
+- github.com/microsoft/dev-tunnels-ssh — SSH 隧道协议
 
 ## 相关链接
 
