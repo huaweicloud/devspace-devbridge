@@ -196,17 +196,47 @@ function setupCodeBlocks() {
 
     const copyBtn = block.querySelector(".copy");
     if (copyBtn) {
+      copyBtn.removeAttribute("title");
       copyBtn.innerHTML =
-        '<img src="/devspace-devbridge/images/copy.svg" alt="Copy">';
+        '<img class="icon-light-default" src="/devspace-devbridge/images/support-doc-revision-copy-m.svg" alt="复制">' +
+        '<img class="icon-light-hover" src="/devspace-devbridge/images/support-doc-revision-copy-h.svg" alt="复制">' +
+        '<img class="icon-dark-default" src="/devspace-devbridge/images/support-doc-revision-copy-dark-m.svg" alt="复制">' +
+        '<img class="icon-dark-hover" src="/devspace-devbridge/images/support-doc-revision-copy-dark-h.svg" alt="复制">' +
+        '<span class="code-btn-tooltip">复制</span>';
+      copyBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const pre = block.querySelector("pre");
+        const text = pre ? pre.textContent : "";
+        if (text) {
+          navigator.clipboard.writeText(text).then(() => {
+            const tooltip = copyBtn.querySelector(".code-btn-tooltip");
+            if (tooltip) {
+              tooltip.textContent = "复制成功";
+              setTimeout(() => {
+                tooltip.textContent = "复制";
+              }, 2000);
+            }
+          });
+        }
+      });
     }
 
     const toggleBtn = document.createElement("button");
     toggleBtn.className = "code-theme-toggle";
     toggleBtn.type = "button";
     toggleBtn.innerHTML =
-      '<img src="/devspace-devbridge/images/doc-revision.svg" alt="Toggle theme">';
+      '<img class="icon-light-default" src="/devspace-devbridge/images/support-doc-revision-cgc-m.svg" alt="切换主题">' +
+      '<img class="icon-light-hover" src="/devspace-devbridge/images/support-doc-revision-cgc-h.svg" alt="切换主题">' +
+      '<img class="icon-dark-default" src="/devspace-devbridge/images/support-doc-revision-cgc-dark-m.svg" alt="切换主题">' +
+      '<img class="icon-dark-hover" src="/devspace-devbridge/images/support-doc-revision-cgc-dark-h.svg" alt="切换主题">' +
+      '<span class="code-btn-tooltip">夜间模式</span>';
     toggleBtn.addEventListener("click", () => {
       block.classList.toggle("code-dark");
+      const isDark = block.classList.contains("code-dark");
+      const tooltip = toggleBtn.querySelector(".code-btn-tooltip");
+      if (tooltip) {
+        tooltip.textContent = isDark ? "日间模式" : "夜间模式";
+      }
     });
     block.appendChild(toggleBtn);
 

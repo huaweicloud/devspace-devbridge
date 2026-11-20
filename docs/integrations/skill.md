@@ -5,7 +5,7 @@ description: Use the huawei-cloud-devbridge-tunnel skill to let an AI agent mana
 
 # AI Agent Skill
 
-<p class="lead"><code>huawei-cloud-devbridge-tunnel</code> is an AI agent skill that wraps all of the DevBridge CLI's tunnel operations, letting an agent automatically install, authenticate, create tunnels, and host services.</p>
+<p class="lead">huawei-cloud-devbridge-tunnel is an AI agent skill that wraps all of the DevBridge CLI's tunnel operations, letting an agent automatically install, authenticate, create tunnels, and host services.</p>
 
 ## Use cases
 

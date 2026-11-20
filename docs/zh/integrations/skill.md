@@ -5,7 +5,7 @@ description: 通过 huawei-cloud-devbridge-tunnel skill 让 AI 代理自动管�
 
 # AI Agent Skill
 
-<p class="lead"><code>huawei-cloud-devbridge-tunnel</code> 是一个 AI 代理技能，封装了 DevBridge CLI 的全部隧道操作，让代理自动完成安装、认证、创建隧道和托管服务。</p>
+<p class="lead">huawei-cloud-devbridge-tunnel 是一个 AI 代理技能，封装了 DevBridge CLI 的全部隧道操作，让代理自动完成安装、认证、创建隧道和托管服务。</p>
 
 ## 适用场景
 

@@ -5,7 +5,7 @@ description: DevBridge CLI 的认证、隧道、端口、Host 和 Connect 命令
 
 # CLI 命令参考
 
-<p class="lead">本页汇总 DevBridge CLI 的主要命令。使用命令级 <code>--help</code> 查看当前安装版本的完整参数。</p>
+<p class="lead">本页汇总 DevBridge CLI 的主要命令。使用命令级 --help 查看当前安装版本的完整参数。</p>
 
 ## 全局命令
 

@@ -641,8 +641,8 @@ body {
 .vp-doc .lead {
   margin: 0 0 28px;
   color: var(--vp-c-text-2);
-  font-size: 17px;
-  line-height: 1.7;
+  font-size: var(--vp-doc-body-fs);
+  line-height: var(--vp-doc-zh-lh);
 }
 
 .vp-doc strong,
@@ -668,7 +668,7 @@ body {
   border-radius: var(--vp-code-block-radius);
   background: #fafafa;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .vp-doc div[class*="language-"] pre {
@@ -684,7 +684,7 @@ body {
   line-height: var(--vp-code-block-lh);
   font-family: "PT Mono", "Consolas", "Monaco", "Menlo", monospace;
   color: #191919;
-  padding: 0;
+  padding: 0 12px 12px 0;
   width: auto;
   min-width: 0;
 }
@@ -733,13 +733,72 @@ body {
   border-color: transparent;
 }
 
+
+.vp-doc div[class*="language-"] > button.copy::before,
 .vp-doc div[class*="language-"] > button.copy.copied::before {
   display: none;
 }
 
-.vp-doc div[class*="language-"] > button.copy img {
+.vp-doc div[class*="language-"] > button img {
   width: var(--vp-code-btn-icon-size);
   height: var(--vp-code-btn-icon-size);
+  display: none;
+}
+
+.vp-doc div[class*="language-"]:not(.code-dark) > button .icon-light-default {
+  display: inline;
+}
+.vp-doc div[class*="language-"]:not(.code-dark) > button:hover .icon-light-default {
+  display: none;
+}
+.vp-doc div[class*="language-"]:not(.code-dark) > button:hover .icon-light-hover {
+  display: inline;
+}
+
+.vp-doc div[class*="language-"].code-dark > button .icon-dark-default {
+  display: inline;
+}
+.vp-doc div[class*="language-"].code-dark > button:hover .icon-dark-default {
+  display: none;
+}
+.vp-doc div[class*="language-"].code-dark > button:hover .icon-dark-hover {
+  display: inline;
+}
+
+.code-btn-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: #fff;
+  color: #333;
+  font-size: 12px;
+  line-height: 1.4;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.code-btn-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #fff;
+}
+
+.vp-doc div[class*="language-"] > button:hover .code-btn-tooltip {
+  opacity: 1;
 }
 
 .vp-doc div[class*="language-"] > button.code-theme-toggle {
@@ -764,11 +823,6 @@ body {
   border-color: transparent;
 }
 
-.vp-doc div[class*="language-"] > button.code-theme-toggle img {
-  width: var(--vp-code-btn-icon-size);
-  height: var(--vp-code-btn-icon-size);
-}
-
 .vp-doc div[class*="language-"].code-dark {
   background: #1d2023;
   border: 1px solid rgb(219, 219, 219);
@@ -789,17 +843,9 @@ body {
   border-color: transparent;
 }
 
-.vp-doc div[class*="language-"].code-dark > button.copy img {
-  filter: none;
-}
-
 .vp-doc div[class*="language-"].code-dark > button.code-theme-toggle:hover {
   background-color: transparent;
   border-color: transparent;
-}
-
-.vp-doc div[class*="language-"].code-dark > button.code-theme-toggle img {
-  filter: none;
 }
 
 .vp-doc div[class*="language-"]:not(.code-dark) .vp-code span {

@@ -5,7 +5,7 @@ description: A quick reference for the DevBridge CLI's authentication, tunnel, p
 
 # CLI command reference
 
-<p class="lead">This page summarizes the main DevBridge CLI commands. Use command-level <code>--help</code> to see the full set of parameters for your installed version.</p>
+<p class="lead">This page summarizes the main DevBridge CLI commands. Use command-level --help to see the full set of parameters for your installed version.</p>
 
 ## Global commands
 
