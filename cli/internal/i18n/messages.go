@@ -99,6 +99,10 @@ type TunnelMessages struct {
 	FlagExpiration        Message
 	FlagName              Message
 	FlagScope             Message
+	FlagYes               Message
+	ConfirmDeleteAll      Message
+	DeleteAborted         Message
+	ConfirmNonInteractive Message
 }
 
 type PortMessages struct {
@@ -129,7 +133,9 @@ type PortMessages struct {
 
 type CommonMessages struct {
 	VersionInfo         Message
+	Day                 Message
 	Days                Message
+	Hour                Message
 	Hours               Message
 	Expired             Message
 	AuthCommands        Message

@@ -9,15 +9,6 @@ description: Understand the relationships between DevBridge tunnels, ports, Host
 
 DevBridge is suited to remote integration testing, sharing web pages under development, receiving webhooks, and accessing local services from another device.
 
-## Video
-
-<VideoPlayer
-  src="https://tools-artifact.developer.huaweicloud.com/sharedata/devbridge/video/promotion-video.mp4"
-  poster="/images/videos/promotion-video.png"
-  title="DevBridge promotional video"
-  :caption="false"
-/>
-
 ## How it works
 
 A complete connection involves the following parts:

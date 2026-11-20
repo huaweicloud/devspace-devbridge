@@ -135,9 +135,15 @@ For complete type and method documentation, see [pkg.go.dev](https://pkg.go.dev/
 client := sdk.New(sdk.Config{
 	APIKey:      "your-key",   // API Key; reads HW_API_KEY env var when empty
 	APIBaseURL:  "custom-url", // Custom REST API address
-	GatewayAddr: "addr:443",   // Custom gateway address
-	GatewayHost: "host",       // Custom gateway SNI host
-	OutputWriter: io.Discard,  // Status output destination; defaults to os.Stdout; io.Discard silences it
+	GatewayAddr: "addr:443",   // WebSocket gateway address (host:port)
+	GatewayHost: "host",       // WebSocket gateway SNI host
+	OutputWriter: io.Discard,  // Status output; defaults to os.Stdout, io.Discard silences it
+
+	// Extra headers merged into the host/connect WebSocket handshake.
+	WSHeaders: http.Header{"User-Agent": []string{"my-app/1.0"}},
+
+	// Custom HTTP client for REST API requests; nil uses the SDK default.
+	HTTPClient: http.DefaultClient,
 })
 ```
 

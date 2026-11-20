@@ -12,7 +12,8 @@ description: 使用 DevBridge REST API 管理开发隧道、端口和访问令�
 API 基础地址：
 
 ```text
-https://bridge.developer.myhuaweicloud.com
+https://bridge.developer.myhuaweicloud.com   # 隧道、端口、令牌、限制接口
+https://ns.developer.myhuaweicloud.com        # /v1/api-keys/check
 ```
 
 本文路径均包含 `/v1` 版本前缀。每次请求携带完整 Key：
@@ -26,9 +27,11 @@ X-API-Key: devbridge_<API Key 内容>
 
 ```bash
 export API_BASE='https://bridge.developer.myhuaweicloud.com'
+export NS_API_BASE='https://ns.developer.myhuaweicloud.com'
 export DEVBRIDGE_API_KEY='<完整 DevBridge API Key>'
 
-curl -k -i -X POST "$API_BASE/v1/api-keys/check" -H "X-API-Key: $DEVBRIDGE_API_KEY"
+# 凭证校验接口由独立域名提供：
+curl -k -i -X POST "$NS_API_BASE/v1/api-keys/check" -H "X-API-Key: $DEVBRIDGE_API_KEY"
 ```
 
 成功返回 `204 No Content`。下文请求均携带 `X-API-Key`，
@@ -72,23 +75,22 @@ curl -k -i -X POST "$API_BASE/v1/api-keys/check" -H "X-API-Key: $DEVBRIDGE_API_K
 
 ## 接口概览
 
-| 方法   | 路径                                      | 用途                               |
-| ------ | ----------------------------------------- | ---------------------------------- |
-| POST   | `/v1/api-keys/check`                      | 校验凭据。                         |
-| POST   | `/v1/tunnels`                             | 创建隧道。                         |
-| GET    | `/v1/tunnels`                             | 查询当前用户的有效隧道。           |
-| DELETE | `/v1/tunnels`                             | 删除当前用户的全部隧道。           |
-| GET    | `/v1/tunnels/{tunnelId}`                  | 查询详情和运行状态。               |
-| PUT    | `/v1/tunnels/{tunnelId}`                  | 更新隧道。                         |
-| DELETE | `/v1/tunnels/{tunnelId}`                  | 删除指定隧道。                     |
-| POST   | `/v1/tunnels/{tunnelId}/token?scope=host` | 签发 host 或 connect 令牌。        |
-| POST   | `/v1/tunnels/upsert-with-token`           | 按名称创建或复用，并签发两个令牌。 |
-| POST   | `/v1/tunnels/{tunnelId}/ports`            | 创建端口。                         |
-| GET    | `/v1/tunnels/{tunnelId}/ports`            | 查询端口列表。                     |
-| GET    | `/v1/tunnels/{tunnelId}/ports/{port}`     | 查询端口详情。                     |
-| PUT    | `/v1/tunnels/{tunnelId}/ports/{port}`     | 更新端口策略。                     |
-| DELETE | `/v1/tunnels/{tunnelId}/ports/{port}`     | 删除端口。                         |
-| GET    | `/v1/limits`                              | 查询限制和余额。                   |
+| 方法   | 路径                                      | 用途                                                |
+| ------ | ----------------------------------------- | --------------------------------------------------- |
+| POST   | `/v1/api-keys/check`                      | 校验凭据（域名 `ns.developer.myhuaweicloud.com`）。 |
+| POST   | `/v1/tunnels`                             | 创建隧道。                                          |
+| GET    | `/v1/tunnels`                             | 查询当前用户的有效隧道。                            |
+| DELETE | `/v1/tunnels`                             | 删除当前用户的全部隧道。                            |
+| GET    | `/v1/tunnels/{tunnelId}`                  | 查询详情和运行状态。                                |
+| PUT    | `/v1/tunnels/{tunnelId}`                  | 更新隧道。                                          |
+| DELETE | `/v1/tunnels/{tunnelId}`                  | 删除指定隧道。                                      |
+| POST   | `/v1/tunnels/{tunnelId}/token?scope=host` | 签发 host 或 connect 令牌。                         |
+| POST   | `/v1/tunnels/{tunnelId}/ports`            | 创建端口。                                          |
+| GET    | `/v1/tunnels/{tunnelId}/ports`            | 查询端口列表。                                      |
+| GET    | `/v1/tunnels/{tunnelId}/ports/{port}`     | 查询端口详情。                                      |
+| PUT    | `/v1/tunnels/{tunnelId}/ports/{port}`     | 更新端口策略。                                      |
+| DELETE | `/v1/tunnels/{tunnelId}/ports/{port}`     | 删除端口。                                          |
+| GET    | `/v1/limits`                              | 查询限制和余额。                                    |
 
 ## 创建隧道
 
@@ -109,7 +111,7 @@ Content-Type: application/json
 | `description` | string  | 否   | 最长 512 字符。                             |
 | `clusterId`   | string  | 否   | 当前区域的集群 ID；省略使用服务端默认集群。 |
 | `expiration`  | integer | 否   | 有效期，单位小时，默认 72，范围 1–720。     |
-| `type`        | string  | 否   | `bridge` 或 `env`，默认 `bridge`。          |
+| `type`        | string  | 否   | `bridge` 或 `devbox`，默认 `bridge`。       |
 
 成功响应：
 
@@ -218,45 +220,6 @@ curl -k -X POST "$API_BASE/v1/tunnels/aaaadysa/token?scope=host" -H "X-API-Key: 
 `lifetime` 是有效时长，单位为秒；`expiration` 是令牌过期的 Unix 秒。
 建立连接时，隧道和令牌均须处于有效期内。请妥善保管令牌。
 
-## 按名称创建或复用并签发令牌
-
-```http
-POST /v1/tunnels/upsert-with-token
-Content-Type: application/json
-
-{
-  "name": "frontend-dev",
-  "expiration": 24,
-  "ports": [
-    {"port": 8080, "protocol": "http", "allowAnonymous": false}
-  ]
-}
-```
-
-支持创建隧道的字段，以及可选的 `ports` 数组，每次最多 10 项：
-
-- 按名称创建或复用隧道；复用有效隧道时保留原有信息和过期时间。
-- 保留中的过期隧道会续期，时长取 `expiration`，默认沿用原时长规格。
-- `ports` 用于追加端口；已有端口沿用原策略，可通过端口更新接口修改。
-- 每次生成新的 Host 和 Connect 令牌。
-
-成功直接返回创建隧道响应的字段，并增加以下两个字段：
-
-```json
-{
-  "hostToken": {
-    "lifetime": 86400,
-    "expiration": 1789603200,
-    "token": "<Host JWT>"
-  },
-  "connectToken": {
-    "lifetime": 86400,
-    "expiration": 1789603200,
-    "token": "<Connect JWT>"
-  }
-}
-```
-
 ## 创建和查询端口
 
 ```http
@@ -316,10 +279,7 @@ Content-Type: application/json
   "activeTunnels": 1,
   "maxTunnels": 10,
   "maxPortsPerTunnel": 10,
-  "maxHostsPerTunnel": 1,
-  "maxTunnelBandwidthBytesPerSecond": 5242880,
-  "maxHttpRequestsPerMinutePerPort": 500,
-  "maxConnectionsPerPort": 100
+  "maxHostsPerTunnel": 1
 }
 ```
 

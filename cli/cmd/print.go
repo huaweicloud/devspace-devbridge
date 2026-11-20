@@ -58,11 +58,7 @@ func printTable(headers []string, rows [][]string) {
 }
 
 func formatTunnelExpiration(tunnelExpiration int64) string {
-	hours := float64(tunnelExpiration)
-	if hours >= 24 {
-		return formatRemaining(hours/24, i18n.T(i18n.Msg.Common.Days))
-	}
-	return formatRemaining(hours, i18n.T(i18n.Msg.Common.Hours))
+	return formatDuration(float64(tunnelExpiration))
 }
 
 func formatTunnelRemaining(expireAt int64) string {
@@ -71,17 +67,29 @@ func formatTunnelRemaining(expireAt int64) string {
 	if remaining <= 0 {
 		return i18n.T(i18n.Msg.Common.Expired)
 	}
-	hours := float64(remaining) / 3600
-	if hours >= 24 {
-		days := hours / 24
-		return formatRemaining(days, i18n.T(i18n.Msg.Common.Days))
-	}
-	return formatRemaining(hours, i18n.T(i18n.Msg.Common.Hours))
+	return formatDuration(float64(remaining) / 3600)
 }
 
-func formatRemaining(v float64, unit string) string {
+// formatDuration renders an hour count with day/hour units, rounding up
+// (ceiling) to 0.1 hour before choosing the unit. Ceiling first keeps a
+// 24-hour tunnel consistent between create (static: exactly 24h -> 1 day) and
+// show/list (remaining: 24h minus a few seconds -> would otherwise round to
+// 24 hours).
+func formatDuration(hours float64) string {
+	rounded := math.Ceil(hours*10) / 10
+	if rounded >= 24 {
+		return formatRemaining(rounded/24, i18n.T(i18n.Msg.Common.Day), i18n.T(i18n.Msg.Common.Days))
+	}
+	return formatRemaining(rounded, i18n.T(i18n.Msg.Common.Hour), i18n.T(i18n.Msg.Common.Hours))
+}
+
+func formatRemaining(v float64, singular, plural string) string {
 	rounded := math.Ceil(v*10) / 10
 
+	unit := plural
+	if rounded == 1 {
+		unit = singular
+	}
 	return strconv.FormatFloat(rounded, 'f', -1, 64) + " " + unit
 }
 

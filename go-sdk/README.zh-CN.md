@@ -135,9 +135,15 @@ err = client.Host(ctx, sdk.HostConfig{
 client := sdk.New(sdk.Config{
 	APIKey:      "your-key",   // API Key，留空时读取 HW_API_KEY 环境变量
 	APIBaseURL:  "custom-url", // 自定义 REST API 地址
-	GatewayAddr: "addr:443",   // 自定义网关地址
-	GatewayHost: "host",       // 自定义网关 SNI host
-	OutputWriter: io.Discard,  // 状态输出目的地，默认 os.Stdout，io.Discard 表示静音
+	GatewayAddr: "addr:443",   // WebSocket 网关地址（host:port）
+	GatewayHost: "host",       // WebSocket 网关 SNI host
+	OutputWriter: io.Discard,  // 状态输出；默认 os.Stdout，io.Discard 表示静音
+
+	// 合并进每次 host/connect WebSocket 握手的额外请求头。
+	WSHeaders: http.Header{"User-Agent": []string{"my-app/1.0"}},
+
+	// 自定义 REST API 的 HTTP 客户端；nil 表示使用 SDK 默认。
+	HTTPClient: http.DefaultClient,
 })
 ```
 
