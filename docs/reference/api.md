@@ -273,7 +273,7 @@ The `port` in the path specifies the target port. On success, returns the update
 
 ```json
 {
-  "resetAt": 1794153600,
+  "resetAt": 1795363200,
   "quotaBytes": 53687091200,
   "remainingBytes": 53683945472,
   "activeTunnels": 1,
@@ -285,7 +285,7 @@ The `port` in the path specifies the target port. On success, returns the update
 
 Example quotas are for illustration only; use the actual response. `activeTunnels` is the current user's number of valid tunnels;
 `maxTunnels` is the limit shared by all users under the account.
-`quotaBytes` and `remainingBytes` are also account-shared weekly quota and balance, reset at 00:00 Beijing time on Monday of each Beijing natural week (Monday through Sunday);
+`quotaBytes` and `remainingBytes` are also account-shared weekly quota and balance, provisioned per account plan (5 GB for Basic, 50 GB for Plus), metered by Beijing natural week (Monday through Sunday) and reset at 00:00 Beijing time every Monday; unused quota does not carry over to the next week.
 `resetAt` is the Unix time (in seconds) of the next reset (the upcoming Monday 00:00 Beijing time).
 
 ## Field conventions

@@ -273,7 +273,7 @@ Content-Type: application/json
 
 ```json
 {
-  "resetAt": 1794153600,
+  "resetAt": 1795363200,
   "quotaBytes": 53687091200,
   "remainingBytes": 53683945472,
   "activeTunnels": 1,
@@ -286,8 +286,8 @@ Content-Type: application/json
 示例额度以实际响应为准。`activeTunnels` 是当前用户的有效隧道数；
 `maxTunnels` 是账户下所有用户共享的上限。
 `quotaBytes` 和 `remainingBytes` 也是账户共享的每周额度和余额，
-按北京时间自然周（周一至周日）计，每周一 00:00 重置，
-`resetAt` 为下次重置（下周一 00:00 北京时间）的 Unix 秒。
+按套餐下发（普通 5 GB、Plus 50 GB），按北京时间自然周（周一至周日）计量，
+每周一 00:00 重置且不累计，`resetAt` 为下次重置（下周一 00:00 北京时间）的 Unix 秒。
 
 ## 字段约定
 
