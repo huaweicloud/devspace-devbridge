@@ -277,14 +277,14 @@ The `port` in the path specifies the target port. On success, returns the update
   "quotaBytes": 53687091200,
   "remainingBytes": 53683945472,
   "activeTunnels": 1,
-  "maxTunnels": 10,
+  "maxTunnels": 100,
   "maxPortsPerTunnel": 10,
   "maxHostsPerTunnel": 1
 }
 ```
 
 Example quotas are for illustration only; use the actual response. `activeTunnels` is the current user's number of valid tunnels;
-`maxTunnels` is the limit shared by all users under the account.
+`maxTunnels` is the limit shared by all users under the account (10 for Basic, 100 for Plus).
 `quotaBytes` and `remainingBytes` are also account-shared weekly quota and balance, provisioned per account plan (5 GB for Basic, 50 GB for Plus), metered by Beijing natural week (Monday through Sunday) and reset at 00:00 Beijing time every Monday; unused quota does not carry over to the next week.
 `resetAt` is the Unix time (in seconds) of the next reset (the upcoming Monday 00:00 Beijing time).
 

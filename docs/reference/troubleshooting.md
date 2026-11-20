@@ -70,7 +70,7 @@ Common causes:
 
 ## Can't create more tunnels
 
-Each workspace holds up to 10 valid tunnels by default. Run:
+Each workspace holds up to 10 valid tunnels on the Basic plan and 100 on the Plus plan. Run:
 
 ```bash
 devbridge list

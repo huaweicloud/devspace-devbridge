@@ -145,7 +145,7 @@ devbridge create my-tunnel -d "测试" -e 8
 
 ### Problem: `Failed to create tunnel: quota exceeded`
 
-**Cause:** Account has reached the maximum number of tunnels (default 10 per workspace).
+**Cause:** Account has reached the maximum number of tunnels (10 per workspace on Basic, 100 on Plus).
 
 **Solution:**
 
