@@ -19,13 +19,15 @@ The output includes:
 
 | Item                             | Description                                                |
 | -------------------------------- | ---------------------------------------------------------- |
-| Reset time                       | The point in time when quota metering resets.              |
+| Reset time                       | Quota reset time: the upcoming Monday 00:00 Beijing time.  |
 | Traffic quota / traffic used     | The traffic limit and current usage of tunnel forwarding.  |
 | Active tunnels                   | The number of valid tunnels in the current workspace.      |
 | Tunnel / port / Host limits      | The maximum allowed count for each resource.               |
 | Tunnel bandwidth limit           | The bandwidth limit of a single tunnel.                    |
 | Per-port HTTP request-rate limit | The HTTP request rate allowed for a single port.           |
 | Per-port connection limit        | The concurrent connection count allowed for a single port. |
+
+Traffic quota is metered by Beijing natural week (Monday through Sunday) and resets at 00:00 Beijing time every Monday without carrying over. The quota size depends on the plan (5 GB for Basic, 50 GB for Plus).
 
 ::: tip When to check quotas
 

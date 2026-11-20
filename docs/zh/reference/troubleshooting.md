@@ -70,7 +70,7 @@ devbridge show <tunnelId>
 
 ## 无法创建更多隧道
 
-每个工作空间默认最多拥有 10 条有效隧道。使用：
+每个工作空间最多拥有 10 条有效隧道（普通套餐），Plus 套餐为 100 条。使用：
 
 ```bash
 devbridge list

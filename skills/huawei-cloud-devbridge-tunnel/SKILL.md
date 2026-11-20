@@ -436,7 +436,7 @@ db_tunnel_url <tunnelId> # Public URL accessible
 
 ### Limitations
 
-- Maximum 10 active tunnels per workspace (default quota).
+- Maximum active tunnels per workspace: 10 (Basic), 100 (Plus).
 - Tunnel expiration: 1-720 hours (default 72 hours).
 - Port range: 1-65535, ports cannot be duplicated within the same tunnel.
 - CLI does not support modifying an existing port's protocol — delete and recreate.

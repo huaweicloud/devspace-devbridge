@@ -27,7 +27,7 @@ Expired tunnels don't appear in the list of valid tunnels, and you can no longer
 
 On success, the command returns the tunnel ID, name, description, and expiration time.
 
-A workspace can hold up to 10 valid tunnels by default. Once you reach the quota, reuse or delete existing tunnels.
+A workspace can hold up to 10 valid tunnels on the Basic plan and 100 on the Plus plan. Once you reach the quota, reuse or delete existing tunnels.
 
 ## List tunnels
 
