@@ -136,6 +136,8 @@ The output includes:
 - per-port HTTP request-rate limit
 - per-port connection limit
 
+For those last three rows, a field the server does not return is shown as `not provided by server` (never as `0`), `0` is shown as returned, and a negative value such as `-1` is shown as `unlimited`.
+
 ## Debug tools
 
 ### echo

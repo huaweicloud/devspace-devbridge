@@ -27,6 +27,8 @@ The output includes:
 | Per-port HTTP request-rate limit | The HTTP request rate allowed for a single port.           |
 | Per-port connection limit        | The concurrent connection count allowed for a single port. |
 
+The bandwidth, request-rate, and connection rows distinguish three cases: a limit the server did not return is shown as `not provided by server` (not `0`), an explicit `0` is shown as returned, and a negative value such as `-1` is shown as `unlimited`.
+
 ::: tip When to check quotas
 
 - When creating a tunnel or port fails, check whether you've hit the count limit.
