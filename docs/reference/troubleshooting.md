@@ -109,6 +109,29 @@ Confirm:
 
 Connect's automatic reconnection only handles brief network interruptions; it can't recover tunnels that have been deleted or expired.
 
+## Public URL returns 404 or 503
+
+A public URL (`https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com`) reflects the tunnel and Host state:
+
+| Status code | Meaning | Action |
+| ----------- | ------- | ------ |
+| `404` with `tunnel not found` | The tunnel does not exist or has expired. | Check the tunnel ID; confirm with `devbridge show <tunnelId>`. |
+| `404` with `port not bound` | The port is not configured on this tunnel. | Run `devbridge port list <tunnelId>`. |
+| `503` with `Retry-After` and `host offline` | The tunnel exists but no Host is currently connected. | Wait for the `Retry-After` interval and retry; restart the Host process. |
+
+::: warning Server-side boundary
+The public status code is decided by the gateway (relay service), which is not part of this repository. The target contract is `404 tunnel not found` for a missing or expired tunnel and `502`/`503` plus `Retry-After` for a tunnel whose Host is offline. Implementing it is tracked as a cross-repository dependency of issue #50 and is not verified end to end in this repository. Until the gateway ships it, an offline Host may still produce `404 tunnel not found`; use the **Host Online Status** field of `devbridge show <tunnelId>` to tell the two cases apart.
+:::
+
+### A newly added port is still unreachable
+
+Check, in order:
+
+1. `devbridge show <tunnelId>` reports `Host Online Status: online`;
+2. `devbridge port list <tunnelId>` contains the port;
+3. the Host runs in dynamic port mode (`devbridge host <tunnelId>` without `-p`). A Host started with explicit ports forwards only that list, so restart it: `devbridge host <tunnelId> -p <ports>`;
+4. the local service behind the new port is listening on the Host machine.
+
 ## Incorrect HTTP and HTTPS behavior
 
 View the port protocol:

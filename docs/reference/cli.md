@@ -136,6 +136,8 @@ The output includes:
 - per-port HTTP request-rate limit
 - per-port connection limit
 
+`limits` is an account-level view and does not include per-tunnel Host status. To check whether a specific tunnel currently has a Host, use `devbridge show <tunnelId>`, which reports the **Host Online Status** field.
+
 ## Debug tools
 
 ### echo

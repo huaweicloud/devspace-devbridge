@@ -31,6 +31,12 @@ type TunnelStatus struct {
 	TotalDownloadBytes    int64 `json:"totalDownloadBytes"`
 }
 
+// HostOnline reports whether the tunnel currently has a connected Host.
+// A nil status reports offline, matching the zero-value semantics.
+func (s *TunnelStatus) HostOnline() bool {
+	return s != nil && s.HostConnectionCount > 0
+}
+
 // Port represents a port configuration.
 type Port struct {
 	TunnelID       string `json:"tunnelId"`

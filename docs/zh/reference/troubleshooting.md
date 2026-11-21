@@ -109,6 +109,29 @@ curl -v http://127.0.0.1:8080
 
 Connect 自动重连只处理短暂网络中断，不能恢复已删除或已过期的隧道。
 
+## 公网 URL 返回 404 或 503
+
+通过隧道公网 URL（`https://<tunnelId>-<port>.devbridge-s2.hwtunnel.com`）访问时，返回码反映隧道与 Host 的当前状态：
+
+| 返回码 | 含义 | 处理 |
+| ------ | ---- | ---- |
+| `404`，body 为 `tunnel not found` | 隧道不存在或已过期。 | 核对隧道 ID；用 `devbridge show <tunnelId>` 确认。 |
+| `404`，body 为 `port not bound` | 该端口未在隧道上配置。 | 执行 `devbridge port list <tunnelId>` 核对端口。 |
+| `503`，带 `Retry-After`，body 为 `host offline` | 隧道存在，但当前没有 Host 连接。 | 等待 `Retry-After` 指示的时间后重试；重启 Host 进程。 |
+
+::: warning 服务端边界
+公网返回码由网关（中继服务）判定，不在本仓库内。目标契约是：隧道不存在或已过期返回 `404 tunnel not found`；隧道存在但 Host 离线返回 `502`/`503` 并带 `Retry-After`。该实现作为 Issue #50 的跨仓依赖项跟踪，尚未在本仓库端到端验证。网关完成前，Host 离线仍可能返回 `404 tunnel not found`，此时可用 `devbridge show <tunnelId>` 的 **Host 在线状态** 字段区分两种情况。
+:::
+
+### 新增端口仍不可访问
+
+按顺序确认：
+
+1. `devbridge show <tunnelId>` 显示 `Host 在线状态: 在线`；
+2. `devbridge port list <tunnelId>` 中已有该端口；
+3. Host 以动态端口模式运行（`devbridge host <tunnelId>` 未带 `-p`）。若启动时显式指定了端口，Host 只转发该列表，需重启生效：`devbridge host <tunnelId> -p <端口列表>`；
+4. 新端口对应的本地服务在 Host 机器上正在监听。
+
 ## HTTP 与 HTTPS 行为不正确
 
 查看端口协议：
