@@ -9,7 +9,15 @@ description: Changes to the DevBridge CLI and related services.
 
 ### Added
 
-- Go SDK (v0.1.0-release): tunnel management, port management, token issuance, Host hosting and Connect connection (with `OnReady` callback and automatic reconnection), client configuration (API key, custom gateway, WebSocket handshake headers, output control), sentinel errors and `IsAPIError` for business error codes, i18n support (`DEVBRIDGE_LANG`)
+- Go SDK (v0.1.0-release):
+  - Tunnel management: create, query, update, delete
+  - Port management: create, query, update, delete
+  - Token issuance: Host / Connect tokens
+  - Host hosting: forward local ports via WebSocket + SSH tunnel, with `OnReady` callback and automatic reconnection
+  - Connect connection: connect to a remote tunnel and establish local port mappings, with `OnReady` callback and automatic reconnection
+  - Client configuration: API key, custom gateway address, custom HTTP client, WebSocket handshake headers, output control
+  - Error handling: sentinel errors (`ErrMissingAPIKey`, `ErrTunnelNotFound`, `ErrDuplicateHost`, `ErrQuotaExceeded`, etc.) and `IsAPIError` for business error codes
+  - i18n support via `DEVBRIDGE_LANG` environment variable
 
 ## 2026-11-06
 
