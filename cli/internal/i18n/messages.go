@@ -133,7 +133,9 @@ type PortMessages struct {
 
 type CommonMessages struct {
 	VersionInfo         Message
+	Day                 Message
 	Days                Message
+	Hour                Message
 	Hours               Message
 	Expired             Message
 	AuthCommands        Message

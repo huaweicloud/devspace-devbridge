@@ -10,7 +10,7 @@ description: DevBridge 开发隧道的入口：五分钟上手、核心概念与
 ## 从这里开始
 
 - [五分钟创建并托管第一条隧道](./guide/quickstart.md) —— 安装、登录、托管、连接的完整流程
-- [了解开发隧道的工作方式](./guide/overview.md) —— 隧道、端口、Host 与 Connect 的关系，含视频介绍
+- [了解开发隧道的工作方式](./guide/overview.md) —— 隧道、端口、Host 与 Connect 的关系
 - [CLI 命令参考](./reference/cli.md) —— 全部命令与参数说明
 
 ## 常用页面

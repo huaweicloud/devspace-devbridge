@@ -2,7 +2,9 @@ package i18n
 
 func init() {
 	Msg.Common.VersionInfo = Message{ZH: "DevBridge 远程隧道端口转发工具", EN: "DevBridge remote tunnel port forwarding tool"}
+	Msg.Common.Day = Message{ZH: "天", EN: "day"}
 	Msg.Common.Days = Message{ZH: "天", EN: "days"}
+	Msg.Common.Hour = Message{ZH: "小时", EN: "hour"}
 	Msg.Common.Hours = Message{ZH: "小时", EN: "hours"}
 	Msg.Common.Expired = Message{ZH: "已过期", EN: "expired"}
 	Msg.Common.AuthCommands = Message{ZH: "认证命令", EN: "Authentication commands"}

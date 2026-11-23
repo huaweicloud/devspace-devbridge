@@ -1,5 +1,6 @@
 export default {
   config: {
+    MD010: { code_blocks: false },
     MD013: false,
     MD024: { siblings_only: true },
     MD025: false,
