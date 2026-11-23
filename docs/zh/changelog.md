@@ -5,7 +5,13 @@ description: DevBridge 命令行工具与服务的变更日志。
 
 # 更新日志
 
-## 0.3.0-release（2026-11-06）
+## 2026-11-23
+
+### 新增
+
+- Go SDK（v0.1.0-release）：隧道管理、端口管理、令牌签发、Host 托管与 Connect 连接（支持 `OnReady` 回调与断线自动重连）、客户端配置（API Key、自定义网关、WebSocket 握手头、状态输出控制）、sentinel error 与 `IsAPIError` 业务错误码提取、国际化支持（`DEVBRIDGE_LANG`）
+
+## 2026-11-06
 
 ### 改进
 

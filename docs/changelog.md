@@ -5,7 +5,13 @@ description: Changes to the DevBridge CLI and related services.
 
 # Changelog
 
-## 0.3.0-release (2026-11-06)
+## 2026-11-23
+
+### Added
+
+- Go SDK (v0.1.0-release): tunnel management, port management, token issuance, Host hosting and Connect connection (with `OnReady` callback and automatic reconnection), client configuration (API key, custom gateway, WebSocket handshake headers, output control), sentinel errors and `IsAPIError` for business error codes, i18n support (`DEVBRIDGE_LANG`)
+
+## 2026-11-06
 
 ### Improvements
 
