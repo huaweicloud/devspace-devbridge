@@ -57,7 +57,7 @@ const enSidebar = [
   },
   {
     text: "Working with tunnels",
-    collapsed: false,
+    collapsed: true,
     items: [
       { text: "Manage tunnels", link: "/guide/tunnels" },
       { text: "Manage ports", link: "/guide/ports" },
@@ -68,7 +68,7 @@ const enSidebar = [
   },
   {
     text: "Best practices",
-    collapsed: false,
+    collapsed: true,
     items: [
       {
         text: "Automate DevBridge setup and host an SSH tunnel",
@@ -98,7 +98,7 @@ const enSidebar = [
   },
   {
     text: "Integrations",
-    collapsed: false,
+    collapsed: true,
     items: [
       { text: "AI Agent Skill", link: "/integrations/skill" },
       { text: "Go SDK", link: "/integrations/sdk" },
@@ -106,7 +106,7 @@ const enSidebar = [
   },
   {
     text: "Reference",
-    collapsed: false,
+    collapsed: true,
     items: [
       { text: "CLI command reference", link: "/reference/cli" },
       { text: "REST API", link: "/reference/api" },
@@ -131,7 +131,7 @@ const zhSidebar = [
   },
   {
     text: "使用隧道",
-    collapsed: false,
+    collapsed: true,
     items: [
       { text: "管理隧道", link: "/zh/guide/tunnels" },
       { text: "管理端口", link: "/zh/guide/ports" },
@@ -142,7 +142,7 @@ const zhSidebar = [
   },
   {
     text: "最佳实践",
-    collapsed: false,
+    collapsed: true,
     items: [
       {
         text: "一键配置 DevBridge 并托管 SSH 隧道",
@@ -172,7 +172,7 @@ const zhSidebar = [
   },
   {
     text: "集成",
-    collapsed: false,
+    collapsed: true,
     items: [
       { text: "AI Agent Skill", link: "/zh/integrations/skill" },
       { text: "Go SDK", link: "/zh/integrations/sdk" },
@@ -180,7 +180,7 @@ const zhSidebar = [
   },
   {
     text: "参考",
-    collapsed: false,
+    collapsed: true,
     items: [
       { text: "CLI 命令参考", link: "/zh/reference/cli" },
       { text: "REST API", link: "/zh/reference/api" },

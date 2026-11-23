@@ -529,7 +529,8 @@ body {
 .VPSidebar {
   padding-right: 0 !important;
   background: var(--vp-c-bg);
-  border-right: 1px solid var(--vp-c-divider);
+  border-right: none !important;
+  box-shadow: 1px 0 4px 0 rgba(0, 0, 0, 0.08) !important;
 }
 
 .VPSidebar .nav {
@@ -555,14 +556,6 @@ body {
   color: var(--vp-c-text-2);
   font-weight: 400 !important;
 }
-
-/* .VPSidebarItem.level-1 > .item:hover {
-  background: transparent;
-} */
-
-/* .VPSidebarItem.level-1 > .item:hover .text {
-  color: var(--vp-c-text-1);
-} */
 
 .VPSidebarItem.level-1 > .item {
   padding-left: 24px;
@@ -627,9 +620,6 @@ body {
   }
 }
 
-.VPDoc .container {
-  padding-top: 8px;
-}
 .VPDoc .container > .content {
   padding: var(--vp-doc-content-padding);
   background: var(--vp-c-bg-elv);
@@ -1337,6 +1327,7 @@ body {
 }
 
 .VPDoc {
+  padding-top: 0 !important;
   padding-left: var(--vp-doc-pl) !important;
   padding-right: var(--vp-doc-pl) !important;
 }
@@ -1677,5 +1668,60 @@ body {
 @media (max-width: 959px) {
   .sidebar-resizer {
     display: none;
+  }
+}
+/* === 面包屑导航样式（对标华为云） === */
+.doc-breadcrumb {
+  font-size: 14px;
+  line-height: 22px;
+  color: #575d6c;
+  padding: 0 var(--vp-doc-pl);
+  margin-top: 28px;
+  margin-bottom: 16px;
+}
+
+.doc-breadcrumb .breadcrumb-link {
+  color: #191919;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.doc-breadcrumb .breadcrumb-link:hover {
+  color: #191919;
+  text-decoration: underline;
+}
+
+.dark .doc-breadcrumb .breadcrumb-link {
+  color: #e0e0e0;
+}
+
+.dark .doc-breadcrumb .breadcrumb-link:hover {
+  color: #e0e0e0;
+}
+
+.doc-breadcrumb .breadcrumb-separator {
+  padding: 0 5px;
+  color: #575d6c;
+}
+
+.dark .doc-breadcrumb .breadcrumb-separator {
+  color: #a8a8a8;
+}
+
+.doc-breadcrumb .breadcrumb-current {
+  color: #191919;
+  font-weight: 600;
+}
+
+.dark .doc-breadcrumb .breadcrumb-current {
+  color: #e0e0e0;
+}
+
+@media (max-width: 768px) {
+  .doc-breadcrumb {
+    font-size: 12px;
+    line-height: 18px;
+    margin-top: 16px;
+    margin-bottom: 16px;
   }
 }

@@ -3,6 +3,7 @@ import { ref, onMounted, watch, nextTick, onBeforeUnmount } from "vue";
 import { useRoute } from "vitepress";
 import DefaultTheme from "vitepress/theme";
 import TranslationNotice from "./TranslationNotice.vue";
+import Breadcrumb from "./Breadcrumb.vue";
 
 const route = useRoute();
 const target = ref(null);
@@ -346,6 +347,7 @@ watch(
   <DefaultTheme.Layout>
     <template #doc-top>
       <ClientOnly>
+        <Breadcrumb />
         <Teleport v-if="target" :to="target">
           <TranslationNotice />
         </Teleport>
