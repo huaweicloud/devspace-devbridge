@@ -5,6 +5,39 @@ description: Changes to the DevBridge CLI and related services.
 
 # Changelog
 
+## 2026-11-23
+
+### Added
+
+- Go SDK (v0.1.0-release):
+  - Tunnel management: create, query, update, delete
+  - Port management: create, query, update, delete
+  - Token issuance: Host / Connect tokens
+  - Host hosting: forward local ports via WebSocket + SSH tunnel, with `OnReady` callback and automatic reconnection
+  - Connect connection: connect to a remote tunnel and establish local port mappings, with `OnReady` callback and automatic reconnection
+  - Client configuration: API key, custom gateway address, custom HTTP client, WebSocket handshake headers, output control
+  - Error handling: sentinel errors (`ErrMissingAPIKey`, `ErrTunnelNotFound`, `ErrDuplicateHost`, `ErrQuotaExceeded`, etc.) and `IsAPIError` for business error codes
+  - i18n support via `DEVBRIDGE_LANG` environment variable
+
+## 2026-11-06
+
+### Improvements
+
+- Reports the client version and prompts for an upgrade (with a one-click install command) when the version is below the minimum required.
+- `ping` now distinguishes a network failure from an error returned by the tunneled service; a 4xx/5xx from the service is treated as a normal response and probing continues.
+
+### Fixes
+
+- Fixed a reconnect storm that could occur after a connection dropped.
+- Fixed a resource leak in long-running `ping` sessions.
+- Fixed `--allow-anonymous` / `--deny-anonymous` flag handling.
+- The installer now verifies the package before extracting it.
+
+### Removed
+
+- Removed the client-side version self-check.
+- Removed the `config get/set/unset` command.
+
 ## 2026-09-21
 
 ### Improvements

@@ -5,6 +5,39 @@ description: DevBridge 命令行工具与服务的变更日志。
 
 # 更新日志
 
+## 2026-11-23
+
+### 新增
+
+- Go SDK（v0.1.0-release）：
+  - 隧道管理：创建、查询、更新、删除
+  - 端口管理：创建、查询、更新、删除
+  - 令牌签发：Host / Connect 令牌
+  - Host 托管：通过 WebSocket + SSH 隧道转发本地端口，支持 `OnReady` 就绪回调与断线自动重连
+  - Connect 连接：连接远端隧道并建立本地端口映射，支持 `OnReady` 就绪回调与断线自动重连
+  - 客户端配置：API Key、自定义网关地址、自定义 HTTP 客户端、WebSocket 握手请求头、状态输出控制
+  - 错误处理：提供 `ErrMissingAPIKey`、`ErrTunnelNotFound`、`ErrDuplicateHost`、`ErrQuotaExceeded` 等 sentinel error，支持 `IsAPIError` 提取业务错误码
+  - 国际化支持：通过 `DEVBRIDGE_LANG` 环境变量切换语言
+
+## 2026-11-06
+
+### 改进
+
+- 端侧上报版本号，版本过低时提示升级，并附一键升级命令。
+- `ping` 区分「网络不通」与「业务返回错误」：业务返回 4xx/5xx 时视为网络正常，继续探测。
+
+### 修复
+
+- 修复网络异常时可能出现的重连风暴。
+- 修复 `ping` 长时间运行时的资源泄漏。
+- 修复 `--allow-anonymous` / `--deny-anonymous` 参数解析错误。
+- 安装包增加安装前校验。
+
+### 移除
+
+- 移除客户端本地版本自检。
+- 移除 `config get/set/unset` 命令。
+
 ## 2026-09-21
 
 ### 改进
