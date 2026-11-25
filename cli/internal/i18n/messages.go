@@ -95,6 +95,8 @@ type TunnelMessages struct {
 	StatusNotReported     Message
 	StatusReportedAtMiss  Message
 	StatusStale           Message
+	HostCountSuspectZero  Message
+	FlagExpectHost        Message
 	Name                  Message
 	Description           Message
 	CreateFailed          Message

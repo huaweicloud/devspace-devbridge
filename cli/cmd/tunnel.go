@@ -39,11 +39,29 @@ func tunnelStatusWarning(status *devbridge.TunnelStatus, now time.Time) string {
 	return ""
 }
 
+// tunnelHostCountHint returns a non-empty hint when the caller explicitly
+// declares that a Host should be online, the status is fresh (as defined by
+// tunnelStatusWarning), and the reported Host connection count is 0. Long-lived
+// connections whose open event has slid out of the server's 1h event window
+// can be reported as 0 while the status itself is current, so a fresh 0 is not
+// proof that no Host is online. It stays silent for missing/stale status so the
+// warnings from tunnelStatusWarning remain the single explanation.
+func tunnelHostCountHint(status *devbridge.TunnelStatus, expectHost bool, now time.Time) string {
+	if !expectHost || tunnelStatusWarning(status, now) != "" {
+		return ""
+	}
+	if status.HostConnectionCount != 0 {
+		return ""
+	}
+	return i18n.T(i18n.Msg.Tunnel.HostCountSuspectZero)
+}
+
 var (
 	tunnelDescription string
 	tunnelExpiration  int
 	tunnelName        string
 	tunnelScope       string
+	tunnelExpectHost  bool
 )
 
 var listCmd = &cobra.Command{
@@ -148,8 +166,12 @@ var showCmd = &cobra.Command{
 			kv = append(kv, [2]string{i18n.T(i18n.Msg.Tunnel.ReportedAt), formatTime(status.ReportedAt)})
 		}
 		printKV(kv)
-		if warning := tunnelStatusWarning(status, time.Now()); warning != "" {
+		now := time.Now()
+		if warning := tunnelStatusWarning(status, now); warning != "" {
 			fmt.Println(warning)
+		}
+		if hint := tunnelHostCountHint(status, tunnelExpectHost, now); hint != "" {
+			fmt.Println(hint)
 		}
 		return nil
 	}),
@@ -291,6 +313,8 @@ func getTunnelIDArg(args []string) (string, error) {
 func init() {
 	createCmd.Flags().StringVarP(&tunnelDescription, "description", "d", "", i18n.T(i18n.Msg.Tunnel.FlagDescription))
 	createCmd.Flags().IntVarP(&tunnelExpiration, "expiration", "e", 0, i18n.T(i18n.Msg.Tunnel.FlagExpiration))
+
+	showCmd.Flags().BoolVar(&tunnelExpectHost, "expect-host", false, i18n.T(i18n.Msg.Tunnel.FlagExpectHost))
 
 	updateCmd.Flags().StringVarP(&tunnelName, "name", "n", "", i18n.T(i18n.Msg.Tunnel.FlagName))
 	updateCmd.Flags().StringVarP(&tunnelDescription, "description", "d", "", i18n.T(i18n.Msg.Tunnel.FlagDescription))
