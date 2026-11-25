@@ -56,12 +56,19 @@ The CLI also reads the `HW_API_KEY` environment variable automatically.
 
 ### Tunnel flags
 
-| Flag | Applies to                                     | Description                       |
-| ---- | ---------------------------------------------- | --------------------------------- |
-| `-n` | `update`                                       | Update the tunnel name.           |
-| `-d` | `create`, `update`, `host` without a tunnel ID | Set the tunnel description.       |
-| `-e` | `create`, `update`, `host` without a tunnel ID | Set the expiration, in hours.     |
-| `-s` | `token`                                        | Token scope: `host` or `connect`. |
+| Flag            | Applies to                                     | Description                                                                                         |
+| --------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `-n`            | `update`                                       | Update the tunnel name.                                                                             |
+| `-d`            | `create`, `update`, `host` without a tunnel ID | Set the tunnel description.                                                                         |
+| `-e`            | `create`, `update`, `host` without a tunnel ID | Set the expiration, in hours.                                                                       |
+| `-s`            | `token`                                        | Token scope: `host` or `connect`.                                                                   |
+| `--expect-host` | `show`                                         | Declare that the tunnel should have a Host online; warns when a fresh Host connection count is `0`. |
+
+`devbridge show` renders `-` when the server returns no statistics and warns when statistics are missing or older than 120 seconds. Add `--expect-host` when you know a Host should be online: if the statistics are fresh but the Host connection count is `0`, `show` explains that the count is aggregated over an event window and that a connection older than one hour may be counted as `0`. Without the flag the output is unchanged, so a genuine zero is not flagged.
+
+```bash
+devbridge show <tunnelId> --expect-host
+```
 
 ## Ports
 

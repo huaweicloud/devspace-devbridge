@@ -52,6 +52,20 @@ The details show the tunnel ID, name, description, and expiration time of the sp
 
 Statistics are reported by the server roughly every minute and include a report time (`reportedAt`). If the server has not reported statistics yet, or the last report is older than 120 seconds, `show` prints an explicit "statistics not reported" or "statistics are stale" warning and shows `-` for unavailable values instead of a misleading `0`.
 
+Connection counts are aggregated over a server-side event window of about one hour. A connection that stays open longer than one hour can therefore have its open event slide out of the window while the tunnel is still hosted, so a fresh `reportedAt` with a Host connection count of `0` does not by itself prove that no Host is online. Treat a reported `0` as one of three possibilities:
+
+- the tunnel genuinely has no Host connected;
+- a long-lived connection is still up but its open event has left the one-hour window;
+- the statistics query failed and the server fell back to a zero/incomplete value.
+
+When you expect a Host to be online, pass `--expect-host` to make the client state the caveat explicitly:
+
+```bash
+devbridge show <tunnelId> --expect-host
+```
+
+If the statistics are fresh and the Host connection count is `0`, `show` prints a hint that the count may lag and that a connection older than one hour may be counted as `0`. Without the flag the output is unchanged. A positive count is still the most reliable signal; for a zero count, confirm the tunnel by connecting through its public address before concluding that the Host is offline. This is a statistics-window limitation on the server side, not a problem the CLI can fix.
+
 ## Update a tunnel
 
 ```bash

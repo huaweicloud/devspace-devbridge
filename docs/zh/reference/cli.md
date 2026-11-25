@@ -63,6 +63,12 @@ CLI 也会自动读取 `HW_API_KEY` 环境变量。
 | `-e` | `create`、`update`、无隧道 ID 的 `host` | 设置有效期规格，单位为小时。    |
 | `-s` | `token`                                 | 令牌范围：`host` 或 `connect`。 |
 
+`devbridge show` 在服务端未返回统计时以 `-` 展示不可用值，并在统计缺失或距上次上报超过 120 秒时给出提示。确认隧道应有 Host 在线时，可加 `--expect-host`：若统计新鲜但 Host 连接数为 `0`，`show` 会说明连接数按事件窗口统计，存活超过 1 小时的连接可能被计为 `0`。不带该标志时输出保持不变，避免把真实的 0 误标为可疑。
+
+```bash
+devbridge show <tunnelId> --expect-host
+```
+
 ## 端口
 
 | 命令                                                               | 说明               |
