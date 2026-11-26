@@ -14,6 +14,12 @@ var ServerAddr = "gateway.devbridge-s2.hwtunnel.com:443"
 // ServerHost is the WebSocket gateway SNI host, injected via ldflags.
 var ServerHost = "devbridge-s2.hwtunnel.com"
 
+// DevboxHost is the SNI host for devbox-scoped API keys, injected via ldflags.
+var DevboxHost = "devbox-s2.hwtunnel.com"
+
+// DevbridgeHost is the SNI host for devbridge-scoped API keys, injected via ldflags.
+var DevbridgeHost = "devbridge-s2.hwtunnel.com"
+
 // ResolveGatewayAddr returns the WebSocket gateway address.
 func ResolveGatewayAddr() string {
 	return ServerAddr
@@ -28,9 +34,9 @@ func ResolveGatewayAddr() string {
 func ResolveGatewayHost(apiKey string) string {
 	switch {
 	case strings.HasPrefix(apiKey, "devbox_"):
-		return "devbox-s2.hwtunnel.com"
+		return DevboxHost
 	case strings.HasPrefix(apiKey, "devbridge_"):
-		return "devbridge-s2.hwtunnel.com"
+		return DevbridgeHost
 	}
 	return ServerHost
 }
