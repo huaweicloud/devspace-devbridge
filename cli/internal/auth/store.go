@@ -37,9 +37,16 @@ func StoreCredential(name string, cred *Credential, userInfo *UserInfo) error {
 		return fmt.Errorf("%s: %w", i18n.T(i18n.Msg.Auth.LoadConfigFailed), err)
 	}
 
-	if err := keyring.Set(name, "Credentials", blob); err == nil {
-		delete(cfg, credentialsKey)
+	if keyringBackendUsable() {
+		if err := keyring.Set(name, "Credentials", blob); err == nil {
+			delete(cfg, credentialsKey)
+		} else {
+			cfg[credentialsKey] = credToMap(cred)
+		}
 	} else {
+		// No session bus (headless/service environment): skip the D-Bus
+		// keyring entirely instead of autolaunching leak-prone daemons, and
+		// store the credential in the config file.
 		cfg[credentialsKey] = credToMap(cred)
 	}
 
@@ -53,9 +60,11 @@ func StoreCredential(name string, cred *Credential, userInfo *UserInfo) error {
 func LoadCredential(name string) (*Credential, *UserInfo, error) {
 
 	var cred *Credential
-	if blob, err := keyring.Get(name, "Credentials"); err == nil && blob != "" {
-		if c, ok := decodeCredential(blob); ok {
-			cred = c
+	if keyringBackendUsable() {
+		if blob, err := keyring.Get(name, "Credentials"); err == nil && blob != "" {
+			if c, ok := decodeCredential(blob); ok {
+				cred = c
+			}
 		}
 	}
 
@@ -71,7 +80,9 @@ func LoadCredential(name string) (*Credential, *UserInfo, error) {
 }
 
 func DeleteCredential(name string) error {
-	_ = keyring.Delete(name, "Credentials")
+	if keyringBackendUsable() {
+		_ = keyring.Delete(name, "Credentials")
+	}
 	cfg, err := config.Load()
 	if err != nil {
 		return err
