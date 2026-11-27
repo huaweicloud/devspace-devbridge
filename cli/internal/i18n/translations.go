@@ -37,6 +37,12 @@ func init() {
 	Msg.Auth.VerifyResponseRead = Message{ZH: "读取验证响应失败", EN: "read verify response"}
 	Msg.Auth.VerifyUnexpected = Message{ZH: "验证 API Key 失败: 异常状态码 %d, 响应体=%s", EN: "verify api key: unexpected status %d, body=%s"}
 	Msg.Auth.LoadConfigFailed = Message{ZH: "加载配置失败", EN: "load config"}
+	Msg.Auth.CredentialBackendFallback = Message{
+		ZH: "未检测到可用的 D-Bus 会话总线，凭证改用本地配置文件存储：%s（目录权限 0700，文件权限 0600）。" +
+			"该文件以 base64 编码保存，并非加密；如需使用系统密钥环（Secret Service），请在桌面会话或 dbus-run-session 下运行。",
+		EN: "no usable D-Bus session bus was detected; credentials are stored in the local config file instead: %s (directory mode 0700, file mode 0600). " +
+			"The file holds them base64-encoded, which is not encryption. Run inside a desktop session or under dbus-run-session to use the system keyring (Secret Service).",
+	}
 
 	Msg.Tunnel.TunnelID = Message{ZH: "隧道ID", EN: "Tunnel ID"}
 	Msg.Tunnel.TunnelExpiration = Message{ZH: "隧道过期时间", EN: "Tunnel Expiration"}
