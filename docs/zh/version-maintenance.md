@@ -15,14 +15,14 @@ description: DevBridge CLI 客户端各版本的支持状态。
 
 ## 版本清单
 
-| 版本 | 状态 |
-|------|------|
+| 版本          | 状态   |
+| ------------- | ------ |
 | 0.3.0-release | 支持中 |
 | 0.2.2-release | 支持中 |
 | 0.2.1-release | 已 EOS |
 | 0.2.0-release | 已 EOS |
 | 0.1.9-release | 已 EOS |
-| 0.1.0 | 已 EOS |
+| 0.1.0         | 已 EOS |
 
 ## 计划 EOS
 
