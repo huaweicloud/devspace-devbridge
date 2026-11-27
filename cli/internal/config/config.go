@@ -31,6 +31,13 @@ func configPath() (string, error) {
 	return filepath.Join(home, ".huawei", "devbridge", "config.yaml"), nil
 }
 
+// ConfigPath returns the absolute path of the CLI config file. Callers that
+// persist or report the file location (for example the credential fallback
+// notice) use it instead of rebuilding the path themselves.
+func ConfigPath() (string, error) {
+	return configPath()
+}
+
 func Load() (map[string]any, error) {
 	path, err := configPath()
 	if err != nil {

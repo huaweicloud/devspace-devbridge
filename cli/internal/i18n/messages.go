@@ -60,6 +60,11 @@ type AuthMessages struct {
 	VerifyResponseRead  Message
 	VerifyUnexpected    Message
 	LoadConfigFailed    Message
+
+	// CredentialBackendFallback is shown once per process when no D-Bus session
+	// bus is available and credentials are kept in the config file instead of
+	// the system keyring. The placeholder is the config file path.
+	CredentialBackendFallback Message
 }
 
 type TunnelMessages struct {

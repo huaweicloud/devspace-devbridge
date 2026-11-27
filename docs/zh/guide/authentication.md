@@ -43,6 +43,55 @@ devbridge auth login
 
 在该页面创建新的 API Key 后，将其复制并通过环境变量 `HW_API_KEY` 注入 CLI 即可使用。
 
+## 无头与服务环境
+
+CLI 的凭证存放在两处之一，并在进程启动时决定用哪一个：
+
+- 系统密钥环（经 D-Bus 会话总线访问的 Secret Service）；
+- 配置文件 `~/.huawei/devbridge/config.yaml`。
+
+桌面会话、`dbus-run-session` 启动的进程，以及设置了常驻 `DBUS_SESSION_BUS_ADDRESS` 的进程，会使用密钥环。判定在进程内只做一次，顺序为：
+
+1. `DBUS_SESSION_BUS_ADDRESS` 指向真实地址（`autolaunch:` 不算）；
+2. `$XDG_RUNTIME_DIR/bus` 存在且是 socket；
+3. `$HOME/.dbus/session-bus` 下的文件中存在 `DBUS_SESSION_BUS_ADDRESS=` 行。
+
+命中后两条时，CLI 会把探测到的地址导出到环境变量，让 D-Bus 客户端复用它，而不是另起一条总线。
+
+三者都不满足时——容器、沙箱、systemd 服务，以及任何没有会话总线的主机——CLI **完全不调用密钥环**。这一点比字面上更重要：没有会话总线时，一次密钥环调用会让 D-Bus 客户端执行 `dbus-launch`，fork 出一个无人回收的
+`dbus-daemon --session`；长期运行的 `devbridge host` 会因此每次读写凭据泄漏一个守护进程。跳过密钥环才能让进程数保持恒定。
+
+该模式下，凭据的读写都走配置文件，CLI 会在进程内提示一次：
+
+```text
+未检测到可用的 D-Bus 会话总线，凭证改用本地配置文件存储：
+~/.huawei/devbridge/config.yaml（目录权限 0700，文件权限 0600）。
+该文件以 base64 编码保存，并非加密；如需使用系统密钥环（Secret Service），
+请在桌面会话或 dbus-run-session 下运行。
+```
+
+请把它理解为有意的取舍，而不是故障：
+
+- 凭据以 Base64 编码保存、**不做加密**，其保密性依赖于 `0700` 目录权限、`0600` 文件权限，以及主机为单用户使用；
+- 共享主机上应优先通过受保护的环境变量（或密钥服务）注入 `HW_API_KEY`，避免凭据落盘；
+- 如果希望在无头主机上继续使用密钥环，请给进程一条真实总线，而不是每次调用临时拉起：
+
+```bash
+dbus-run-session -- devbridge host --tunnel <tunnel-id> --host-token <token> --ports 8080
+```
+
+要确认某个进程实际选中了哪种后端，加上 `-v` 查看总线探测日志：
+
+```bash
+devbridge auth status -v
+```
+
+```text
+level=DEBUG msg="d-bus session bus probe" available=false source=none
+```
+
+找到总线时 `source` 为 `env`、`xdg-runtime-dir` 或 `session-bus-file`；使用配置文件时为 `none`。Windows 与 macOS 始终使用系统自带的凭证存储（凭据管理器、Keychain），本节不适用。
+
 ## 查看登录状态
 
 ```bash
