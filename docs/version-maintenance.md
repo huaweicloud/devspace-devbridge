@@ -15,14 +15,14 @@ This page describes the support status of each DevBridge CLI client version. The
 
 ## Version list
 
-| Version | Status |
-|---------|--------|
+| Version       | Status    |
+| ------------- | --------- |
 | 0.3.0-release | Supported |
 | 0.2.2-release | Supported |
-| 0.2.1-release | EOS |
-| 0.2.0-release | EOS |
-| 0.1.9-release | EOS |
-| 0.1.0 | EOS |
+| 0.2.1-release | EOS       |
+| 0.2.0-release | EOS       |
+| 0.1.9-release | EOS       |
+| 0.1.0         | EOS       |
 
 ## Planned EOS
 
