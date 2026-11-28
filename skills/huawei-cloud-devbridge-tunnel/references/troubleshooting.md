@@ -216,17 +216,47 @@ devbridge port create <tunnelId> -p 8080 --protocol https
 
 ### Problem: `Host failed: local service not reachable`
 
-**Cause:** No service is running on the specified local port.
+**Cause:** No service is running on the specified local port, or the service listens only on the loopback address.
 
 **Solution:**
 
-1. Verify the local service is running:
+1. Check the listening address first — not just whether the process is alive:
+
+```bash
+ss -tlnp | grep 8080
+# ✅ Expected: LISTEN 0 511 0.0.0.0:8080 0.0.0.0:*
+# ❌ Problem:  LISTEN 0 511 127.0.0.1:8080 127.0.0.1:*   (loopback only)
+```
+
+1. If the address is `127.0.0.1`/`::1`, rebind to `0.0.0.0` (see the entry below) and restart the service before running `devbridge host`.
+1. If the address is already `0.0.0.0`, confirm the service responds:
 
 ```bash
 curl http://localhost:8080
 ```
 
-2. Start the service before running `devbridge host`.
+1. Start the service before running `devbridge host`.
+
+### Problem: 隧道已创建但公网地址无法访问（`devbridge host` 正常，浏览器/`curl` 打不开公网 URL）
+
+**Cause:** 本地服务只监听了回环地址（`127.0.0.1`/`localhost`/`::1`），没有监听 `0.0.0.0`。`devbridge host` 本身可以成功建立隧道并返回公网 URL，但中继转发到本机非回环接口的请求无法到达服务，表现为「隧道创建成功、公网打不开」的静默失败。
+
+> ⚠️ `curl http://localhost:<port>` 通过**不能**证明监听正确——回环地址上的 `curl` 即使服务只绑 `127.0.0.1` 也会成功。必须直接查看监听地址。
+
+**Solution:**
+
+1. 查看服务实际监听地址：
+
+```bash
+ss -tlnp | grep <port>
+# ✅ Expected: LISTEN 0 511 0.0.0.0:<port> 0.0.0.0:*
+# ❌ Problem:  LISTEN 0 511 127.0.0.1:<port> 127.0.0.1:*   (loopback only)
+```
+
+1. 若为 `127.0.0.1`/`::1`，修改服务启动参数显式绑定 `0.0.0.0`。示例：`python3 -m http.server <port> --bind 0.0.0.0`；Flask `app.run(host="0.0.0.0")`；Django `runserver 0.0.0.0:<port>`；Node `server.listen(<port>, "0.0.0.0")`；Go `http.ListenAndServe("0.0.0.0:<port>", nil)`；Vite `npm run dev -- --host 0.0.0.0`。
+1. 停止旧服务并重启，使其按新绑定地址监听；再 `ss -tlnp | grep <port>` 确认已变为 `0.0.0.0:<port>`。
+1. 重新托管隧道：必要时先 `db_process_stop <pid>` 停掉旧 host 进程，再执行 `db_host <tunnelId>`。
+1. 用 `db_tunnel_url <tunnelId>` 获取权威公网地址（不要手工拼接域名），再次访问验证。
 
 ### Problem: `Host failed: tunnel expired`
 
