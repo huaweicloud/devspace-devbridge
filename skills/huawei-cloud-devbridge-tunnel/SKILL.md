@@ -231,12 +231,57 @@ db_port_create <tunnelId> -p <port> --protocol <protocol>
 
 ### Step 5: Host Local Service
 
+> **CRITICAL — 本地服务必须监听 `0.0.0.0`（或 `::` 等全部地址），不能只监听 `127.0.0.1`/`localhost`。**
+> `devbridge host` 会通过中继把公网请求转发到本机端口，而只绑定回环地址的服务不会接受来自非回环接口的连接。结果是**隧道可以创建成功、`db_host` 也正常返回 URL，但公网地址始终打不开**——这是静默失败，务必在 host 之前先校验监听地址。
+
+**① 先检查本地服务监听地址**（在 host 之前执行）：
+
 ```bash
-nohup python3 -m http.server <port> > /tmp/devbridge-service.log 2>&1 &
+ss -tlnp | grep <port>
+# ✅ 期望：LISTEN 0 511 0.0.0.0:<port> 0.0.0.0:*     （全部地址，公网可转发）
+# ❌ 异常：LISTEN 0 511 127.0.0.1:<port> 127.0.0.1:*  （仅回环，公网访问必然失败）
+# ❌ 异常：LISTEN 0 511 [::1]:<port> ...            （仅 IPv6 回环，同样失败）
+```
+
+> macOS 无 `ss` 时用 `lsof -nP -iTCP:<port> -sTCP:LISTEN`，观察输出中的监听地址是否为 `*:<port>` 或 `0.0.0.0:<port>`，而非 `127.0.0.1:<port>`。
+
+**② 启动服务时显式绑定 `0.0.0.0`**（示例不再依赖默认值）：
+
+```bash
+nohup python3 -m http.server <port> --bind 0.0.0.0 > /tmp/devbridge-service.log 2>&1 &
 db_host <tunnelId>                   # 后台托管，输出 PID 和 Tunnel URL 到 stdout
 TUNNEL_URL=$(db_tunnel_url <tunnelId>)  # 获取权威公网 URL
 echo "$TUNNEL_URL"
 ```
+
+**③ 代码智能体生成的 Node/Python/Go 应用常把 host 写死为 `localhost`/`127.0.0.1`，或所用框架开发模式默认只绑回环地址**（并非所有脚手架都如此，务必以 `ss` 实际输出为准）。若检查结果为 `127.0.0.1`，改为显式绑定全部地址后再启动：
+
+```python
+# Flask
+app.run(host="0.0.0.0", port=<port>)
+```
+
+```bash
+# Django
+python manage.py runserver 0.0.0.0:<port>
+```
+
+```javascript
+// Node.js (Express / 原生 http)
+server.listen(<port>, "0.0.0.0");
+```
+
+```go
+// Go net/http
+http.ListenAndServe("0.0.0.0:<port>", nil)
+```
+
+```bash
+# Vite 开发服务器
+npm run dev -- --host 0.0.0.0
+```
+
+> 若隧道已创建但公网地址仍无法访问，按 [references/troubleshooting.md#host-issues](references/troubleshooting.md#host-issues) 的「隧道已创建但公网地址无法访问」条目排查。
 
 Alternative one-shot temporary tunnel: `devbridge host -p 8080 -e 8` (creates a temp tunnel and hosts immediately).
 
